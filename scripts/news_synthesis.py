@@ -30,7 +30,7 @@ def generate_post_info(article_bodies, ext_sources):
         messages=[system_message_synthesis] + user_messages,
     )
 
-    synthesized_content = response_synthesis.choices[0].message['content']
+    synthesized_content = response_synthesis.choices[0].message.content
 
     # Get the JSON prompt
     json_prompt = os.getenv('JSON_PROMPT')
@@ -51,7 +51,7 @@ def generate_post_info(article_bodies, ext_sources):
     post_info = {key: value for key, value in response_json.choices[0].message.items() if key != 'image_queries'}
 
     # Process images and replace placeholders
-    image_queries = response_json.choices[0].message.get('image_queries')
+    image_queries = response_json.choices[0].message.content.get('image_queries')
     if image_queries:
         images = process_images(image_queries)
     else:

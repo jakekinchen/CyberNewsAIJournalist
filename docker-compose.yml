@@ -2,8 +2,8 @@ services:
   app:
     build: .  # Build context is the current directory
     volumes:
-      - ./data:/app/data
+      - .:/app  # Mount the current directory into the /app directory in the container
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
-    command: python /app/scripts/controller.py
+    command: python /app/scripts/init.py

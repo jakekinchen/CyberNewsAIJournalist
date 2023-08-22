@@ -16,4 +16,4 @@ RUN pip3 install --no-cache-dir -r /app/requirements.txt
 EXPOSE 80
 
 # Run controller.py when the container launches
-CMD ["python", "/app/scripts/controller.py"]
+CMD ["python", "/app/scripts/init.py"]

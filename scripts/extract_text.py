@@ -1,97 +1,59 @@
 import requests
-import hashlib
-import json
-import os
-import sys 
-import random
-import time
-from scrapingbee import ScrapingBeeClient
 from bs4 import BeautifulSoup
-from urllib.parse import urlparse
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+import os
+import random
 from dotenv import load_dotenv
 
-# Load .env file
 load_dotenv()
 
-# Set your ScrapingBee API key
-scrapingbee_api_key = os.getenv('SCRAPINGBEE_API_KEY')
+username = os.getenv('BRIGHTDATA_USERNAME')
+password = os.getenv('BRIGHTDATA_PASSWORD')
 
-# Function to get user agents
-def get_user_agents():
-    # List of user agents
-    user_agents = [
-        # List your user agents here
-         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.82 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:86.0) Gecko/20100101 Firefox/86.0',
-    ]
-    return user_agents
+def scrape_news(url):
+    try:
+        # Generate a random session ID
+        session_id = random.randint(0, 1000000)
+        # Set up proxy with session ID
+        super_proxy = f"http://brd-customer-{username}-session-{session_id}-zone-unblocker:{password}@brd.superproxy.io:22225"
+        proxies = {
+            "http": super_proxy,
+            "https": super_proxy
+        }
+        # User-Agent
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+        }
+        # Retry mechanism
+        session = requests.Session()
+        retry = Retry(total=5, backoff_factor=0.1, status_forcelist=[500, 502, 503, 504])
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        # Make the request
+        response = session.get(url, proxies=proxies, headers=headers, verify=False)
+        soup = BeautifulSoup(response.text, 'html.parser')
 
-def extract_text(topic_dir):
-    related_articles_file = os.path.join(topic_dir, 'related_articles.json')
-    with open(related_articles_file) as f:
-        related_articles = json.load(f)
-
-    # Possible CSS selectors for the article body
-    possible_selectors = [
-        "article", ".article-content", "#content", ".post-body", 
-        "div.main-content", "section.article", ".entry-content", 
-        ".post-content", "main article", ".blog-post"
-    ]
-
-    # Initialize the scraping client with your API key
-    client = ScrapingBeeClient(api_key=scrapingbee_api_key)
-
-    # Define the user agent rotation and slow crawling options
-    user_agent_rotation = False
-    slow_crawling = False
-    user_agents = get_user_agents()  # Use the function defined earlier
-
-    for article in related_articles:
-        url = article['url']
-
-        # Add user agent rotation if enabled
-        headers = {'User-Agent': random.choice(user_agents)} if user_agent_rotation else {}
-
-        article_body = None
-
-        for selector in possible_selectors:
-            # Create the extraction rule with the current selector
-            extraction_rules = json.dumps({"article_body": selector})
-
-            # Fetch the raw HTML content using the ScrapingBee API
-            response = client.get(url, headers=headers, params={'extract_rules': extraction_rules})
-
-            # Add slow crawling delay if enabled
-            if slow_crawling:
-                time.sleep(random.uniform(0.5, 3.5))
-
-            # Check the status of the response
-            if response.status_code == 200:
-                extracted_data = response.json()
-                if 'article_body' in extracted_data and extracted_data['article_body']:
-                    article_body = extracted_data['article_body']
+        # If the URL is from "thehackernews.com", extract text content within <p> tags
+        if 'thehackernews.com' in url:
+            content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
+        else:
+            # Possible CSS selectors for the article body
+            possible_selectors = [
+                "article", ".article-content", "#content", ".post-body",
+                "div.main-content", "section.article", ".entry-content",
+                ".post-content", "main article", ".blog-post",
+            ]
+            content = None
+            for selector in possible_selectors:
+                selected_content = soup.select_one(selector)
+                if selected_content:
+                    content = selected_content.get_text().strip()
                     break
 
-        if article_body is None:
-            print(f"Failed to retrieve the article body for URL: {url}")
-            article_body = "Could not extract text body."
+        return content
+    except Exception as error:
+        print(f"Failed to scrape URL: {url}. Error: {error}")
+        return None
 
-        # Extract external sources (modify as needed)
-        ext_sources = [] # ...
-
-        article['article_body'] = article_body
-        article['ext_sources'] = ext_sources
-
-        print(f"Processing article: {url}")
-
-    # Save the updated articles data
-    updated_articles_file = os.path.join(topic_dir, 'updated_articles.json')
-    with open(updated_articles_file, 'w') as f:
-        json.dump(related_articles, f, indent=4)
-        
-    # Check if the file is created
-    if os.path.exists(updated_articles_file):
-        print(f"Updated articles file created at {updated_articles_file}")
-    else:
-        print(f"Failed to create updated articles file at {updated_articles_file}")
