@@ -3,7 +3,7 @@ import json
 import requests
 import pandas as pd
 from dotenv import load_dotenv
-from supabase import create_client, SupabaseClient
+from supabase import create_client, Client
 
 # Load .env file
 load_dotenv()

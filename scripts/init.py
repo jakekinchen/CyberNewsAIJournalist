@@ -5,10 +5,11 @@ from generate_topics import generate_topics
 from supabase import create_client, Client
 from search_related_articles import search_related_sources
 from content_optimization import create_factsheet, query_gpt3
+from news_synthesis import process_images, generate_post_info, news_synthesis
 import asyncio
 import httpx
-from extract_text import scrape_news
-
+from extract_text import scrape_content
+from exploit_fetcher import fetch_latest_exploits, fetch_past_exploits
 # Load environment variables
 from dotenv import load_dotenv
 load_dotenv()
@@ -22,6 +23,34 @@ supabase: Client = create_client(supabase_url = supabase_url, supabase_key = sup
 allow_topic_regeneration = False
 pause_topic_generation = False
 pause_source_scraping = False
+exploit_fetcher_activated = False
+debug = False
+synthesize_factsheets = True
+
+def delete_targeted_sources(target_url):
+    #find all source url's that begin with https://thehackernews.com/search? and delete them
+    #remove the quotes from the beginning and end of the target_url variable
+    target_url = target_url[1:-1]
+    response = supabase.table("sources").select("*").like("url", f"%{target_url}%").execute()
+    sources = response.data
+    for source in sources:
+        supabase.table("sources").delete().eq("id", source["id"]).execute()
+        print(f"Deleted source from {source['url']} because it is a search query.")
+
+def rescrape_yahoo_sources():
+    #find all source url's that contain yahoo.com and rescrape them
+    response = supabase.table("sources").select("*").like("url", "%yahoo.com%").execute()
+    sources = response.data
+    for source in sources:
+        print(f"Scraping source from {source['url']}...")
+        content = scrape_content(source["url"])
+
+        if content:
+            print(f"Successfully scraped source from {source['url']}")
+            supabase.table("sources").update({"content": content}).eq("id", source["id"]).execute()
+            print(f"Source from {source['url']} saved to Supabase.")
+        else:
+            supabase.table("sources").delete().eq("id", source["id"]).execute()
 
 def rescrape_thehackernews_sources():
     #find all source url's that begin with https://thehackernews.com and rescrape them
@@ -34,7 +63,7 @@ def rescrape_thehackernews_sources():
             supabase.table("sources").delete().eq("id", source["id"]).execute()
             print(f"Deleted source from {source['url']} because it is a search query.")
             continue
-        content = scrape_news(source["url"])
+        content = scrape_content(source["url"])
 
         if content:
             print(f"Successfully scraped source from {source['url']}")
@@ -58,6 +87,19 @@ async def delete_topic(topic_id):
 
     print(f"Successfully deleted topic with ID {topic_id} and all related sources.")
 
+def delete_duplicate_source_urls():
+    #find all source's with duplicate urls and delete them
+    response = supabase.table("sources").select("*").execute()
+    sources = response.data
+    for source in sources:
+        response = supabase.table("sources").select("*").eq("url", source["url"]).execute()
+        duplicate_sources = response.data
+        if len(duplicate_sources) > 1:
+            for duplicate_source in duplicate_sources:
+                if duplicate_source["id"] != source["id"]:
+                    supabase.table("sources").delete().eq("id", duplicate_source["id"]).execute()
+                    print(f"Deleted duplicate source from {duplicate_source['url']}")
+
 def gather_sources(topic, overload=False):
     MIN_SOURCES = 3
     response = supabase.table("sources").select("*").eq("topic_id", topic["id"]).execute()
@@ -71,7 +113,7 @@ def gather_sources(topic, overload=False):
         related_sources = search_related_sources(topic["name"], len(existing_sources))
         for source in related_sources[:required_sources]:
             print(f"Scraping source from {source['url']}...")
-            content = scrape_news(source["url"])  # Assuming scrape_news is defined elsewhere
+            content = scrape_content(source["url"])  # Assuming scrape_content is defined elsewhere
 
             if content:
                 print(f"Successfully scraped source from {source['url']}")
@@ -97,11 +139,26 @@ def test_query_gpt3():
     system_prompt = "You are an expert at summarizing topics while being able to maintain every single detail. You utilize a lossless compression algorithm to keep the factual details together"
     print(query_gpt3(user_prompt, system_prompt))
 
+def post_todays_topics():
+    current_date = datetime.now().isoformat()[:10]
+    response = supabase.table("topics").select("*").eq("date_accessed", current_date).execute()
+    topics = response.data
+    for topic in topics:
+        print(f"Posting topic {topic['name']}...")
+        news_synthesis(topic)
+
 async def main():
     # Check if topics need to be generated
     #rescrape_thehackernews_sources()
-    generate_factsheets()
-    test_query_gpt3()
+
+    if debug:
+        #fetch_latest_exploits()
+        #fetch_past_exploits(10)
+        #generate_factsheets()
+        #rescrape_yahoo_sources()
+        #delete_duplicate_source_urls()
+        # Take the topics generated today from supabase and synthesize them into a post using the news_synthesis function
+        return
    
     current_date = datetime.now().isoformat()[:10]
     response = supabase.table("topics").select("*").eq("date_accessed", current_date).execute()
@@ -134,8 +191,12 @@ async def main():
 
         # Generate Fact Sheets
         create_factsheet(topic)
-
+    delete_targeted_sources("https://thehackernews.com/search?")
     print("Scraping complete.")
+    post_todays_topics()
+
+    
+    
 
 if __name__ == "__main__":
     asyncio.run(main())

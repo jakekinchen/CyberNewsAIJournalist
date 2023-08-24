@@ -57,6 +57,28 @@ def query_gpt3(user_prompt, system_prompt, model='gpt-3.5-turbo'):
             ]
         )
         return response.choices[0].message.content
+    
+def create_factsheet(source):
+    # if source's factsheet is empty or null
+    if not source['factsheet']:
+        system_prompt = "You are an expert at summarizing topics while being able to maintain every single detail. You utilize a lossless compression algorithm to keep the factual details together"
+        user_prompt = f'When you make a factsheet, keep each fact together in a sentence so each fact is separated by a period. Try to chunk together information that is related to {source["topic_name"]}. Now give the factsheet for the following information: {source["content"]}'
+        try:
+            facts = query_gpt3(user_prompt, system_prompt)
+            supabase.table('sources').update({"factsheet": facts}).eq('id', source['id']).execute()
+            return facts
+        except Exception as gpt3_error:
+            print(f'Failed to synthesize facts for source {source["id"]}', gpt3_error)
+            try:
+                facts = query_gpt3(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
+                supabase.table('sources').update({"factsheet": facts}).eq('id', source['id']).execute()
+                return facts
+            except Exception as gpt3_error:
+                print(f'Failed to synthesize facts for source {source["id"]}', gpt3_error)
+                return None
+    else:
+        print(f'Factsheet already exists for source {source["id"]}')
+        return None
 
 def create_factsheet(topic):
     try :

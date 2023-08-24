@@ -3,9 +3,15 @@ import os
 import openai
 from dotenv import load_dotenv
 from image_fetcher import process_images  # Import the image fetching function
+from supabase import create_client, Client
 
 # Load .env file
 load_dotenv()
+
+# Supabase configuration
+supabase_url = os.getenv('SUPABASE_ENDPOINT')
+supabase_key = os.getenv('SUPABASE_KEY')
+supabase = create_client(supabase_url, supabase_key)
 
 # Set your OpenAI API key and organization
 openai.api_key = os.getenv('OPENAI_KEY')
@@ -20,7 +26,7 @@ def generate_post_info(article_bodies, ext_sources):
         "role": "system",
         "content": synthesis_prompt
     }
-
+    article_bodies = [str(body) for body in article_bodies]
     # Define the user messages
     user_messages = [{"role": "user", "content": body} for body in article_bodies]
     print([system_message_synthesis] + user_messages)
@@ -86,22 +92,22 @@ def generate_post_info(article_bodies, ext_sources):
             print("image_queries field is missing in the response. Continuing without images.")
         return post_info
 
-def news_synthesis(topic_dir):
-    # Read in the articles data
-    updated_articles_file = os.path.join(topic_dir, 'updated_articles.json')
-    with open(updated_articles_file, 'r') as f:
-        articles = json.load(f)
+def news_synthesis(topic):
+    # Read in the factsheets into an object for each source associated with the topic and keep track of the source IDs
+    response = supabase.table("sources").select("*").eq("topic_id", topic["id"]).execute()
+    sources = response.data
+    source_ids = [source['id'] for source in sources]
+    factsheets = {source['id']: source['factsheet'] for source in sources}
 
-    # Aggregate all article bodies and external sources
-    article_bodies = [article['article_body'] for article in articles]
-    ext_sources = [source for article in articles for source in article['ext_sources']]
+    #put the ids of the sources into the ext_sources array with the url of the source
+    ext_sources = [{"id": source['id'], "url": source['url']} for source in sources]
 
+    print(f"Synthesizing news for topic {topic['name']}...")
     # Generate the post information
-    post_info = generate_post_info(article_bodies, ext_sources)
+    post_info = generate_post_info(factsheets, ext_sources)
 
-    # Save the post information to a JSON file
-    post_info_file = os.path.join(topic_dir, 'post_info.json')
-    with open(post_info_file, 'w') as f:
-        json.dump(post_info, f)
+    # Save the post information to their respective fields in Supabase in the posts table
+    post_info_file = f"post_info_{topic['id']}.json"
+    response = supabase.table("posts").insert([post_info]).execute()
 
     print(f"Post information saved to {post_info_file}")
