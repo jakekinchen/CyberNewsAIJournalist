@@ -29,7 +29,7 @@ def generate_post_info(article_bodies, ext_sources):
     article_bodies = [str(body) for body in article_bodies]
     # Define the user messages
     user_messages = [{"role": "user", "content": body} for body in article_bodies]
-    print([system_message_synthesis] + user_messages)
+    #print([system_message_synthesis] + user_messages)
     # Request a chat completion from the OpenAI API for synthesis
     response_synthesis = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-16k",  # Use the appropriate model version
@@ -51,13 +51,62 @@ def generate_post_info(article_bodies, ext_sources):
     response_json = openai.ChatCompletion.create(
         model="gpt-3.5-turbo-16k",  # Use the appropriate model version
         messages=[system_message_json, {"role": "user", "content": synthesized_content}],
+        functions={
+            {
+            "name": "WordPress Post Field Completion",
+            "description": "Observe the content of the post and optimize it for SEO for a Wordpress post.",
+            "parameters": {
+                "content": {
+                "type": "string",
+                "description": "The content of the post."
+                },
+                "title": {
+                "type": "string",
+                "description": "The title of the post."
+                },
+                "image_queries": {
+                "type": "array",
+                "description": "An array of image search query strings."
+                },
+                "excerpt": {
+                "type": "string",
+                "description": "The excerpt of the post."
+                },
+                "yoast_meta": [
+                    {
+                        "yoast_wpseo_title": {
+                        "type": "string",
+                        "description": "The title of the post."
+                        }
+                    },
+                    {
+                        "yoast_wpseo_metadesc": {
+                        "type": "string",
+                        "description": "The excerpt of the post."
+                        }
+                    },
+                    {
+                        "yoast_wpseo_focuskw": {
+                        "type": "string",
+                        "description": "The focus keyword of the post."
+                        }
+                    }
+                ]
+            }
+            },
+
+        }
     )
+
+                
+
+   
 
     # Get the assistant's response and exclude the image_queries field
     post_info = {key: value for key, value in response_json.choices[0].message.items() if key != 'image_queries'}
 
     # Process images and replace placeholders
-    image_queries = response_json.choices[0].message.content.get('image_queries')
+    image_queries = response_json.choices[0].message.content('image_queries')
     if image_queries:
         images = process_images(image_queries)
     else:
@@ -108,6 +157,10 @@ def news_synthesis(topic):
 
     # Save the post information to their respective fields in Supabase in the posts table
     post_info_file = f"post_info_{topic['id']}.json"
-    response = supabase.table("posts").insert([post_info]).execute()
+    try:
+        response = supabase.table("posts").insert([post_info]).execute()
+    except Exception as e:
+        print(e)
+        print(f"Failed to save post information to Supabase. Saving to {post_info_file} instead...")
 
     print(f"Post information saved to {post_info_file}")

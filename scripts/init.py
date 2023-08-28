@@ -10,6 +10,7 @@ import asyncio
 import httpx
 from extract_text import scrape_content
 from exploit_fetcher import fetch_latest_exploits, fetch_past_exploits
+from cisa import get_cisa_exploits
 # Load environment variables
 from dotenv import load_dotenv
 load_dotenv()
@@ -24,7 +25,7 @@ allow_topic_regeneration = False
 pause_topic_generation = False
 pause_source_scraping = False
 exploit_fetcher_activated = False
-debug = False
+debug = True
 synthesize_factsheets = True
 
 def delete_targeted_sources(target_url):
@@ -140,9 +141,10 @@ def test_query_gpt3():
     print(query_gpt3(user_prompt, system_prompt))
 
 def post_todays_topics():
-    current_date = datetime.now().isoformat()[:10]
-    response = supabase.table("topics").select("*").eq("date_accessed", current_date).execute()
+    #get all topics from august 23 2023
+    response = supabase.table("topics").select("*").execute()
     topics = response.data
+    #print(response)
     for topic in topics:
         print(f"Posting topic {topic['name']}...")
         news_synthesis(topic)
@@ -158,6 +160,12 @@ async def main():
         #rescrape_yahoo_sources()
         #delete_duplicate_source_urls()
         # Take the topics generated today from supabase and synthesize them into a post using the news_synthesis function
+        # post_todays_topics()
+        result = await get_cisa_exploits()
+        if result == False:
+            print("Failed to get CISA exploits")
+        else:
+            print("Successfully got CISA exploits")
         return
    
     current_date = datetime.now().isoformat()[:10]
