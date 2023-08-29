@@ -29,7 +29,6 @@ def search_related_sources(query, offset=0):
         }
         for result in news_result["value"]
     ]
-
     return related_sources
 
 def search_related_articles(topic):

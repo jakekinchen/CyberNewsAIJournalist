@@ -4,10 +4,11 @@ import json
 import os
 from supabase import create_client, Client
 from dotenv import load_dotenv
+from bs4 import BeautifulSoup
 
 supabase_url = os.getenv('SUPABASE_ENDPOINT')
 supabase_key = os.getenv('SUPABASE_KEY')
-supabase = create_client(supabase_url, supabase_key)
+supabase: Client = create_client(supabase_url, supabase_key)
 
 def get_exploits():
     # Get the JSON from CISA
@@ -64,13 +65,13 @@ def insert_new_exploits(exploits):
 async def get_cisa_exploits():
     # Get the exploits from CISA
     exploits = get_exploits()
-    #if exploits is null then return an error
+    # If exploits is null then return an error
     if exploits is None:
         print("Failed to get exploits from CISA")
         return False
     #Copy the catalogVersion field value
     catalog_version = exploits['catalogVersion']
-    #Format into a date 2023-08-24 the catalog version whose value format is as follows: 2023.08.24
+    # Replace dots with dashes in the catalogVersion field value
     catalog_version = catalog_version.replace('.', '-')
     # Remove the outer parent object and isolate the child objects within vulnerabilities
     exploits = exploits['vulnerabilities']
@@ -81,27 +82,65 @@ async def get_cisa_exploits():
     # Insert the exploits into Supabase
     try:
         insert_new_exploits(formatted_exploits)
+        try: 
+            upload_hyperlinks()
+        except:
+            print("Failed to add hyperlinks")
         return True
     except Exception as error:
         print(f'Failed to insert new exploits: {error}')
         return False
-    
-    try: 
-        response = supabase.table('exploits').select('*').execute()
-        print("Successfully queried exploits")
-    except Exception as error:
-        print(f'Failed to query exploits: {error}')
-        return False
 
 def add_hyperlinks(url):
-    """ Scrape hyperlinks from a tags in the href value that are children of the class tag <td data-testid="vuln-hyperlinks-link-2"> """
+    # children of the class tag <td data-testid="vuln-hyperlinks-link-2"> are the hyperlinks
     try:
         response = requests.get(url)
     except Exception as error:
         print(f'Failed to get response from {url}: {error}')
         return
     html = response.text
+    if html is None:
+        print(f'Failed to get html from {url}')
+        return
+    else:
+        print(f'Successfully got html from {url}')
+        #print(html)
     soup = BeautifulSoup(html, 'html.parser')
-    links = soup.select('td[data-testid="vuln-hyperlinks-link-2"] a')
+    # Generalize the selector to get all links under `td` elements that have a `data-testid` attribute starting with "vuln-hyperlinks-link-"
+    links = soup.select('td[data-testid^="vuln-hyperlinks-link-"] a')
+    # Extract href attributes from the selected links
     links = [link['href'] for link in links]
+    print(links)
     return links
+
+def upload_hyperlinks():
+    # Find all exploits that have a source of cisa and a url that contains https://nvd.nist.gov/vuln/detail/ and empty hyperlinks array
+    try:
+        response = supabase.table('exploits').select('*').eq('source', 'cisa').execute()
+        print("Successfully queried exploits")
+    except Exception as error:
+        print(f'Failed to query exploits: {error}')
+        return
+    exploits = response.data
+    if exploits is None:
+        print("No exploits found")
+        return
+    for exploit in exploits:
+        print(f"Adding hyperlinks to exploit with cve {exploit['cve']}")
+        # Get the hyperlinks
+        # continue if exploit hyperlinks is not empty
+        if exploit['hyperlinks']:
+            print(f"Exploit with cve {exploit['cve']} already has hyperlinks")
+            continue
+        hyperlinks = add_hyperlinks(exploit['url'])
+        if hyperlinks is None:
+            print(f"Failed to get hyperlinks for exploit with cve {exploit['cve']}")
+            continue
+        # Update the exploit with the hyperlinks
+        try:
+            supabase.table('exploits').update({'hyperlinks': hyperlinks}).eq('id', exploit['id']).execute()
+            print(f"Successfully updated exploit with cve {exploit['cve']}")
+        except Exception as error:
+            print(f'Failed to update exploit with cve {exploit["cve"]}: {error}')
+            continue
+    print("Successfully added hyperlinks to exploits")

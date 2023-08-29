@@ -98,10 +98,6 @@ def generate_post_info(article_bodies, ext_sources):
         }
     )
 
-                
-
-   
-
     # Get the assistant's response and exclude the image_queries field
     post_info = {key: value for key, value in response_json.choices[0].message.items() if key != 'image_queries'}
 

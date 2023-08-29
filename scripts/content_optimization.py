@@ -87,9 +87,7 @@ def create_factsheet(topic):
     except Exception as e:
         print(f'Failed to get related sources for topic {topic["id"]}', e)
         return
-
     combined_factsheet = {}
-
     for source in related_sources:
         # if source's factsheet is empty or null
         if not source['factsheet']:
@@ -108,8 +106,15 @@ def create_factsheet(topic):
                 except Exception as gpt3_error:
                     print(f'Failed to synthesize facts for source {source["id"]}', gpt3_error)
                     continue
-
     try:
         supabase.table('topics').update({"factsheet": combined_factsheet}).eq('id', topic['id']).execute()
     except Exception as e:
         print(f'Failed to update topic {topic["id"]}', e)
+
+def generate_factsheets():
+    #Loop through all topics and use create_factsheet to generate factsheets for each of them
+    response = supabase.table("topics").select("*").execute()
+    topics = response.data
+    for topic in topics:
+        create_factsheet(topic)
+        print(f"Successfully generated factsheet for topic {topic['name']}")
