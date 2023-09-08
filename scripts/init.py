@@ -4,14 +4,12 @@ from datetime import datetime
 from generate_topics import generate_topics
 from supabase import create_client, Client
 from search_related_articles import search_related_sources
-from content_optimization import create_factsheet, query_gpt3, generate_factsheets
+from content_optimization import create_factsheet
 from post_synthesis import post_synthesis
-from image_fetcher import fetch_images_from_post_of_topic
 from wp_post import create_wordpress_post
 import asyncio
 import httpx
 from extract_text import scrape_content
-from exploit_fetcher import fetch_latest_exploits, fetch_past_exploits
 from cisa import get_cisa_exploits
 # Load environment variables
 from dotenv import load_dotenv
@@ -26,7 +24,7 @@ supabase: Client = create_client(supabase_url = supabase_url, supabase_key = sup
 allow_topic_regeneration = False
 pause_topic_generation = False
 exploit_fetcher_activated = False
-debug = False
+debug = True
 synthesize_factsheets = True
 
 def delete_targeted_sources(target_url):
@@ -128,11 +126,17 @@ def post_the_most_recent_topic():
     topic = response.data[0]
     # Post the most recent topic
     post_info = post_synthesis(topic)
+    # Upload post info to wordpress if post_info['complete_with_images'] is not None and post_info['complete_with_images'] == True:
+    if post_info['complete_with_images'] == True:
+        create_wordpress_post(post_info, datetime.now() + datetime.timedelta(days=1))
+    else:
+        print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
 
 async def main():
     if debug:
         print("Debug mode enabled")
-        #post_the_most_recent_topic()
+        await get_cisa_exploits()
+        post_the_most_recent_topic()
         return
     # Upload new cisa exploits
     result = await get_cisa_exploits()
@@ -170,7 +174,8 @@ async def main():
         # Fetch images
         #fetch_images_from_post_of_topic(topic)
         # Upload post info to wordpress
-        if post_info['complete_with_images']:
+        # if post_info['complete_with_images']: is not None and post_info['complete_with_images'] == True:
+        if post_info['complete_with_images'] == True:
             create_wordpress_post(post_info, datetime.now() + datetime.timedelta(days=1))
         else:
             print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
