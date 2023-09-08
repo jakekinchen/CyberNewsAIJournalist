@@ -30,8 +30,9 @@ def isolate_new_exploits(exploits):
     if existing_exploits.data == None:
         return exploits
     existing_cve_ids = [exploit['cve'] for exploit in existing_exploits.data]
-    existing_urls = [exploit['url'] for exploit in existing_exploits.data]
-    new_exploits = [exploit for exploit in exploits if exploit['cveID'] not in existing_cve_ids and f"https://nvd.nist.gov/vuln/detail/{exploit['cveID']}" not in existing_urls]
+    new_exploits = [exploit for exploit in exploits if exploit['cveID'] not in existing_cve_ids]
+    # Print the amount of new exploits
+    print(f"Found {len(new_exploits)} new exploits")
     return new_exploits
 
 def format_json_for_supabase(exploits, catalog_version):
@@ -83,7 +84,6 @@ async def get_cisa_exploits():
     # Insert the exploits into Supabase
     try:
         insert_new_exploits(formatted_exploits)
-        add_hyperlinks_to_most_recent_exploits()
         return True
     except Exception as error:
         print(f'Failed to insert new exploits: {error}')
@@ -108,7 +108,6 @@ def add_hyperlinks(url):
     links = soup.select('td[data-testid^="vuln-hyperlinks-link-"] a')
     # Extract href attributes from the selected links
     links = [link['href'] for link in links]
-    print(links)
     return links
 
 def upload_hyperlinks():

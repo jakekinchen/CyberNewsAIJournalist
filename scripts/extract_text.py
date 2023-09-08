@@ -37,6 +37,8 @@ def scrape_content(url):
         # If the URL is from "thehackernews.com" or yahoo.com, extract text content within <p> tags
         if 'thehackernews.com' or 'yahoo.com' in url:
             content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
+        elif 'wsj.com' in url:
+            content = ' '.join([p.get_text().strip() for p in soup.find_all('p', attrs={'data-type': 'paragraph'})])
         # else if statement in python for exploit-db.com
         elif 'exploit-db.com' in url:
             content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])

@@ -47,7 +47,7 @@ def generate_post_info(article_bodies, ext_sources):
 
     # Initialize post_info as an empty dictionary
     post_info = {}
-
+    post_info['complete_with_images'] = False
     # Check if 'title' exists in the JSON dictionary
     if 'title' in json_dict:
         post_info['title'] = json_dict['title']
