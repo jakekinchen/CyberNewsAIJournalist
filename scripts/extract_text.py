@@ -34,7 +34,6 @@ def scrape_content(url):
         # Make the request
         response = session.get(url, proxies=proxies, headers=headers, verify=False)
         soup = BeautifulSoup(response.text, 'html.parser')
-
         # If the URL is from "thehackernews.com" or yahoo.com, extract text content within <p> tags
         if 'thehackernews.com' or 'yahoo.com' in url:
             content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
@@ -72,6 +71,11 @@ def scrape_content(url):
             date = str(date)[2:-2]
             #remove the first double quote and space from the beginning of the cve variable and from the end of the cve variable
             cve = str(cve)[2:-2]
+
+            links = soup.select('td[data-testid^="vuln-hyperlinks-link-"] a')
+            # Extract href attributes from the selected links
+            links = [link['href'] for link in links]
+
             #put the title, edbid, author, type, platform, date, and code variables into a json structured object named content
             content = {
                 "title": title,
@@ -81,10 +85,10 @@ def scrape_content(url):
                 "platform": platform,
                 "date": date,
                 "cve": cve,
-                "code": code
+                "code": code,
+                "hyperlinks": links,
             }
             return content
-
         else:
             # Possible CSS selectors for the article body
             possible_selectors = [
@@ -98,7 +102,6 @@ def scrape_content(url):
                 if selected_content:
                     content = selected_content.get_text().strip()
                     break
-
         return content
     except Exception as error:
         print(f"Failed to scrape URL: {url}. Error: {error}")

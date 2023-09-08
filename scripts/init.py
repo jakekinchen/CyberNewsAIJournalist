@@ -5,7 +5,9 @@ from generate_topics import generate_topics
 from supabase import create_client, Client
 from search_related_articles import search_related_sources
 from content_optimization import create_factsheet, query_gpt3, generate_factsheets
-from news_synthesis import process_images, generate_post_info, news_synthesis
+from post_synthesis import post_synthesis
+from image_fetcher import fetch_images_from_post_of_topic
+from wp_post import create_wordpress_post
 import asyncio
 import httpx
 from extract_text import scrape_content
@@ -23,7 +25,6 @@ supabase: Client = create_client(supabase_url = supabase_url, supabase_key = sup
 
 allow_topic_regeneration = False
 pause_topic_generation = False
-pause_source_scraping = False
 exploit_fetcher_activated = False
 debug = False
 synthesize_factsheets = True
@@ -121,14 +122,18 @@ def gather_sources(topic, overload=False):
             else:
                 print(f"Failed to scrape source from {source['url']}")
 
-def post_a_topic():
-    #get 10 topics from supabase
-    response = supabase.table("topics").select("*").limit(1).execute()
-    topic = response.data
-    print(f"Posting topic {topic['name']}...")
-    news_synthesis(topic)
+def post_the_most_recent_topic():
+    # Get the most recent topic
+    response = supabase.table("topics").select("*").execute()
+    topic = response.data[0]
+    # Post the most recent topic
+    post_info = post_synthesis(topic)
 
 async def main():
+    if debug:
+        print("Debug mode enabled")
+        #post_the_most_recent_topic()
+        return
     # Upload new cisa exploits
     result = await get_cisa_exploits()
     if result == False:
@@ -156,14 +161,21 @@ async def main():
     ordered_topics = response.data
     for topic in ordered_topics:
         print(f"Processing topic: {topic['name']}")
-        # Gather Sources if needed
-        if not pause_source_scraping:
-            gather_sources(topic, False)
+        # Gather Sources
+        gather_sources(topic, False)
         # Generate Fact Sheets
         create_factsheet(topic)
+        # Generate News
+        post_info = post_synthesis(topic)
+        # Fetch images
+        #fetch_images_from_post_of_topic(topic)
+        # Upload post info to wordpress
+        if post_info['complete_with_images']:
+            create_wordpress_post(post_info, datetime.now() + datetime.timedelta(days=1))
+        else:
+            print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
     delete_targeted_sources("https://thehackernews.com/search?")
     print("Scraping complete.")
-    post_a_topic()
 
 if __name__ == "__main__":
     asyncio.run(main())

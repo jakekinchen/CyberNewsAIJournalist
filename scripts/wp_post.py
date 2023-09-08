@@ -35,7 +35,10 @@ def get_jwt_token(username, password):
         return None
 
 # Create a new post on WordPress
-def create_wordpress_post(post_info, token, post_time):
+def create_wordpress_post(post_info, post_time):
+    
+    token = get_jwt_token(wp_username, wp_password)
+
     post_endpoint = "http://cybernow.info/wp-json/wp/v2/posts"
 
     headers = {
@@ -54,52 +57,4 @@ def create_wordpress_post(post_info, token, post_time):
     else:
         print(f"Failed to create post: {response.text}")
         return None
-
-def write_to_csv(post_info):
-    # Define the CSV file path
-    csv_file_path = './data/temp/master.csv'
-    
-    # Define the field names for the CSV file
-    fieldnames = post_info.keys()
-
-    # Check if file exists
-    file_exists = os.path.isfile(csv_file_path)
-    
-    with open(csv_file_path, 'a') as csvfile:
-        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        
-        # If file does not exist, write a header
-        if not file_exists:
-            writer.writeheader()
-
-        # Write the post data
-        writer.writerow(post_info)
-
-def create_post_and_write_to_csv(json_file_path):
-    # Get the JWT token
-    token = get_jwt_token(wp_username, wp_password)
-    if not token:
-        return
-
-    # Load the post information from the passed JSON file
-    with open(json_file_path) as f:
-        post_info = json.load(f)
-
-    # Extract post_time from post_info
-    post_time = datetime.strptime(post_info['post_time'], '%Y-%m-%dT%H:%M:%S')
-
-    # Create the WordPress post
-    post_data = create_wordpress_post(post_info, token, post_time)
-    if post_data is None:  # Failed to create post
-        post_info['status'] = 'failed'
-        with open(json_file_path, 'w') as f:
-            json.dump(post_info, f)
-        return
-
-    post_info['status'] = 'posted'
-    with open(json_file_path, 'w') as f:
-        json.dump(post_info, f)
-
-    # Write the post data to the master CSV file
-    write_to_csv(post_data)
 

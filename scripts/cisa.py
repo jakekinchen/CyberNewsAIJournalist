@@ -50,6 +50,7 @@ def format_json_for_supabase(exploits, catalog_version):
         exploit['due_date'] = exploit.pop('dueDate')
         exploit['notes'] = exploit.pop('notes')
         exploit['url'] = 'https://nvd.nist.gov/vuln/detail/' + exploit['cve']
+        exploit['hyperlinks'] = add_hyperlinks(exploit['url'])
         exploit['source'] = 'cisa'
         exploit['catalog_version'] = catalog_version
     return exploits
@@ -82,10 +83,7 @@ async def get_cisa_exploits():
     # Insert the exploits into Supabase
     try:
         insert_new_exploits(formatted_exploits)
-        try: 
-            upload_hyperlinks()
-        except:
-            print("Failed to add hyperlinks")
+        add_hyperlinks_to_most_recent_exploits()
         return True
     except Exception as error:
         print(f'Failed to insert new exploits: {error}')
