@@ -4,6 +4,7 @@ import openai
 from dotenv import load_dotenv
 from image_fetcher import fetch_images_from_queries # Import the image fetching function
 from supabase import create_client, Client
+from wp_post import fetch_categories
 
 # Load .env file
 load_dotenv()
@@ -16,11 +17,13 @@ model = os.getenv('MODEL')
 openai.api_key = os.getenv('OPENAI_KEY')
 openai.organization = os.getenv('OPENAI_ORGANIZATION')
 
-def generate_post_info(article_bodies, ext_sources):
+def generate_post_info(token, article_bodies, ext_sources):
     synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
     system_message_synthesis = {"role": "system", "content": synthesis_prompt}
     article_bodies = [str(body) for body in article_bodies]
     user_messages = [{"role": "user", "content": body} for body in article_bodies]
+
+    categories = fetch_categories(token)
     
     response_synthesis = openai.ChatCompletion.create(
         model=model,  # Assuming 'model' is defined elsewhere
@@ -54,27 +57,23 @@ def generate_post_info(article_bodies, ext_sources):
     else:
         print("title field is missing in the response. Please recreate the JSON object with the title field filled out")
 
-    
     # Check if 'content' exists in the JSON dictionary
     if 'content' in json_dict:
         post_info['content'] = json_dict['content']
     else:
         print("content field is missing in the response. Please recreate the JSON object with the content field filled out")
 
-    
     # Check if 'excerpt' exists in the JSON dictionary
     if 'excerpt' in json_dict:
         post_info['excerpt'] = json_dict['excerpt']
     else:
         print("excerpt field is missing in the response. Please recreate the JSON object with the excerpt field filled out")
 
-    
     # Check if 'yoast_wpseo_title' exists in the JSON dictionary
     if 'yoast_wpseo_title' in json_dict:
         post_info['yoast_wpseo_title'] = json_dict['yoast_wpseo_title']
     else:
         print("yoast_wpseo_title field is missing in the response. Please recreate the JSON object with the yoast_wpseo_title field filled out")
-
     
     # Check if 'yoast_wpseo_metadesc' exists in the JSON dictionary
     if 'yoast_wpseo_metadesc' in json_dict:
@@ -82,15 +81,11 @@ def generate_post_info(article_bodies, ext_sources):
     else:
         print("yoast_wpseo_metadesc field is missing in the response. Please recreate the JSON object with the yoast_wpseo_metadesc field filled out")
 
-    
     # Check if 'yoast_wpseo_focuskw' exists in the JSON dictionary
     if 'yoast_wpseo_focuskw' in json_dict:
         post_info['yoast_wpseo_focuskw'] = json_dict['yoast_wpseo_focuskw']
     else:
         print("yoast_wpseo_focuskw field is missing in the response. Please recreate the JSON object with the yoast_wpseo_focuskw field filled out")
-
-    
-    print("Post info: ", post_info)
     
     # Initialize image_queries as an empty list
     image_queries = []
@@ -98,7 +93,7 @@ def generate_post_info(article_bodies, ext_sources):
     # Check if 'image_queries' exists in the JSON dictionary
     if 'image_queries' in json_dict:
         image_queries = json_dict['image_queries']
-        images = fetch_images_from_queries(image_queries)
+        images = fetch_images_from_queries(image_queries, token)
     else:
         print("image_queries field is missing in the response. Generating image_queries...")
         # Define a prompt to instruct the model to insert 3 strings in an array under the image_queries field
@@ -119,7 +114,7 @@ def generate_post_info(article_bodies, ext_sources):
         image_queries = response_image_queries.choices[0].message.get('image_queries')
         
         if image_queries:
-            images = fetch_images_from_queries(image_queries)
+            images = fetch_images_from_queries(image_queries, token)
         else:
             print("image_queries field is missing in the response. Continuing without images.")
             images = []
@@ -140,7 +135,7 @@ def generate_post_info(article_bodies, ext_sources):
 
     return post_info
 
-def post_synthesis(topic):
+def post_synthesis(token, topic):
     # Read in the factsheets into an object for each source associated with the topic and keep track of the source IDs
     response = supabase.table("sources").select("*").eq("topic_id", topic["id"]).execute()
     sources = response.data
@@ -150,7 +145,7 @@ def post_synthesis(topic):
     ext_sources = [{"id": source['id'], "url": source['url']} for source in sources]
     print(f"Synthesizing news for topic {topic['name']}...")
     # Generate the post information
-    post_info = generate_post_info(factsheets, ext_sources)
+    post_info = generate_post_info(token, factsheets, ext_sources)
     # Save the post information to their respective fields in Supabase in the posts table
     try:
         response = supabase.table("posts").insert([post_info]).execute()

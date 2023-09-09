@@ -8,37 +8,10 @@ from datetime import datetime, timedelta
 # Load .env file
 load_dotenv()
 
-# Access your API keys and token
-wp_username = os.getenv('WP_USERNAME')
-wp_password = os.getenv('WP_PASSWORD')
-wp_token = os.getenv('WP_TOKEN')  # Get the token from environment variables
-
-
-# Get the JWT token for WordPress
-def get_jwt_token(username, password):
-    # Use the existing token if it exists
-    if wp_token:
-        return wp_token
-    
-    token_endpoint = "http://cybernow.info/wp-json/jwt-auth/v1/token"
-    payload = {
-        'username': username,
-        'password': password
-    }
-    response = requests.post(token_endpoint, data=payload)
-    if response.status_code == 200:
-        token = response.json().get('token')  # Get token directly from JSON response
-        print(f"Received token: {token}")
-        return token
-    else:
-        print(f"Failed to get JWT token: {response.text}")
-        return None
 
 # Create a new post on WordPress
-def create_wordpress_post(post_info, post_time):
+def create_wordpress_post(token, post_info, post_time):
     
-    token = get_jwt_token(wp_username, wp_password)
-
     post_endpoint = "http://cybernow.info/wp-json/wp/v2/posts"
 
     headers = {
@@ -58,3 +31,16 @@ def create_wordpress_post(post_info, post_time):
         print(f"Failed to create post: {response.text}")
         return None
 
+def fetch_categories(token):
+    #Establish headers
+    headers = {'Authorization': f'Bearer {token}'}
+    # Fetch the categories
+    categories_endpoint = "http://cybernow.info/wp-json/wp/v2/categories"
+    response = requests.get(categories_endpoint, headers=headers)
+    if response.status_code == 200:
+        categories = response.json()
+        print(f"Successfully fetched {len(categories)} categories")
+        return categories
+    else:
+        print(f"Failed to fetch categories: {response.text}")
+        return None

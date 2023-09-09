@@ -1,4 +1,5 @@
 import os
+import requests
 import datetime
 from datetime import datetime
 from generate_topics import generate_topics
@@ -21,11 +22,41 @@ supabase_key: str = os.getenv('SUPABASE_KEY')
 # Initialize Supabase
 supabase: Client = create_client(supabase_url = supabase_url, supabase_key = supabase_key)
 
+wp_username = os.getenv('WP_USERNAME')
+wp_password = os.getenv('WP_PASSWORD')
+
 allow_topic_regeneration = False
 pause_topic_generation = False
 exploit_fetcher_activated = False
 debug = True
 synthesize_factsheets = True
+
+# Access your API keys and token
+wp_username = os.getenv('WP_USERNAME')
+wp_password = os.getenv('WP_PASSWORD')
+wp_token = os.getenv('WP_TOKEN')  # Get the token from environment variables
+
+# Get the JWT token for WordPress
+def get_jwt_token(username, password):
+
+    if wp_token:
+        print("Using existing token")
+        return wp_token
+    
+    token_endpoint = "http://cybernow.info/wp-json/jwt-auth/v1/token"
+    payload = {
+        'username': username,
+        'password': password
+    }
+    response = requests.post(token_endpoint, data=payload)
+    if response.status_code == 200:
+        token = response.json().get('token')  # Get token directly from JSON response
+        print(f"Received token: {token}")
+        return token
+    else:
+        print(f"Failed to get JWT token: {response.text}")
+        return None
+
 
 def delete_targeted_sources(target_url):
     #find all source url's that begin with https://thehackernews.com/search? and delete them
@@ -120,12 +151,12 @@ def gather_sources(topic, overload=False):
             else:
                 print(f"Failed to scrape source from {source['url']}")
 
-def post_the_most_recent_topic():
+def post_the_most_recent_topic(token):
     # Get the most recent topic
     response = supabase.table("topics").select("*").execute()
     topic = response.data[0]
     # Post the most recent topic
-    post_info = post_synthesis(topic)
+    post_info = post_synthesis(token, topic)
     # Upload post info to wordpress if post_info['complete_with_images'] is not None and post_info['complete_with_images'] == True:
     if post_info['complete_with_images'] == True:
         create_wordpress_post(post_info, datetime.now() + datetime.timedelta(days=1))
@@ -133,10 +164,11 @@ def post_the_most_recent_topic():
         print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
 
 async def main():
+    token = get_jwt_token(wp_username, wp_password)
     if debug:
         print("Debug mode enabled")
-        await get_cisa_exploits()
-        post_the_most_recent_topic()
+        #await get_cisa_exploits()
+        post_the_most_recent_topic(token)
         return
     # Upload new cisa exploits
     result = await get_cisa_exploits()
@@ -170,13 +202,11 @@ async def main():
         # Generate Fact Sheets
         create_factsheet(topic)
         # Generate News
-        post_info = post_synthesis(topic)
-        # Fetch images
-        #fetch_images_from_post_of_topic(topic)
+        post_info = post_synthesis(token, topic)
         # Upload post info to wordpress
         # if post_info['complete_with_images']: is not None and post_info['complete_with_images'] == True:
         if post_info['complete_with_images'] == True:
-            create_wordpress_post(post_info, datetime.now() + datetime.timedelta(days=1))
+            create_wordpress_post(token, post_info, datetime.now() + datetime.timedelta(days=1))
         else:
             print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
     delete_targeted_sources("https://thehackernews.com/search?")
