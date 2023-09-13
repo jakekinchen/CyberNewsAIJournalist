@@ -32,15 +32,49 @@ def create_wordpress_post(token, post_info, post_time):
         return None
 
 def fetch_categories(token):
-    #Establish headers
+    # Establish headers
     headers = {'Authorization': f'Bearer {token}'}
+    
     # Fetch the categories
     categories_endpoint = "http://cybernow.info/wp-json/wp/v2/categories"
     response = requests.get(categories_endpoint, headers=headers)
+    
     if response.status_code == 200:
         categories = response.json()
-        print(f"Successfully fetched {len(categories)} categories")
-        return categories
+        
+        # Simplify the response to only include 'id' and 'name'
+        simplified_categories = []
+        for category in categories:
+            simplified_category = {'id': category['id'], 'name': category['name']}
+            simplified_categories.append(simplified_category)
+        
+        print(f"Successfully fetched {len(simplified_categories)} categories")
+        return simplified_categories
+        
     else:
         print(f"Failed to fetch categories: {response.text}")
+        return None
+    
+def fetch_tags(token):
+    # Establish headers
+    headers = {'Authorization': f'Bearer {token}'}
+    
+    # Fetch the tags
+    tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
+    response = requests.get(tags_endpoint, headers=headers)
+    
+    if response.status_code == 200:
+        tags = response.json()
+        
+        # Simplify the response to only include 'id' and 'name'
+        simplified_tags = []
+        for tag in tags:
+            simplified_tag = {'id': tag['id'], 'name': tag['name']}
+            simplified_tags.append(simplified_tag)
+        
+        print(f"Successfully fetched {len(simplified_tags)} tags")
+        return simplified_tags
+        
+    else:
+        print(f"Failed to fetch tags: {response.text}")
         return None

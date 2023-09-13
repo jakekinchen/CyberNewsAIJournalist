@@ -4,7 +4,7 @@ import openai
 from dotenv import load_dotenv
 from image_fetcher import fetch_images_from_queries # Import the image fetching function
 from supabase import create_client, Client
-from wp_post import fetch_categories
+from wp_post import fetch_categories, fetch_tags
 
 # Load .env file
 load_dotenv()
@@ -13,12 +13,57 @@ supabase_url = os.getenv('SUPABASE_ENDPOINT')
 supabase_key = os.getenv('SUPABASE_KEY')
 supabase = create_client(supabase_url, supabase_key)
 model = os.getenv('MODEL')
+synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
+json_prompt = os.getenv('JSON_PROMPT')
 # Set your OpenAI API key and organization
 openai.api_key = os.getenv('OPENAI_KEY')
 openai.organization = os.getenv('OPENAI_ORGANIZATION')
 
+def fill_in_field(token, field, post):
+    # Mapping of field names to prompts
+    switcher = {
+        "title": "The title of the post should be",
+        "content": "The content of the post should be",
+        "excerpt": "The excerpt of the post should be",
+        "yoast_wpseo_title": "The SEO title of the post should be",
+        "yoast_wpseo_metadesc": "The SEO description of the post should be",
+        "yoast_wpseo_focuskw": "The focus keyword of the post should be",
+        "image_queries": "The image queries should be",
+        "featured_image": "The featured image should be",
+        "slug": "The slug of the post should be",
+        "categories": "The category id(s) of the post should be",
+        "tags": "The tag id(s) of the post should be"
+    }
+    
+    prompt = switcher.get(field, f"The {field} of the post should be")  # Default prompt if field not found
+    
+    # Additional information for categories and tags
+    if field == "categories":
+        categories = fetch_categories(token)
+        category_list = ', '.join([str(cat['name']) for cat in categories])
+        prompt = f"Given that available WordPress categories are: {category_list}. {prompt}"
+        
+    elif field == "tags":
+        tags = fetch_tags(token)
+        tag_list = ', '.join([str(tag['name']) for tag in tags])
+        prompt = f"Given that available WordPress tags are: {tag_list}. {prompt}"
+    
+    try:
+        # Request a chat completion from the OpenAI API
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo-16k",
+            messages=[{"role": "system", "content": prompt}],
+        )
+        # Extract the field value from the response
+        field_value = response.choices[0].text.strip()  # Remove any extra whitespace or newline
+        # Update the post object with the field value
+        post[field] = field_value
+    except Exception as e:
+        print(f"Failed to generate content for {field}. Error: {e}")
+        
+    return post
+
 def generate_post_info(token, article_bodies, ext_sources):
-    synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
     system_message_synthesis = {"role": "system", "content": synthesis_prompt}
     article_bodies = [str(body) for body in article_bodies]
     user_messages = [{"role": "user", "content": body} for body in article_bodies]
@@ -31,7 +76,7 @@ def generate_post_info(token, article_bodies, ext_sources):
     )
     synthesized_content = response_synthesis.choices[0].message['content']
     
-    json_prompt = os.getenv('JSON_PROMPT')
+    
     system_message_json = {"role": "system", "content": json_prompt}
     
     response_json = openai.ChatCompletion.create(
@@ -51,41 +96,20 @@ def generate_post_info(token, article_bodies, ext_sources):
     # Initialize post_info as an empty dictionary
     post_info = {}
     post_info['complete_with_images'] = False
-    # Check if 'title' exists in the JSON dictionary
-    if 'title' in json_dict:
-        post_info['title'] = json_dict['title']
-    else:
-        print("title field is missing in the response. Please recreate the JSON object with the title field filled out")
 
-    # Check if 'content' exists in the JSON dictionary
-    if 'content' in json_dict:
-        post_info['content'] = json_dict['content']
-    else:
-        print("content field is missing in the response. Please recreate the JSON object with the content field filled out")
+    # List of required fields
+    required_fields = [
+        'title', 'content', 'excerpt', 
+        'yoast_wpseo_title', 'yoast_wpseo_metadesc', 'yoast_wpseo_focuskw'
+    ]
 
-    # Check if 'excerpt' exists in the JSON dictionary
-    if 'excerpt' in json_dict:
-        post_info['excerpt'] = json_dict['excerpt']
-    else:
-        print("excerpt field is missing in the response. Please recreate the JSON object with the excerpt field filled out")
-
-    # Check if 'yoast_wpseo_title' exists in the JSON dictionary
-    if 'yoast_wpseo_title' in json_dict:
-        post_info['yoast_wpseo_title'] = json_dict['yoast_wpseo_title']
-    else:
-        print("yoast_wpseo_title field is missing in the response. Please recreate the JSON object with the yoast_wpseo_title field filled out")
-    
-    # Check if 'yoast_wpseo_metadesc' exists in the JSON dictionary
-    if 'yoast_wpseo_metadesc' in json_dict:
-        post_info['yoast_wpseo_metadesc'] = json_dict['yoast_wpseo_metadesc']
-    else:
-        print("yoast_wpseo_metadesc field is missing in the response. Please recreate the JSON object with the yoast_wpseo_metadesc field filled out")
-
-    # Check if 'yoast_wpseo_focuskw' exists in the JSON dictionary
-    if 'yoast_wpseo_focuskw' in json_dict:
-        post_info['yoast_wpseo_focuskw'] = json_dict['yoast_wpseo_focuskw']
-    else:
-        print("yoast_wpseo_focuskw field is missing in the response. Please recreate the JSON object with the yoast_wpseo_focuskw field filled out")
+    # Check and fill each required field
+    for field in required_fields:
+        if field in json_dict:
+            post_info[field] = json_dict[field]
+        else:
+            print(f"{field} is missing. Filling it in...")
+            post_info = fill_in_field(token, field, post_info)
     
     # Initialize image_queries as an empty list
     image_queries = []

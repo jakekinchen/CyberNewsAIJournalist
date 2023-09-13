@@ -7,7 +7,7 @@ from supabase import create_client, Client
 from search_related_articles import search_related_sources
 from content_optimization import create_factsheet
 from post_synthesis import post_synthesis
-from wp_post import create_wordpress_post
+from wp_post import create_wordpress_post, fetch_categories, fetch_tags
 import asyncio
 import httpx
 from extract_text import scrape_content
@@ -25,10 +25,10 @@ supabase: Client = create_client(supabase_url = supabase_url, supabase_key = sup
 wp_username = os.getenv('WP_USERNAME')
 wp_password = os.getenv('WP_PASSWORD')
 
-allow_topic_regeneration = False
-pause_topic_generation = False
+amount_of_topics = 1
+MIN_SOURCES = 3
 exploit_fetcher_activated = False
-debug = True
+debug = False
 synthesize_factsheets = True
 
 # Access your API keys and token
@@ -129,23 +129,32 @@ def delete_duplicate_source_urls():
                     print(f"Deleted duplicate source from {duplicate_source['url']}")
 
 def gather_sources(topic, overload=False):
-    MIN_SOURCES = 3
+    date_accessed = datetime.now().isoformat()
+    
     response = supabase.table("sources").select("*").eq("topic_id", topic["id"]).execute()
     existing_sources = response.data or []
     required_sources = MIN_SOURCES - len(existing_sources)
+    
     if overload:
         required_sources += 3  # Increase the number if overloaded
+
     if required_sources > 0:
         related_sources = search_related_sources(topic["name"], len(existing_sources))
+        
         for source in related_sources[:required_sources]:
+            if source['url'] == "https://thehackernews.com/search?":  # Skip the URL to be deleted
+                continue
+            
             print(f"Scraping source from {source['url']}...")
-            content = scrape_content(source["url"])  # Assuming scrape_content is defined elsewhere
+            content = scrape_content(source["url"])
+            
             if content:
                 print(f"Successfully scraped source from {source['url']}")
                 supabase.table("sources").insert([{
                     "url": source["url"],
                     "content": content,
                     "topic_id": topic["id"],
+                    "date_accessed": date_accessed
                 }]).execute()
                 print(f"Source from {source['url']} saved to Supabase.")
             else:
@@ -165,51 +174,42 @@ def post_the_most_recent_topic(token):
 
 async def main():
     token = get_jwt_token(wp_username, wp_password)
+    
     if debug:
         print("Debug mode enabled")
-        #await get_cisa_exploits()
-        post_the_most_recent_topic(token)
         return
+    
     # Upload new cisa exploits
     result = await get_cisa_exploits()
     if result == False:
         print("Failed to get CISA exploits")
     else:
         print("Successfully got CISA exploits")
-    # Fetch latest exploits
-    current_date = datetime.now().isoformat()[:10]
-    response = supabase.table("topics").select("*").eq("date_accessed", current_date).execute()
-    print(f"Response: {response}")
-    topics_today = response.data
-    if allow_topic_regeneration or not topics_today or len(topics_today) == 0:
-        if topics_today and len(topics_today) > 0:
-            # Clear existing topics for the day
-            supabase.table("topics").delete().eq("date_accessed", current_date).execute()
-        # Generate topics
-        if not pause_topic_generation:
-            #Trying to generate topics
-            try:
-                generate_topics(supabase)
-            except Exception as e:
-                print(f"Failed to generate new topics: {e}")
-    # Iterate through each topic and gather sources and factsheets
-    response = supabase.table("topics").select("*").execute()
-    ordered_topics = response.data
-    for topic in ordered_topics:
+    
+    # Generate topics
+    try:
+        recently_generated_topics = generate_topics(supabase, amount_of_topics)
+    except Exception as e:
+        print(f"Failed to generate new topics: {e}")
+    
+    # Iterate through each recently generated topic and gather sources and factsheets
+    for topic in recently_generated_topics:
         print(f"Processing topic: {topic['name']}")
+        
         # Gather Sources
         gather_sources(topic, False)
+        
         # Generate Fact Sheets
         create_factsheet(topic)
+        
         # Generate News
         post_info = post_synthesis(token, topic)
-        # Upload post info to wordpress
-        # if post_info['complete_with_images']: is not None and post_info['complete_with_images'] == True:
+        
         if post_info['complete_with_images'] == True:
             create_wordpress_post(token, post_info, datetime.now() + datetime.timedelta(days=1))
         else:
             print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
-    delete_targeted_sources("https://thehackernews.com/search?")
+    
     print("Scraping complete.")
 
 if __name__ == "__main__":
