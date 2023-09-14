@@ -18,7 +18,6 @@ def create_wordpress_post(token, post_info, post_time):
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json'
     }
-
     post_info['status'] = 'future'  # Set status to 'future'
     post_info['date'] = post_time.strftime('%Y-%m-%dT%H:%M:%S')  # Set date and time of publishing
     post_info['date_gmt'] = (post_time - timedelta(hours=6)).strftime('%Y-%m-%dT%H:%M:%S')  # Set GMT date and time of publishing
@@ -48,7 +47,7 @@ def fetch_categories(token):
             simplified_category = {'id': category['id'], 'name': category['name']}
             simplified_categories.append(simplified_category)
         
-        print(f"Successfully fetched {len(simplified_categories)} categories")
+        print(f"Successfully fetched {len(simplified_categories)} categories: {simplified_categories}")
         return simplified_categories
         
     else:
@@ -72,7 +71,7 @@ def fetch_tags(token):
             simplified_tag = {'id': tag['id'], 'name': tag['name']}
             simplified_tags.append(simplified_tag)
         
-        print(f"Successfully fetched {len(simplified_tags)} tags")
+        print(f"Successfully fetched {len(simplified_tags)} tags: {simplified_tags}")
         return simplified_tags
         
     else:

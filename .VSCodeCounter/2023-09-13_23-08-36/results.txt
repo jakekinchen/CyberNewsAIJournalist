@@ -1,0 +1,46 @@
+Date : 2023-09-13 23:08:36
+Directory : /Users/jakekinchen/Builds/python_scraping_test
+Total : 15 files,  1037 codes, 185 comments, 149 blanks, all 1371 lines
+
+Languages
++------------------+------------+------------+------------+------------+------------+
+| language         | files      | code       | comment    | blank      | total      |
++------------------+------------+------------+------------+------------+------------+
+| Python           |         10 |        951 |        170 |        125 |      1,246 |
+| Properties       |          1 |         52 |          9 |         16 |         77 |
+| pip requirements |          1 |         16 |          0 |          0 |         16 |
+| YAML             |          1 |          9 |          0 |          1 |         10 |
+| Docker           |          1 |          8 |          6 |          6 |         20 |
+| Markdown         |          1 |          1 |          0 |          1 |          2 |
++------------------+------------+------------+------------+------------+------------+
+
+Directories
++--------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                           | files      | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                              |         15 |      1,037 |        185 |        149 |      1,371 |
+| . (Files)                                                                      |          5 |         86 |         15 |         24 |        125 |
+| scripts                                                                        |         10 |        951 |        170 |        125 |      1,246 |
++--------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++--------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| filename                                                                       | language         | code       | comment    | blank      | total      |
++--------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+
+| /Users/jakekinchen/Builds/python_scraping_test/.env                            | Properties       |         52 |          9 |         16 |         77 |
+| /Users/jakekinchen/Builds/python_scraping_test/Dockerfile                      | Docker           |          8 |          6 |          6 |         20 |
+| /Users/jakekinchen/Builds/python_scraping_test/README.md                       | Markdown         |          1 |          0 |          1 |          2 |
+| /Users/jakekinchen/Builds/python_scraping_test/docker-compose.yml              | YAML             |          9 |          0 |          1 |         10 |
+| /Users/jakekinchen/Builds/python_scraping_test/requirements.txt                | pip requirements |         16 |          0 |          0 |         16 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/cisa.py                 | Python           |        118 |         28 |         10 |        156 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/content_optimization.py | Python           |        104 |          7 |          9 |        120 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/exploit_fetcher.py      | Python           |         68 |          9 |          9 |         86 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/extract_text.py         | Python           |         80 |         25 |          7 |        112 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/generate_topics.py      | Python           |         65 |         20 |         11 |         96 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/image_fetcher.py        | Python           |         97 |         13 |         10 |        120 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/init.py                 | Python           |         92 |         16 |         20 |        128 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/post_synthesis.py       | Python           |        186 |         30 |         12 |        228 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/source_fetcher.py       | Python           |         88 |         14 |         19 |        121 |
+| /Users/jakekinchen/Builds/python_scraping_test/scripts/wp_post.py              | Python           |         53 |          8 |         18 |         79 |
+| Total                                                                          |                  |      1,037 |        185 |        149 |      1,371 |
++--------------------------------------------------------------------------------+------------------+------------+------------+------------+------------+

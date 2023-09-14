@@ -1,0 +1,17 @@
+"filename", "language", "Properties", "Docker", "Python", "YAML", "pip requirements", "Markdown", "comment", "blank", "total"
+"/Users/jakekinchen/Builds/python_scraping_test/.env", "Properties", 52, 0, 0, 0, 0, 0, 9, 16, 77
+"/Users/jakekinchen/Builds/python_scraping_test/Dockerfile", "Docker", 0, 8, 0, 0, 0, 0, 6, 6, 20
+"/Users/jakekinchen/Builds/python_scraping_test/README.md", "Markdown", 0, 0, 0, 0, 0, 1, 0, 1, 2
+"/Users/jakekinchen/Builds/python_scraping_test/docker-compose.yml", "YAML", 0, 0, 0, 9, 0, 0, 0, 1, 10
+"/Users/jakekinchen/Builds/python_scraping_test/requirements.txt", "pip requirements", 0, 0, 0, 0, 16, 0, 0, 0, 16
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/cisa.py", "Python", 0, 0, 118, 0, 0, 0, 28, 10, 156
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/content_optimization.py", "Python", 0, 0, 104, 0, 0, 0, 7, 9, 120
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/exploit_fetcher.py", "Python", 0, 0, 68, 0, 0, 0, 9, 9, 86
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/extract_text.py", "Python", 0, 0, 80, 0, 0, 0, 25, 7, 112
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/generate_topics.py", "Python", 0, 0, 65, 0, 0, 0, 20, 11, 96
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/image_fetcher.py", "Python", 0, 0, 97, 0, 0, 0, 13, 10, 120
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/init.py", "Python", 0, 0, 92, 0, 0, 0, 16, 20, 128
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/post_synthesis.py", "Python", 0, 0, 186, 0, 0, 0, 30, 12, 228
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/source_fetcher.py", "Python", 0, 0, 88, 0, 0, 0, 14, 19, 121
+"/Users/jakekinchen/Builds/python_scraping_test/scripts/wp_post.py", "Python", 0, 0, 53, 0, 0, 0, 8, 18, 79
+"Total", "-", 52, 8, 951, 9, 16, 1, 185, 149, 1371

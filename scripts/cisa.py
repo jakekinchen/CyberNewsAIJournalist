@@ -75,6 +75,18 @@ async def get_cisa_exploits():
     catalog_version = exploits['catalogVersion']
     # Replace dots with dashes in the catalogVersion field value
     catalog_version = catalog_version.replace('.', '-')
+     # Query the most recent catalog_version from Supabase
+    try:
+        most_recent_exploit = supabase.table('exploits').select('catalog_version').order('date_added', ascending=False).limit(1).execute()
+        most_recent_catalog_version = most_recent_exploit.data[0]['catalog_version'] if most_recent_exploit.data else None
+    except Exception as error:
+        print(f'Failed to query the most recent catalog_version: {error}')
+        most_recent_catalog_version = None
+
+    # Check if the catalog version has changed
+    if most_recent_catalog_version == catalog_version:
+        print("Catalog version hasn't changed. Skipping CISA process.")
+        return True
     # Remove the outer parent object and isolate the child objects within vulnerabilities
     exploits = exploits['vulnerabilities']
     # Isolate the new exploits

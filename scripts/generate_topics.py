@@ -17,13 +17,14 @@ def generate_topics(supabase, amount_of_topics):
     etree = ET.ElementTree(ET.fromstring(data))
     # Extract and process topics
     items = etree.findall("./channel/item")
+    current_time = datetime.now().isoformat()
     topics = [{
         "name": item.find("title").text,
         "url": item.find("link").text,
         "description": item.find("description").text,
         "date_published": item.find("pubDate").text,
         "provider": "The Hacker News",
-        "date_accessed": datetime.now().isoformat(),
+        "date_accessed": current_time,
     } for item in items]
     print(f'Extracted {len(topics)} topics')
     # Remove duplicates topics already in supabase
@@ -57,14 +58,38 @@ def generate_topics(supabase, amount_of_topics):
         else:
             raise ValueError("The GPT-3 response is not in the expected JSON array format.")
             
-        # Modified: Adjusted to consider that ordered_topics might just be a list of strings, not dictionaries
-        top_topics = [{
-            **next((topic for topic in topics if topic['name'] == ordered_topic), {'name': ordered_topic}),  # Adjusted this line
-            'order_number': index + 1
-        } for index, ordered_topic in enumerate(ordered_topics[:amount_of_topics])]
+        # Debugging: Print the original topics and ordered topics
+        print(f"Original topics: {[topic['name'] for topic in topics]}")
+        print(f"Ordered topics from GPT-3: {ordered_topics}")
 
+        top_topics = []
+        for index, ordered_topic in enumerate(ordered_topics[:amount_of_topics]):
+            # Debugging: Print the next() function result
+            matching_topic = next((topic for topic in topics if topic['name'].strip().lower() == ordered_topic.strip().lower()), None)
+            #print(f"Type of topic['name']: {type(topic['name'] for topic in topics)}, Type of ordered_topic: {type(ordered_topic)}")
+            
+            if matching_topic:
+                top_topic = {**matching_topic, 'order_number': index + 1}
+            else:
+                top_topic = {'name': ordered_topic, 'order_number': index + 1}
+            
+            top_topics.append(top_topic)
+
+        # Debugging: Print the ordered topics by name and order number
+       # print(f"Ordered topics: {top_topics}")
     except Exception as e:
         print(f'Failed to order topics, inserting without order: {e}')
     # Insert top ten topics into Supabase
     supabase.table('topics').insert(top_topics).execute()
+    # Query the topics back from Supabase to get the primary keys
+    try:
+        # Use the specific timestamp to filter the query
+        response = supabase.table('topics').select('*').eq('date_accessed', current_time).execute()
+        inserted_topics_with_keys = response.data
+    except Exception as e:
+        print(f'Failed to query inserted topics: {e}')
+        sys.exit(1)
+    # Return the top ten topics
+    #print(f'Inserted {len(inserted_topics_with_keys)} topics: {inserted_topics_with_keys}')
+    return inserted_topics_with_keys
     
