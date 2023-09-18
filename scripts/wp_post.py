@@ -8,6 +8,38 @@ from datetime import datetime, timedelta
 # Load .env file
 load_dotenv()
 
+def add_tag_to_wordpress(token, tag):
+    tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
+    headers = {'Authorization': f'Bearer {token}'}
+    
+    # Fetch the tags
+    tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
+
+    # Check if the tag already exists
+    response = requests.get(tags_endpoint, headers=headers)
+    if response.status_code == 200:
+        tags = response.json()
+        for existing_tag in tags:
+            if existing_tag['name'] == tag:
+                print(f"Tag '{tag}' already exists")
+                return existing_tag['id']
+    else:
+        print(f"Failed to fetch tags: {response.text}")
+        return None
+    
+    # Create the tag
+    payload = {
+        'name': tag
+    }
+    response = requests.post(tags_endpoint, headers=headers, json=payload)
+    if response.status_code == 201:
+        print(f"Created tag '{tag}'")
+        return response.json().get('id')
+    else:
+        print(f"Failed to create tag '{tag}': {response.text}")
+        return None
+    
+
 
 # Create a new post on WordPress
 def create_wordpress_post(token, post_info, post_time):
@@ -77,3 +109,9 @@ def fetch_tags(token):
     else:
         print(f"Failed to fetch tags: {response.text}")
         return None
+    
+def fetch_wordpress_taxonomies(token):
+    categories = fetch_categories(token)
+    tags = fetch_tags(token)
+    return categories, tags
+

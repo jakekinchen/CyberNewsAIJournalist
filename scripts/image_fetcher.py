@@ -30,7 +30,10 @@ def upload_image_to_wordpress(token, image_url, image_type, image_name):
     headers = {
         'Authorization': f'Bearer {token}',
         'Content-Disposition': f'attachment; filename="{image_name}"',
-        'Content-Type': image_type  # This should be dynamic based on the image type
+        'Content-Type': image_type,  # This should be dynamic based on the image type
+        # Make user agent Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.81
+        #'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko), Chrome/116.0.0.0, Safari/537.36, Edg/116.0.1938.81',
+        #'Accept': '*/*'
     }
     # Prepare files
     files = {
@@ -117,3 +120,15 @@ def fetch_images_from_post_of_topic(topic, token):
         for image in images:
             image['topic_id'] = topic['id']
     return images
+
+def test_image_upload(wp_token):
+    image_url = "https://images.pexels.com/photos/18202678/pexels-photo-18202678.jpeg"
+    image_type = "image/jpeg"
+    image_name = "test_image.jpeg"
+    
+    upload_result = upload_image_to_wordpress(wp_token, image_url, image_type, image_name)
+    
+    if upload_result:
+        print(f"Successfully uploaded image. WordPress ID is {upload_result}.")
+    else:
+        print("Failed to upload image.")
