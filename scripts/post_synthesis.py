@@ -5,9 +5,13 @@ from dotenv import load_dotenv
 from image_fetcher import fetch_images_from_queries # Import the image fetching function
 from supabase import create_client, Client
 from wp_post import fetch_categories, fetch_tags
-from content_optimization import query_gpt
+from content_optimization import query_gpt, function_call_gpt, regenerate_image_queries
 from datetime import datetime
 import ast
+import re
+import logging
+from bs4 import BeautifulSoup, Tag
+import math
 
 # Load .env file
 load_dotenv()
@@ -17,242 +21,283 @@ supabase_key = os.getenv('SUPABASE_KEY')
 supabase = create_client(supabase_url, supabase_key)
 model = os.getenv('MODEL')
 synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
-json_prompt = os.getenv('JSON_PROMPT')
 # Set your OpenAI API key and organization
 openai.api_key = os.getenv('OPENAI_KEY')
 openai.organization = os.getenv('OPENAI_ORGANIZATION')
 
-json_function = [{"name": "WordPressPostFieldCompletion",
-                "description": "Observe the content of the post and optimize it for SEO for a Wordpress post.",
+def post_completion(post_info, functions):
+    instructions = "With this information, complete all of the missing fields in the JSON object (or optimize any that could be better for SEO) using the WordPressPostFieldCompletion function."
+    # Convert the post_info dictionary to a JSON string
+    json_str = json.dumps(post_info)
+    model = 'gpt-4'
+    response = function_call_gpt(json_str, instructions, model, functions, function_call_mode={"name": "WordPressPostFieldCompletion"})
+    # Parse the JSON string into a dictionary
+    # Check if response is already a dictionary
+    if isinstance(response, dict):
+        json_dict = response
+    else:
+        try:
+            # If response is a string, try to load it as JSON
+            json_dict = json.loads(response)
+        except json.JSONDecodeError as e:
+            print(f"Failed to parse the response string as JSON. Error: {e}")
+            return None
+    return json_dict
+    
+
+def post_synthesis(token, topic):
+    # Read in the factsheets into an object for each source associated with the topic and keep track of the source IDs
+    if not topic['factsheet']:
+        print(f"Topic {topic['name']} has no factsheet. Skipping...")
+        return
+    categories = fetch_categories(token)
+    tags = fetch_tags(token)
+    factsheet = topic['factsheet']
+    print("Categories and tags fetched")
+    json_function = [
+            {
+                "name": "WordPressPostFieldCompletion",
+                "description": "Observe the content of the post and optimize its other fields for SEO for a Wordpress post.",
                 "parameters": {
-                    "content": {
-                        "type": "string",
-                        "description": "The content of the post."
-                    },
+                    "type": "object",
+                    "properties": {
                     "title": {
                         "type": "string",
-                        "description": "The title of the post."
+                        "description": "This brief post title is primarily for users, helping them understand the content and adding structure to the page. It is different from the SEO title, which appears in search results."
                     },
-                    "image_queries": {
-                        "type": "array",
-                        "description": "An array of image search query strings."
+                    'image_queries': {
+                        'type': 'array',
+                        'description': 'A list of queries to generate images for the post.',
+                        'items': { 
+                            "type": "string", 
+                            "description": "A query to generate an image for the post. This should be a phrase that describes the contents of the image, with different words separated by space like normal. It should not be a concatenation of multiple words and should not contain a file extension. Try to make it vaguely referential to the content when something specific wouldn't be expected in a stock photo database. Don't make it too obvious or too similar to other queries. Do not use super obvious queries like 'cybersecurity' or 'hacking'." 
+                            },
                     },
                     "excerpt": {
                         "type": "string",
                         "description": "The excerpt of the post."
+                    },
+                    "slug": {
+                        "type": "string",
+                        "description": "The slug of the post. It is the part of the URL that comes after the domain name, and it should be short, descriptive, and include the focus keyword."
                     },                 
                     "yoast_wpseo_title": {
                         "type": "string",
-                        "description": "The title of the post."
+                        "description": "A brief SEO title of the post, optimized to attract clicks from search engine results. It may contain elements such as the post title, site name, emojis, and should ideally include the focus keyword. This title appears in search engine snippets, browser tabs, and impacts the post's rankings. Make it brief, should be no longer than 5 words total. May also end with | CyberNow"
                     },
                     "yoast_wpseo_metadesc": {
                         "type": "string",
-                        "description": "The excerpt of the post."
+                        "description": "The meta description of the post, providing a very brief overview of the content. It appears below the SEO title in search engine snippets. It should include the focus keyword be less than 100 chracters."
                     },
                     "yoast_wpseo_focuskw": {
                         "type": "string",
-                        "description": "The focus keyword of the post."
+                        "description": "The focus keyword of the post. It is a specific keyword that the post is optimized for, aiming to help the post rank higher in search engine results for that keyword. Including the focus keyword in the SEO title and meta description is crucial for SEO effectiveness."
                     },
-                    "categories": {
-                        "type": "array",
-                        "description": "The category id(s) of the post."
+                    "sticky": {
+                        "type": "boolean",
+                        "description": "Whether the post should be sticky or not. Sticky posts are displayed at the top of the blog page. Use discretion when setting this value, should only be true for the most important posts. There should be a probability of 0.1 that this value is true."
                     },
-                    "tags": {
-                        "type": "array",
-                        "description": "The tag id(s) of the post."
-                    },
-                    
+                    "categories": { 
+                                    "type": "array", 
+                                   "description": f"The category id(s) of the post. The existing categories are: {categories}", 
+                                   "items": { 
+                                            "type": "integer", 
+                                            "description": "integer" 
+                                            } 
+                                    }, 
+                    "tags": { 
+                        "type": "array", 
+                        "description": f"The tag id(s) of the post. The existing tags are: {tags}",
+                        "items": {
+                            "type": "integer",
+                            "description": "Tag id of the post that would fit"
+                            }
+                        },
+                    "tech_term": {
+                        "type": "string",
+                        "description": "The most relevant technical term in the post."
+                        },
+                    }
                 }
-}
-]
+            }
+        ]
+    
+    print("JSON function generated")
 
-def post_completion(token, post_info, functions):
-    instructions = "With this information, complete all of the missing fields in the JSON object (or optimize any that could be better for SEO) using the WordPressPostFieldCompletion function."
-    # Convert the post_info dictionary to a JSON string
-    json_str = json.dumps(post_info)
-    # within the first function of the json_function, within the parameters field, within the tags field, within the description field, append the result of fetch_tags(token) to the end of the string value of the description field
-    functions[0]['parameters']['tags']['description'] += f" {fetch_tags(token)}"
-    # within the first function of the json_function, within the parameters field, within the categories field, within the description field, append the result of fetch_categories(token) to the end of the string value of the description field
-    functions[0]['parameters']['categories']['description'] += f" {fetch_categories(token)}"
-    # Generate the chat completion
-    response = query_gpt(json_str, instructions, model, functions)
-    # Parse the JSON string into a dictionary
-    json_dict = json.loads(response)
-    print(f"Successfully generated post completion: {json_dict}")
-    return json_dict
+    if not isinstance(factsheet, str):
+        if isinstance(factsheet, list):
+            factsheet = ' '.join(map(str, factsheet))
+        else:
+            factsheet = str(factsheet)
 
-def insert_tags_and_categories_into_prompt(prompt, categories, tags):
-    # Insert the categories into the prompt
-    prompt = prompt.replace('[insert categories]', ', '.join([str(cat['id']) for cat in categories]))
-    # Insert the tags into the prompt
-    prompt = prompt.replace('[insert tags]', ', '.join([str(tag['id']) for tag in tags]))
-    return prompt
+    # Sanitize factsheet by replacing newline characters and other special characters with a space
+    sanitized_factsheet = re.sub(r'[\n\r]', ' ', factsheet)
 
-def fill_in_field(field, post, categories, tags):
-    # Mapping of field names to prompts
-    switcher = {
-        "title": "The title of the post should be",
-        "content": "The content of the post should be",
-        "excerpt": "The excerpt of the post should be",
-        "yoast_wpseo_title": "The SEO title of the post should be",
-        "yoast_wpseo_metadesc": "The SEO description of the post should be",
-        "yoast_wpseo_focuskw": "The focus keyword of the post should be",
-        "image_queries": "The image queries should be",
-        "featured_media": "The featured image integer should be",
-        "slug": "The slug of the post should be",
-        "categories": "The category id(s) of the post should be (just give the integer id(s) of the category in a comma-separated list in an array (this should always include 19))",
-        "tags": "The tag id(s) of the post should be (just give the integer id(s) of the category in a comma-separated list in an array)"
-    }
-    prompt = switcher.get(field, f"{field} of the post should be")  # Default prompt if field not found
-    # Additional information for categories and tags
-    if field == "categories":
-        category_list = ', '.join([str(cat['name']) for cat in categories])
-        prompt = f"Given the content of the story is {post['content']} and given that available WordPress categories are: {category_list}. {prompt}"
-    elif field == "tags":
-        tag_list = ', '.join([str(tag['name']) for tag in tags])
-        prompt = f"Given the content of the story is {post['content']} and given that available WordPress tags are: {tag_list}. {prompt}"
-    try:
-        # Request a chat completion from the OpenAI API
-        field_value = query_gpt(prompt)
-        # Update the post object with the field value
-        print(f"Successfully generated content for {field}: {field_value}")
-        post[field] = field_value
-    except Exception as e:
-        print(f"Failed to generate content for {field}. Error: {e}")
-    return post
-
-def generate_post_info(token, factsheet, topic):
-    user_messages = [str(factsheet)]
-    categories = fetch_categories(token)
-    tags = fetch_tags(token)
-    # Chat completion to synthesize article information
+    user_messages = f"{sanitized_factsheet}"
     synthesized_article = query_gpt(user_messages, synthesis_prompt, model='gpt-4')
+    print("Synthesized article generated")
     # Chat completion to generate other JSON fields for post
-    response_json = post_completion(token, synthesized_article, json_function)
-    # Parse the JSON string into a dictionary
-    json_str = response_json
+    json_dict = post_completion(synthesized_article, json_function)
+    print("Post completion generated")
+    
+   # Initialize post_info
+    post_info = {
+        'topic_id': topic['id'],
+        'content': synthesized_article + "\n\nIf you enjoyed this article, please check out our other articles on <a href=\"https://cybernow.info\">CyberNow</a>",
+        'complete_with_images': False,
+        'yoast_meta': {},
+    }
 
-    # Initialize post_info as an empty dictionary
-    post_info = {}
-    post_info['topic_id'] = topic['id']
-    post_info['content'] = synthesized_article
-    post_info['complete_with_images'] = False
-    #post_info['categories'] = [19]
-    #post_info['tags'] = [20]
+    post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
 
+    # Extract and validate fields from json_dict and add them to post_info
+    def extract_field(field_name, default_value=None):
+        if field_name.startswith('yoast_wpseo_'):
+            if field_name in json_dict:
+                post_info['yoast_meta'][field_name] = json_dict[field_name]
+            elif default_value is not None:
+                post_info['yoast_meta'][field_name] = default_value
+            else:
+                print(f"Failed to generate {field_name}. Continuing without {field_name}.")
+        else:
+            if field_name in json_dict:
+                post_info[field_name] = json_dict[field_name]
+            elif default_value is not None:
+                post_info[field_name] = default_value
+            else:
+                print(f"Failed to generate {field_name}. Continuing without {field_name}.")
+
+    # Extract fields from json_dict
+    #print(f"Yoast meta before dictionary extraction: {post_info['yoast_meta']}")
     try:
-        json_dict = json.loads(json_str)
-    except json.JSONDecodeError:
+        extract_field('title')
+        extract_field('excerpt')
+        extract_field('slug')
+        extract_field('image_queries', [])
+        extract_field('yoast_wpseo_metadesc')
+        extract_field('yoast_wpseo_title')
+        extract_field('yoast_wpseo_focuskw')
+        extract_field('categories', [19])  # default category
+        extract_field('tags', [20])  # default tag
+        extract_field('sticky', False)
+    except Exception as e:
+        print(f"Failed to extract fields from json_dict: {e}")
+        print(f"Post info after dictionary extraction failed: {post_info['yoast_meta']}")
+        return
+    
+    if not post_info['image_queries']:
+        print("No image queries generated. Generating new ones.")
         try:
-            json_dict = ast.literal_eval(json_str)
-        except (ValueError, SyntaxError):
-            print("Failed to parse the string as either JSON or a Python dictionary.")
+            post_info['image_queries'] = regenerate_image_queries(post_info)
+        except Exception as e:
+            print(f"Failed to regenerate image queries: {e}")
             return
         
+    # Handle image_queries and inject images
+    try:
+        images = fetch_images_from_queries(post_info['image_queries'], token, topic['id'])
+        post_info = inject_images_into_post_info(post_info, images)
+    except Exception as e:
+        print(f"Failed to generate images: {e}")
 
-    # List of required fields
-    required_fields = [
-        'title', 'excerpt', 
-        'yoast_wpseo_title', 'yoast_wpseo_metadesc', 'yoast_wpseo_focuskw', 'slug',
-    ]
-    # Check and fill each required field
-    for field in required_fields:
-        if field in json_dict and not post_info[field]:
-            post_info[field] = json_dict[field]
-        else:
-            post_info = fill_in_field(field, post_info, categories, tags)
+    post_info['date_created'] = datetime.now().isoformat()
+    # Save the post information to their respective fields in Supabase in the posts table
 
-    # Initialize image_queries as an empty list
-    image_queries = []
+    return post_info
 
-    # Check if 'image_queries' exists in the JSON dictionary
-    if 'image_queries' in json_dict:
-        image_queries = json_dict['image_queries']
-        print(f"image_queries: {image_queries}")
-        images = fetch_images_from_queries(image_queries, token)
-    else:
-        print("image_queries field is missing in the response. Generating image_queries...")
-        # Define a prompt to instruct the model to insert 3 strings in an array under the image_queries field
-        prompt_for_image_queries = (
-            "The JSON object is missing the 'image_queries' field. "
-            "Please insert an array with three strings under the 'image_queries' field. "
-            "Each string should correspond to an image search query. "
-            "The first query should be mostly related to the title as it will be the featured image, "
-            "while the 2nd and 3rd photo queries can be related to the adjacent content next to their placeholders in the content field. Recreate the JSON object with the image_queries field filled out"
-        )
-        # Request a chat completion from the OpenAI API
-        response_image_queries = query_gpt(prompt_for_image_queries, model="gpt-3.5-turbo")
-        print(response_image_queries)
-        # Extract the image_queries from the response
-        image_queries = response_image_queries.get('image_queries')
-        
-        if image_queries:
-            images = fetch_images_from_queries(image_queries, token)
-        else:
-            print("image_queries field is missing in the response. Continuing without images.")
-            images = []
-    if images:  # Check if images are not empty
-        for i, image in enumerate(images):
-            if not image['wp_id']:
-                print(f"Failed to upload image {i+1} to WordPress. Continuing without images.")
-                post_info['complete_with_images'] = False
-                continue
-            image_placeholder = f"[wp_get_attachment_image id=\"{image['wp_id']}\" size=\"full\"] <a href=\"{image['url']}\">Photos provided by Pexels</a>"
-            post_info['content'] = post_info['content'].replace(f'[insert image {i+1}]', image_placeholder)
-            post_info['complete_with_images'] = True
-            if i == 0:
-                post_info['featured_media'] = image['wp_id']
-    else:
+
+def insert_tech_term_link(content: str, tech_term: str) -> str:
+    # Construct the hyperlink
+    hyperlink = f'<a href="https://techterms.com/definition/{tech_term}">{tech_term}</a>'
+
+    # Define a flag to indicate whether the tech_term has been replaced
+    replaced = False
+
+    def repl(match):
+        nonlocal replaced
+        block = match.group(0)
+        if not replaced and tech_term in block:
+            replaced = True
+            return block.replace(tech_term, hyperlink, 1)  # Replace only the first occurrence in the block
+        return block
+
+    # Use re.sub to find <p>...</p> blocks and apply the repl function to each block
+    modified_content, _ = re.subn(r'<p>.*?</p>', repl, content, flags=re.DOTALL)
+
+    # If no replacement has been done, log a warning and return the original content
+    if not replaced:
+        logging.warning(f"Tech term {tech_term} not found in the content. Returning the original content.")
+    return modified_content
+
+def inject_images_into_post_info(post_info, images, focus_keyword=None):
+    if not images:  # If images are empty or None
         print("No images received. Continuing without images.")
         post_info['complete_with_images'] = False
-
-    # Check if 'categories' and 'tags' exist in post_info
-    try:
-        if 'categories' not in post_info:
-            # Query GPT-3 to fill in the categories
-            post_info['categories'] = query_gpt(f"Given that available WordPress categories are: {', '.join([str(cat['name']) for cat in categories])}. The category id(s) of the post should be (just give the integer id(s) of the category in a comma-separated list)", model="gpt-3.5-turbo")
-        if 'tags' not in post_info:
-            post_info['tags'] = query_gpt(f"Given that available WordPress tags are: {', '.join([str(tag['name']) for tag in tags])}. The category id(s) of the post should be (just give the integer id(s) of the category in a comma-separated list)", model="gpt-3.5-turbo")
-    except Exception as e:
-        print(f"Failed to generate categories and tags: {e}")
+        return post_info
     
-    if 'title' in post_info:
-        if not post_info['slug']:
-            post_info['slug'] = post_info['title'].lower().replace(' ', '-')
-        if not post_info['yoast_wpseo_title'] or "[title]" in post_info['yoast_wpseo_title']:
-            post_info['yoast_wpseo_title'] = post_info['title']
-        post_info['yoast_wpseo_title'] = f"{post_info['title']} | CyberNow "
-
-    # IF post_info['categories'] is a string, convert it to an array, then remove all non-numeric characters and put a comma between each number
-    if isinstance(post_info['categories'], str):
-        post_info['categories'] = [int(s) for s in post_info['categories'].split(',') if s.isdigit()]
-    # IF post_info['tags'] is a string, convert it to an array, then remove all non-numeric characters so our final result is an array of integers
-    if isinstance(post_info['tags'], str):
-        post_info['tags'] = [int(s) for s in post_info['tags'].split(',') if s.isdigit()]
-    print(f"Tags: {post_info['tags']}")
-    print(f"Categories: {post_info['categories']}")
-    # Add the date_created field
-    post_info['date_created'] = datetime.now().isoformat()
+    # Initialize BeautifulSoup object with the post content
+    soup = BeautifulSoup(post_info['content'], 'html.parser')
+    
+    # Get all the paragraphs in the body
+    p_tags = soup.find_all('p')
+    
+    # If there is only one image, insert it under the h1 tag
+    if len(images) == 1:
+        img_tag = soup.new_tag("img", src=images[0]['wp_url'], alt=images[0]['description'])
+        h1_tag = soup.find('h1')
+        post_info['featured_media'] = images[0]['wp_id']
+        if h1_tag:
+            h1_tag.insert_after(img_tag)
+    else:
+        # Calculate the interval at which to insert the images
+        interval = len(p_tags) / (len(images) + 1)
+        for i, image in enumerate(images):
+            # Calculate the index at which to insert the current image
+            index = math.ceil(interval * (i + 1))
+            
+            # If it exceeds the last index, set it to the last index
+            if index >= len(p_tags):
+                index = len(p_tags) - 1
+                
+            # Create and insert the image tag
+            img_tag = Tag(name='img', attrs={'src': image['wp_url'], 'alt': image['description']})
+            p_tags[index].insert_before(img_tag)
+            
+            # Set the featured_media for the first image
+            if i == 0:
+                post_info['featured_media'] = image['wp_id']
+                
+            # Add focus keyword to alt attribute if not present
+            if focus_keyword and focus_keyword not in img_tag['alt']:
+                img_tag['alt'] += f", {focus_keyword}"
+                
+    post_info['content'] = str(soup)
+    post_info['complete_with_images'] = True
     return post_info
 
-def post_synthesis(token, topic):
-    # Read in the factsheets into an object for each source associated with the topic and keep track of the source IDs
-    factsheets = topic['factsheet']
-
-    #put the ids of the sources into the ext_sources array with the url of the source
-    #ext_sources = [{"id": source['id'], "url": source['url']} for source in sources]
-    print(f"Synthesizing news for topic {topic['name']}...")
-    # Generate the post information
-    post_info = generate_post_info(token, factsheets, topic)
-    # Save the post information to their respective fields in Supabase in the posts table
-    
-    try:
+def insert_post_info_into_supabase(post_info):
+ try:
         response = supabase.table("posts").insert([post_info]).execute()
-    except Exception as e:
+ except Exception as e:
         print(f"An error occurred: {e}")
-        print(f"Failed to save post information to Supabase.")
-    return post_info
-
-
-
-
+        if e.code == '23505':
+            print(f"Post with the slug {post_info['slug']} already exists. Continuing...")
+            print("Deleting the post in Supabase...")
+            try:
+                response = supabase.table("posts").delete().eq('slug', post_info['slug']).execute()
+                print("Post deleted.")
+                # Try to insert the post again
+                try:
+                    response = supabase.table("posts").insert([post_info]).execute()
+                    print("Post inserted.")
+                except Exception as e:
+                    print(f"Failed to insert the post: {e}")
+                    print("Continuing...")
+                    return
+            except Exception as e:
+                print(f"Failed to delete the post: {e}")
+                print("Continuing...")
+                return
+        else:
+            print(f"Failed to save post information to Supabase. Continuing...")
+            return

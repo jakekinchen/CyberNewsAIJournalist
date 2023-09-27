@@ -1,12 +1,12 @@
 import os
 import requests
 import datetime
-from datetime import datetime
+from datetime import datetime, timedelta
 from generate_topics import generate_topics
 from supabase import create_client, Client
 from source_fetcher import gather_sources
-from content_optimization import create_factsheet
-from post_synthesis import post_synthesis
+from content_optimization import create_factsheet_for_topic
+from post_synthesis import post_synthesis, insert_post_info_into_supabase
 from wp_post import create_wordpress_post, add_tag_to_wordpress
 from image_fetcher import test_image_upload
 import asyncio
@@ -22,19 +22,17 @@ supabase_key: str = os.getenv('SUPABASE_KEY')
 # Initialize Supabase
 supabase: Client = create_client(supabase_url = supabase_url, supabase_key = supabase_key)
 
-wp_username = os.getenv('WP_ADMIN_USERNAME')
-wp_password = os.getenv('WP_ADMIN_PASSWORD')
-
 amount_of_topics = 1
 MIN_SOURCES = 3
 exploit_fetcher_activated = False
-debug = True
-synthesize_factsheets = True
+debug = False
+synthesize_factsheets = False
 
 # Access your API keys and token
-wp_username = os.getenv('WP_ADMIN_USERNAME')
-wp_password = os.getenv('WP_ADMIN_PASSWORD')
+wp_username = os.getenv('WP_USERNAME')
+wp_password = os.getenv('WP_PASSWORD')
 wp_token = os.getenv('WP_TOKEN')  # Get the token from environment variables
+#os.getenv('WP_TOKEN')  # Get the token from environment variables
 
 # Get the JWT token for WordPress
 def get_jwt_token(username, password):
@@ -58,15 +56,11 @@ def get_jwt_token(username, password):
         return None
 
 async def delete_topic(topic_id):
-    # Delete all related sources
-    response = supabase.table("sources").delete().eq("topic_id", topic_id).execute()
-    if response.error:
-        print(f"Failed to delete related sources: {response.error}")
-        return
     # Delete the topic
-    response = supabase.table("topics").delete().eq("id", topic_id).execute()
-    if response.error:
-        print(f"Failed to delete topic: {response.error}")
+    try:
+        response = supabase.table("topics").delete().eq("id", topic_id).execute()
+    except Exception as e:
+        print(f"Failed to delete topic: {e}")
         return
     print(f"Successfully deleted topic with ID {topic_id} and all related sources.")
 
@@ -82,16 +76,38 @@ def post_the_most_recent_topic(token):
     else:
         print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
 
-def add_Authentication_tag(token, tag):
-    add_tag_to_wordpress(token, tag)
+def post_with_post_id(token, post_id):
+    #Take the post from supabase with the post id and post it an hour from now to the wordpress site
+    response = supabase.table("posts").select("*").eq("id", post_id).execute()
+    post_info = response.data[0]
+    print(f"Post info: {post_info}")
+    create_wordpress_post(token, post_info, datetime.now() + timedelta(hours=1))
+
+async def delete_supabase_post(topic_id):
+    # topic_id is a foreign key in the supabase table posts
+    # Delete the post
+    try:
+        response = supabase.table("posts").delete().eq("topic_id", topic_id).execute()
+    except Exception as e:
+        print(f"Failed to delete post: {e}")
+        return
+  
+    print(f"Successfully deleted post with topic ID {topic_id}.")
 
 async def main():
     token = get_jwt_token(wp_username, wp_password)
+
+    if token is None:
+        print("Failed to get token")
+        return
     
     if debug:
         print("Debug mode enabled")
-        #add_Authentication_tag(token, "2FA")
+        #add_Authentication_tag(token, "Ransomware")
+        #test_image_upload(token)
+        #post_the_most_recent_topic(token)
         test_image_upload(token)
+        #post_with_post_id(token, 31)
         return
     
     # Upload new cisa exploits
@@ -110,24 +126,49 @@ async def main():
             print(f"Processing topic: {topic['name']}")
             
             # Gather Sources
-            gather_sources(supabase, topic, MIN_SOURCES, False)
-            print("Sources gathered")
+            try:
+                gather_sources(supabase, topic, MIN_SOURCES, False)
+                print("Sources gathered")
+            except Exception as e:
+                print(f"Failed to gather sources: {e}")
+                await delete_topic(topic['id'])
+                continue
 
             # Generate Fact Sheets
-            create_factsheet(topic)
-            print("Factsheet created")
+            try:
+                topic['factsheet'] = create_factsheet_for_topic(topic)
+                print("Factsheet created")
+            except Exception as e:
+                print(f"Failed to create factsheet: {e}")
+                await delete_topic(topic['id'])
+                continue
             
             # Generate News
-            post_info = post_synthesis(token, topic)
-            print(f"Post info: {post_info}")
+            try:
+                post_info = post_synthesis(token, topic)
+                print(f"Post synthesized")
+            except Exception as e:
+                print(f"Failed to synthesize post: {e}")
+                await delete_topic(topic['id'])
+                continue
+            try:
+                insert_post_info_into_supabase(post_info)
+                print("Post info inserted into Supabase")
+            except Exception as e:
+                print(f"Failed to insert post info into Supabase: {e}")
+                await delete_topic(topic['id'])
+                continue
+            try:
+                create_wordpress_post(token, post_info, datetime.now())
+                print("Post created")
+            except Exception as e:
+                print(f"Failed to create post: {e}")
+                await delete_topic(topic['id'])
+                # await delete_supabase_post(topic['id']) shouldn't be necessary with ON DELETE CASCADE
+                continue
             
-            create_wordpress_post(token, post_info, datetime.now())
-
-            print("Not uploaded to WP because its database would not allow images to be uploaded")
     except Exception as e:
-        print(f"Failed to process new topics: {e}")
-    
-    
+        print(f"Failed to process new articles: {e}")
     
     print("Program Complete.")
 
