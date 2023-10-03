@@ -5,15 +5,16 @@ from datetime import datetime, timedelta
 from generate_topics import generate_topics
 from supabase import create_client, Client
 from source_fetcher import gather_sources
-from content_optimization import create_factsheet_for_topic
+from content_optimization import create_factsheets_for_sources
 from post_synthesis import post_synthesis, insert_post_info_into_supabase
 from wp_post import create_wordpress_post, add_tag_to_wordpress
-from image_fetcher import test_image_upload
+from extract_text import test_scraping_site
 import asyncio
 import httpx
 from cisa import get_cisa_exploits
 # Load environment variables
 from dotenv import load_dotenv
+import logging
 load_dotenv()
 
 # Supabase configuration
@@ -38,7 +39,7 @@ wp_token = os.getenv('WP_TOKEN')  # Get the token from environment variables
 def get_jwt_token(username, password):
 
     if wp_token:
-        print("Using existing token")
+        logging.info("Using existing token")
         return wp_token
     
     token_endpoint = "http://cybernow.info/wp-json/jwt-auth/v1/token"
@@ -49,10 +50,10 @@ def get_jwt_token(username, password):
     response = requests.post(token_endpoint, data=payload)
     if response.status_code == 200:
         token = response.json().get('token')  # Get token directly from JSON response
-        print(f"Received token: {token}")
+        #logging.info(f"Received token: {token}")
         return token
     else:
-        print(f"Failed to get JWT token: {response.text}")
+        logging.info(f"Failed to get JWT token: {response.text}")
         return None
 
 async def delete_topic(topic_id):
@@ -106,8 +107,8 @@ async def main():
         #add_Authentication_tag(token, "Ransomware")
         #test_image_upload(token)
         #post_the_most_recent_topic(token)
-        test_image_upload(token)
         #post_with_post_id(token, 31)
+        await test_scraping_site()
         return
     
     # Upload new cisa exploits
@@ -136,7 +137,7 @@ async def main():
 
             # Generate Fact Sheets
             try:
-                topic['factsheet'] = create_factsheet_for_topic(topic)
+                topic['factsheet'], topic['external_source_info'] = create_factsheets_for_sources(topic)
                 print("Factsheet created")
             except Exception as e:
                 print(f"Failed to create factsheet: {e}")

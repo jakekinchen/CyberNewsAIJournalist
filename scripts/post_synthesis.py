@@ -53,6 +53,7 @@ def post_synthesis(token, topic):
     categories = fetch_categories(token)
     tags = fetch_tags(token)
     factsheet = topic['factsheet']
+    external_sources = topic['external_sources']
     print("Categories and tags fetched")
     json_function = [
             {
@@ -133,7 +134,7 @@ def post_synthesis(token, topic):
     # Sanitize factsheet by replacing newline characters and other special characters with a space
     sanitized_factsheet = re.sub(r'[\n\r]', ' ', factsheet)
 
-    user_messages = f"{sanitized_factsheet}"
+    user_messages = f"{sanitized_factsheet}" + "\n\n And here are external sources you can use to add helpful information and link with an a-tag with href at the external source's url" + f"{external_sources}"
     synthesized_article = query_gpt(user_messages, synthesis_prompt, model='gpt-4')
     print("Synthesized article generated")
     # Chat completion to generate other JSON fields for post
@@ -149,6 +150,8 @@ def post_synthesis(token, topic):
     }
 
     post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
+
+    print(f"Image queries before dictionary extraction: {json_dict['image_queries']}")
 
     # Extract and validate fields from json_dict and add them to post_info
     def extract_field(field_name, default_value=None):
@@ -169,6 +172,7 @@ def post_synthesis(token, topic):
 
     # Extract fields from json_dict
     #print(f"Yoast meta before dictionary extraction: {post_info['yoast_meta']}")
+
     try:
         extract_field('title')
         extract_field('excerpt')
@@ -189,6 +193,8 @@ def post_synthesis(token, topic):
         print("No image queries generated. Generating new ones.")
         try:
             post_info['image_queries'] = regenerate_image_queries(post_info)
+            if not post_info['image_queries']:
+                raise Exception("Failed to generate image queries.")
         except Exception as e:
             print(f"Failed to regenerate image queries: {e}")
             return
@@ -231,8 +237,8 @@ def insert_tech_term_link(content: str, tech_term: str) -> str:
 
 def inject_images_into_post_info(post_info, images, focus_keyword=None):
     if not images:  # If images are empty or None
-        print("No images received. Continuing without images.")
         post_info['complete_with_images'] = False
+        raise Exception("No images to inject into post info.")
         return post_info
     
     # Initialize BeautifulSoup object with the post content

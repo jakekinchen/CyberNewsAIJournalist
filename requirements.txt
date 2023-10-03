@@ -14,3 +14,5 @@ postgrest
 realtime
 storage3
 supafunc
+certifi
+playwright==1.38

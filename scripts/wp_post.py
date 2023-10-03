@@ -94,8 +94,8 @@ def create_wordpress_post(token, post_info, post_time):
             sanitized_post_info[key] = sanitized_yoast_meta
         elif key in post_fields and isinstance(value, post_fields[key]):
             sanitized_post_info[key] = value
-        else:
-            print(f"Skipping invalid field: {key}, expected type {post_fields.get(key, 'Unknown')} but got {type(value)}")
+       # else:
+       #     print(f"Skipping invalid field: {key}, expected type {post_fields.get(key, 'Unknown')} but got {type(value)}")
     
     response = requests.post(post_endpoint, json=sanitized_post_info, headers=headers)
     

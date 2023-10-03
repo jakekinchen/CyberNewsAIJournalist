@@ -10,37 +10,58 @@ load_dotenv()
 # Access your API keys
 bing_api_key = os.getenv('BING_SEARCH_KEY')
 
-def gather_sources(supabase, topic, MIN_SOURCES=2, overload=False):
+def gather_and_store_sources(supabase, url, topic_id, date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources):
+    # Check if the URL is already in existing_sources to avoid duplicate scraping
+    if url in existing_sources:
+        print(f"URL {url} already exists in sources.")  # Optional, for debugging
+        return
+    
+    content, external_links = scrape_content(url, depth=depth, exclude_internal_links=exclude_internal_links)
+    
+    # Append the current source into accumulated_sources if content is scraped successfully
+    if content:
+        accumulated_sources.append({
+            "url": url,
+            "content": content,
+            "topic_id": topic_id,
+            "date_accessed": date_accessed,
+            "external_source": depth < 2  # True if this source is an external link extracted from another source
+        })
+        existing_sources.add(url)  # Update the existing_sources set with the new URL
+    
+    # Recursively gather and store sources for external links found
+    if depth > 1 and external_links:
+        for link in external_links:
+            gather_and_store_sources(supabase, link, topic_id, date_accessed, depth - 1, exclude_internal_links, existing_sources, accumulated_sources)
+
+
+def gather_sources(supabase, topic, MIN_SOURCES=2, overload=False, depth=2, exclude_internal_links=True):
     date_accessed = datetime.now().isoformat()
-    
-    response = supabase.table("sources").select("*").eq("topic_id", topic["id"]).execute()
-    existing_sources = response.data or []
+
+    response = supabase.table("sources").select("url").eq("topic_id", topic["id"]).execute()
+    existing_sources = set([source['url'] for source in response.data]) if response.data else set()
     required_sources = MIN_SOURCES - len(existing_sources)
-    
+
     if overload:
         required_sources += 3  # Increase the number if overloaded
 
+    accumulated_sources = []
     if required_sources > 0:
         related_sources = search_related_sources(topic["name"], len(existing_sources))
-        
+
         for source in related_sources[:required_sources]:
             if source['url'] == "https://thehackernews.com/search?":  # Skip the URL to be deleted
                 continue
-            
-           # print(f"Scraping source from {source['url']}...")
-            content = scrape_content(source["url"])
-            
-            if content:
-               # print(f"Successfully scraped source from {source['url']}")
-                supabase.table("sources").insert([{
-                    "url": source["url"],
-                    "content": content,
-                    "topic_id": topic["id"],
-                    "date_accessed": date_accessed
-                }]).execute()
-               # print(f"Source from {source['url']} saved to Supabase.")
-            else:
-                print(f"Failed to scrape source from {source['url']}")
+
+            gather_and_store_sources(supabase, source["url"], topic["id"], date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources)
+
+    # Batch insert the accumulated sources into Supabase
+    if accumulated_sources:
+        try:
+            response = supabase.table("sources").insert(accumulated_sources).execute()
+        except Exception as e:
+            print(f"Failed to insert sources into Supabase: {e}")
+
 
 def search_related_sources(query, offset=0):
     # Call the Bing API
