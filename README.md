@@ -3,7 +3,7 @@
 
 ## Description
 
-CyberNewsAggregator is a cutting-edge tool designed to fetch, aggregate, and provide insightful analyses of cybersecurity news from various sources across the internet. By gathering and synthesizing information related to cybersecurity, users are provided with up-to-date, relevant, and essential news in a single, cohesive interface.
+CyberNewsAggregator is a cutting-edge tool designed to harness the power of LLM's to fetch, aggregate, and provide insightful analyses of cybersecurity news from various sources across the internet. By gathering and synthesizing information related to cybersecurity, users are provided with up-to-date, relevant, and essential news in a single, cohesive interface.
 
 ## Features
 
