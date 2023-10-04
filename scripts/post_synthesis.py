@@ -147,7 +147,7 @@ def post_synthesis(token, topic):
         'yoast_meta': {},
     }
 
-    post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
+    #post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
 
     print(f"Image queries before dictionary extraction: {json_dict['image_queries']}")
 
