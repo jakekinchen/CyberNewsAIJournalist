@@ -6,8 +6,9 @@ import os
 import random
 from dotenv import load_dotenv
 from urllib.parse import urlparse
-from playwright.async_api import async_playwright
-import asyncio
+from scrapingbee import ScrapingBeeClient
+#from playwright.async_api import async_playwright
+#import asyncio
 
 load_dotenv()
 brightdata_host = os.getenv('BRIGHTDATA_HOST')
@@ -24,25 +25,39 @@ sb_username = os.getenv('BRIGHTDATA_SB_USERNAME')
 sb_password = os.getenv('BRIGHTDATA_SB_PASSWORD')
 sb_port = os.getenv('BRIGHTDATA_SB_PORT')
 
+scraping_bee_api_key = os.getenv('SCRAPING_BEE_API_KEY')
+
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
 
-async def test_scraping_site():
+def test_scraping_site():
     url = 'https://nvd.nist.gov/vuln/detail/CVE-2023-20109'
-    html = await scrape_content(url, depth=1, exclude_internal_links=True, include_links=True)
+    html = scrape_content(url, depth=1, exclude_internal_links=True, include_links=True)
     print(html)
 
-async def establish_connection(url, prioritize_res_proxy=False):
+def establish_connection(url, prioritize_res_proxy=False):
     hostname = urlparse(url).hostname
 
     if hostname == 'nvd.nist.gov':
-        return await fetch_without_proxy(url)
+        return fetch_without_proxy(url)
     
     if prioritize_res_proxy:
-        return await fetch_using_dc_proxy(url) or await fetch_using_res_proxy(url) or await fetch_using_scraping_browser(url) or await fetch_without_proxy(url)
+        return fetch_using_dc_proxy(url) or fetch_using_res_proxy(url) or fetch_using_scraping_bee(url) or fetch_without_proxy(url)
     else:
-        return await fetch_using_dc_proxy(url) or await fetch_using_scraping_browser(url) or await fetch_without_proxy(url)
+        return fetch_using_dc_proxy(url) or fetch_using_scraping_bee(url) or fetch_without_proxy(url)
+    
+def fetch_using_scraping_bee(url):
+    client = ScrapingBeeClient(api_key=scraping_bee_api_key)
+    try:
+        response = client.get(url=url, params={'render_js': 'false'})
+        if response.status_code == 200:
+            return response.content
+        else:
+            raise Exception(f"Error with Scraping Bee for {url}: {response.content}")
+    except Exception as e:
+        print(f"Error with Scraping Bee for {url}: {e}")
+        return None
 
-async def fetch_using_dc_proxy(url):
+def fetch_using_dc_proxy(url):
     session_id = random.randint(0, 1000000)
     super_proxy = f"http://brd-customer-{dc_username}-session-{session_id}-zone-unblocker:{dc_password}@brd.superproxy.io:{dc_port}"
     proxies = {"http": super_proxy, "https": super_proxy}
@@ -54,7 +69,7 @@ async def fetch_using_dc_proxy(url):
         print(f"Error with DC proxy for {url}: {e}")
         return None
 
-async def fetch_using_res_proxy(url):
+def fetch_using_res_proxy(url):
     session_id = random.randint(0, 1000000)
     res_super_proxy = f"http://brd-customer-{res_username}-session-{session_id}-zone-unblocker:{res_password}@brd.superproxy.io:{res_port}"
     res_proxies = {"http": res_super_proxy, "https": res_super_proxy}
@@ -66,6 +81,7 @@ async def fetch_using_res_proxy(url):
         print(f"Error with RES proxy for {url}: {e}")
         return None
 
+"""
 async def fetch_using_scraping_browser(url):
     try:
         async with async_playwright() as p:
@@ -78,8 +94,8 @@ async def fetch_using_scraping_browser(url):
     except Exception as e:
         print(f"Error with scraping browser for {url}: {e}")
         return None
-
-async def fetch_without_proxy(url):
+"""
+def fetch_without_proxy(url):
     try:
         response = requests.get(url, headers=headers, verify=False)
         response.raise_for_status()
@@ -87,10 +103,30 @@ async def fetch_without_proxy(url):
     except requests.exceptions.RequestException as e:
         print(f"Error without proxy for {url}: {e}")
         return None
-
-async def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True):
+    
+def is_valid_http_url(url):
     try:
-        html = await establish_connection(url)
+        parsed_url = urlparse(url)
+        return all([parsed_url.scheme, parsed_url.netloc, parsed_url.scheme in ['http', 'https']])
+    except ValueError:
+        return False
+
+def extract_external_links(soup, base_domain, depth, exclude_internal_links):
+    external_links = []
+    if depth > 0:
+        for p in soup.find_all('p'):
+            for a in p.find_all('a', href=True):
+                href = a['href']
+                # Validate URL and exclude internal links based on the provided conditions
+                if is_valid_http_url(href) and not (
+                    exclude_internal_links and (base_domain in href or href.startswith('/'))
+                ):
+                    external_links.append(href)
+    return external_links
+
+def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True):
+    try:
+        html = establish_connection(url)
         if html is None:
             raise ValueError("Unable to retrieve HTML")
 
@@ -123,18 +159,10 @@ async def scrape_content(url, depth=1, exclude_internal_links=True, include_link
             content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
 
         # Extract links if needed
+        external_links = []
         if include_links:
-            external_links = []
-            if depth > 0:
-                base_domain = urlparse(url).netloc
-                for p in soup.find_all('p'):
-                    for a in p.find_all('a', href=True):
-                        href = a['href']
-                        # Exclude internal links based on whether the base domain is in the href
-                        # and also if they start with a "/"
-                        if exclude_internal_links and (base_domain in href or href.startswith('/')):
-                            continue
-                        external_links.append(href)
+            base_domain = urlparse(url).netloc
+            external_links = extract_external_links(soup, base_domain, depth, exclude_internal_links)
             return content, external_links
 
     except Exception as error:

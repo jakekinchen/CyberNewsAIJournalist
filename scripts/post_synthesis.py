@@ -40,10 +40,8 @@ def post_completion(post_info, functions):
             # If response is a string, try to load it as JSON
             json_dict = json.loads(response)
         except json.JSONDecodeError as e:
-            print(f"Failed to parse the response string as JSON. Error: {e}")
-            return None
+            raise Exception(f"Failed to parse the response string as JSON. Error: {e}")
     return json_dict
-    
 
 def post_synthesis(token, topic):
     # Read in the factsheets into an object for each source associated with the topic and keep track of the source IDs
@@ -53,7 +51,7 @@ def post_synthesis(token, topic):
     categories = fetch_categories(token)
     tags = fetch_tags(token)
     factsheet = topic['factsheet']
-    external_sources = topic['external_sources']
+    external_source_info = topic['external_source_info']
     print("Categories and tags fetched")
     json_function = [
             {
@@ -134,7 +132,7 @@ def post_synthesis(token, topic):
     # Sanitize factsheet by replacing newline characters and other special characters with a space
     sanitized_factsheet = re.sub(r'[\n\r]', ' ', factsheet)
 
-    user_messages = f"{sanitized_factsheet}" + "\n\n And here are external sources you can use to add helpful information and link with an a-tag with href at the external source's url" + f"{external_sources}"
+    user_messages = f"{sanitized_factsheet}" + "\n\n And here are external sources you can use to add helpful information and link with an a-tag with href at the external source's url" + f"{external_source_info}"
     synthesized_article = query_gpt(user_messages, synthesis_prompt, model='gpt-4')
     print("Synthesized article generated")
     # Chat completion to generate other JSON fields for post
@@ -304,6 +302,9 @@ def insert_post_info_into_supabase(post_info):
                 print(f"Failed to delete the post: {e}")
                 print("Continuing...")
                 return
+        if e.code == 'PGRST102':
+            print("An invalid request body was sent(e.g. an empty body or malformed JSON).")
+            print("Tried to insert the following post info:")
         else:
             print(f"Failed to save post information to Supabase. Continuing...")
             return

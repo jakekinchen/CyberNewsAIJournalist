@@ -79,7 +79,7 @@ async def get_cisa_exploits():
     try:
         most_recent_exploit = supabase.table('exploits').select('catalog_version').order('date_added').limit(1).execute()
         most_recent_catalog_version = most_recent_exploit.data[0]['catalog_version'] if most_recent_exploit.data else None
-        print(f"Successfully queried most recent catalog_version{most_recent_catalog_version}")
+        print(f"Successfully queried most recent catalog_version {most_recent_catalog_version}")
         return
     except Exception as error:
         print(f'Failed to query the most recent catalog_version: {error}')

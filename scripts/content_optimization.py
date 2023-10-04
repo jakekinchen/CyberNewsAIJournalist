@@ -5,6 +5,7 @@ from supabase import create_client, Client
 import json
 import logging
 import re
+import tiktoken
 import asyncio
 
 # Load .env file
@@ -19,13 +20,30 @@ supabase = create_client(supabase_url, supabase_key)
 openai.api_key = os.getenv('OPENAI_KEY')
 openai.organization = os.getenv('OPENAI_ORGANIZATION')
 
-def token_optimizer(text):
-    message = f"{text}\n\nSummarize this but don't leave out any relevant facts"
-    model = "gpt-3.5-turbo-16k"
-    system = "You are an information compression algorithm that outputs the most relevant information in the least amount of words without losing any relevant information"
-    response = query_gpt(message, system, model)
-    logging.info(f"Token optimizer response: {response}")
-    return response.choices[0].message.content
+def tokenizer(string: str, encoding_name: str) -> int:
+    encoding = tiktoken.encoding_for_model(encoding_name)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+
+def model_optimizer(text, model):
+    token_quantity = tokenizer(text, model)
+    if model.startswith('gpt-4'):
+        if token_quantity < 8096:
+            return 'gpt-4'
+        elif token_quantity >= 8096 and token_quantity <= 32768:
+            return 'gpt-4-32k'
+        else:
+            raise Exception('Text is too long for GPT-4')
+    elif model.startswith('gpt-3.5'):
+        if token_quantity < 4096:
+            return 'gpt-3.5-turbo'
+        elif token_quantity >= 4096 and token_quantity < 16384:
+            return 'gpt-3.5-turbo-16k'
+        elif token_quantity >= 16384 and token_quantity <= 32768:
+            return 'gpt-4-32k'
+        else:
+            raise Exception('Text is too long for GPT-3.5')
 
 def prioritize_topics(topics):
     response = None
@@ -56,8 +74,15 @@ def function_call_gpt(user_prompt, system_prompt, model, functions, function_cal
         return json.loads(response.choices[0].message.function_call.arguments)
     except Exception as err:
         logging.error(err)
+        print (f"Failed to call function: {err}")
 
 def query_gpt(user_prompt, system_prompt="You are a response machine that only responds with the requested information", model='gpt-3.5-turbo'):
+    context = f"{system_prompt} {user_prompt}"
+    try:
+        model = model_optimizer(context, model)
+    except Exception as e:
+        logging.error(e)
+        raise Exception(e)
     try:
         response = openai.ChatCompletion.create(
             model=model,
@@ -65,6 +90,7 @@ def query_gpt(user_prompt, system_prompt="You are a response machine that only r
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
+            request_timeout = 150,
         )
         
         # If functions is not a null array then return response.choices[0].message.function_call.arguments then use json loads on it
@@ -82,17 +108,10 @@ def create_factsheet(source, topic_name):
         user_prompt = f"When you make a factsheet, keep each fact together in a sentence so each fact is separated by a period. Try to chunk together information that is related to {topic_name}. Now give the factsheet for the following information: {sanitized_content}"
         
         try:
-            facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo')
+            facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
         except Exception as gpt3_error:
-            print(f'Failed to synthesize facts for source {source["id"]} with base model', gpt3_error)
-            try: 
-                facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
-            except Exception as gpt3_error:
-                print(f'Failed to synthesize facts for source {source["id"]} with 16k model', gpt3_error)
-                return None
-            facts_json = json.dumps(facts)
-            supabase.table('sources').update({"factsheet": facts_json}).eq('id', source['id']).execute()
-            return facts
+            print(f'Failed to synthesize facts for source {source["id"]} with model', gpt3_error)
+            return None
         facts_json = json.dumps(facts)
         supabase.table('sources').update({"factsheet": facts_json}).eq('id', source['id']).execute()
         return facts
@@ -103,13 +122,13 @@ def create_factsheet(source, topic_name):
 def create_factsheets_for_sources(topic):
     related_sources = get_related_sources(topic['id'])
     combined_factsheet = ""
-    external_sources_info = []
+    external_source_info = []
 
     for source in related_sources:
         source_factsheet = create_factsheet(source, topic['name']) if not source['factsheet'] else source['factsheet']
 
         if source['external_source']:
-            external_sources_info.append({
+            external_source_info.append({
                 "id": source['id'],
                 "url": source['url'],
                 "factsheet": source_factsheet
@@ -119,11 +138,11 @@ def create_factsheets_for_sources(topic):
     
     combined_factsheet = aggregate_factsheets(topic, combined_factsheet)
 
-    if external_sources_info:
-        external_sources_info = remove_unrelated_sources(topic['name'], external_sources_info)
-        update_external_source_info(topic['id'], external_sources_info)
+    if external_source_info:
+        #external_source_info = remove_unrelated_sources(topic['name'], external_source_info)
+        update_external_source_info(topic['id'], external_source_info)
     
-    return combined_factsheet, external_sources_info
+    return combined_factsheet, external_source_info
 
 def get_related_sources(topic_id):
     try:
@@ -133,23 +152,24 @@ def get_related_sources(topic_id):
         print(f'Failed to get related sources for topic {topic_id}', e)
         return []
 
-def update_external_source_info(topic_id, external_sources_info):
-    formatted_info = ",".join([f"{info['id']}:{info['url']}:[{info['factsheet']}]" for info in external_sources_info])
+def update_external_source_info(topic_id, external_source_info):
+    formatted_info = ",".join([f"{info['id']}:{info['url']}:[{info['factsheet']}]" for info in external_source_info])
     try:
         response = supabase.table('topics').update({"external_source_info": formatted_info}).eq('id', topic_id).execute()
     except Exception as e:
         print(f'Failed to update external source info for topic {topic_id}', e)
 
-def remove_unrelated_sources(topic_name, external_sources_info):
-    unrelated_source_ids = identify_unrelated_sources(topic_name, external_sources_info)
+def remove_unrelated_sources(topic_name, external_source_info):
+    unrelated_source_ids = identify_unrelated_sources(topic_name, external_source_info)
 
     if unrelated_source_ids:
-        asyncio.run(remove_sources_from_supabase(unrelated_source_ids))
-        external_sources_info = [source_info for source_info in external_sources_info if source_info['id'] not in unrelated_source_ids]
-    return external_sources_info
+        remove_sources_from_supabase(unrelated_source_ids)
+        external_source_info = [source_info for source_info in external_source_info if source_info['id'] not in unrelated_source_ids]
+    return external_source_info
     
-def identify_unrelated_sources(topic_name, external_sources_info):
-    formatted_sources = ",".join([f"{info['id']}:{info['url']}:[{info['factsheet']}]" for info in external_sources_info])
+def identify_unrelated_sources(topic_name, external_source_info):
+    print(f"We have {len(external_source_info)} external sources to check for topic {topic_name}")
+    formatted_sources = ",".join([f"{info['id']}:{info['url']}:[{info['factsheet']}]" for info in external_source_info])
     system_prompt = "You are a source remover that removes sources that are not related to the topic."
     user_prompt = f"List the source id's that are not related to {topic_name} from the following list: {formatted_sources}"
     functions = [
@@ -172,29 +192,37 @@ def identify_unrelated_sources(topic_name, external_sources_info):
                 }
             }
         ]
-
     try:
-        # Assuming function_call_gpt returns a list of unrelated source ids
-        unrelated_source_ids = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo-16k", functions)
+        gpt_response = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo-16k", functions)
+        
+        # Extracting the source IDs directly from the response
+        unrelated_source_ids = gpt_response.get('sources', [])
+        
         return unrelated_source_ids
+    except KeyError:
+        print(f"Expected key 'sources' not found in data from GPT.")
+        return []
+    except ValueError:
+        print(f"One of the source IDs from GPT is not an integer.")
+        return []
     except Exception as e:
         print(f"Failed to identify unrelated sources for topic {topic_name}: {e}")
         return []
     
-async def delete_source(source_id):
+def delete_source(source_id):
     # Delete the topic
     try:
         response = supabase.table("sources").delete().eq("id", source_id).execute()
     except Exception as e:
-        print(f"Failed to delete topic: {e}")
+        print(f"Failed to delete source: {e}")
         return
-    print(f"Successfully deleted topic with ID {source_id} and all related sources.")
+    print(f"Successfully deleted source with ID {source_id} and all related sources.")
 
-async def remove_sources_from_supabase(unrelated_source_ids):
+def remove_sources_from_supabase(unrelated_source_ids):
     try:
         for source_id in unrelated_source_ids:
             # Assuming you have a function to remove a source by id from Supabase
-            await delete_source(source_id)
+            delete_source(source_id)
         print(f"Removed unrelated sources: {', '.join(map(str, unrelated_source_ids))}")
     except Exception as e:
         print(f"Failed to remove unrelated sources: {', '.join(map(str, unrelated_source_ids))}. Error: {e}")
@@ -205,15 +233,13 @@ def aggregate_factsheets(topic, combined_factsheet):
             system_prompt = "You are an expert at summarizing topics while being able to maintain every single detail. You utilize a lossless compression algorithm to keep the factual details together"
             user_prompt = f"When you make a factsheet, keep each fact together in a sentence so each fact is separated by a period. Try to chunk together information that is related to {topic['name']}. Now give the factsheet for the following information: {combined_factsheet} "
             facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
-            print(f"Aggregated factsheet: {facts}")
             facts_json = json.dumps(facts)
             supabase.table('topics').update({"factsheet": facts_json}).eq('id', topic['id']).execute()
             return facts
         else:
-            logging.error("No factsheets to aggregate")
-            return None
+            raise Exception("No factsheets to aggregate")
     except Exception as gpt3_error:
-        logging.error(f'Failed to synthesize facts for topic {topic["id"]}', gpt3_error)
+        logging.error(f'Failed to synthesize factsheets for topic {topic["id"]}', gpt3_error)
 
 def aggregate_factsheets_from_topic(topic):
     # Get all of the factsheets for the topic, and query gpt to aggregate them into a single factsheet
@@ -230,12 +256,11 @@ def aggregate_factsheets_from_topic(topic):
         user_prompt = f"When you make a factsheet, keep each fact together in a sentence so each fact is separated by a period. Try to chunk together information that is related to {topic['name']}. Now give the factsheet for the following information: {related_sources} "
         try:
             facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
-            print(f"Aggregated factsheet: {facts}")
             facts_json = json.dumps(facts)
             supabase.table('topics').update({"factsheet": facts_json}).eq('id', topic['id']).execute()
             return facts
         except Exception as gpt3_error:
-            logging.error(f'Failed to synthesize facts for topic {topic["id"]}', gpt3_error)
+            logging.error(f'Failed to synthesize factsheets from topic {topic["id"]}', gpt3_error)
 
 
 def regenerate_image_queries(post_info):
@@ -267,8 +292,7 @@ def regenerate_image_queries(post_info):
         print(f"Image queries generated: {image_queries}")
         return image_queries
     except Exception as e:
-        print(f"Failed to regenerate image queries: {e}")
-        return None
+        raise Exception(f"Failed to regenerate image queries: {e}")
 
 
 

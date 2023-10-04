@@ -15,4 +15,5 @@ realtime
 storage3
 supafunc
 certifi
-playwright==1.38
+tiktoken
+#playwright==1.38

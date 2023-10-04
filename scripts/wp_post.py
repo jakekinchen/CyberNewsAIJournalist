@@ -4,6 +4,7 @@ import requests
 import csv
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+import logging
 
 # Load .env file
 load_dotenv()
@@ -69,6 +70,10 @@ def add_tag_to_wordpress(token, tag):
     
 # Create a new post on WordPress
 def create_wordpress_post(token, post_info, post_time):
+    if post_info is None:
+        logging.error("Error: post_info is None")
+        raise ValueError("post_info is None")
+    
     post_endpoint = "http://cybernow.info/wp-json/wp/v2/posts"
 
     headers = {
@@ -103,8 +108,7 @@ def create_wordpress_post(token, post_info, post_time):
         print("Post created successfully.")
         return response.json()  # Return the post data
     else:
-        print(f"Failed to create post: {response.text}")
-        return None
+        raise Exception(f"Failed to create post: {response.text}")
 
 
 def fetch_categories(token):

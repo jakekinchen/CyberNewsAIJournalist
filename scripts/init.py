@@ -7,7 +7,7 @@ from supabase import create_client, Client
 from source_fetcher import gather_sources
 from content_optimization import create_factsheets_for_sources
 from post_synthesis import post_synthesis, insert_post_info_into_supabase
-from wp_post import create_wordpress_post, add_tag_to_wordpress
+from wp_post import create_wordpress_post
 from extract_text import test_scraping_site
 import asyncio
 import httpx
@@ -15,6 +15,7 @@ from cisa import get_cisa_exploits
 # Load environment variables
 from dotenv import load_dotenv
 import logging
+import time
 load_dotenv()
 
 # Supabase configuration
@@ -54,7 +55,7 @@ def get_jwt_token(username, password):
         return token
     else:
         logging.info(f"Failed to get JWT token: {response.text}")
-        return None
+        raise Exception(f"Failed to get JWT token: {response.text}")
 
 async def delete_topic(topic_id):
     # Delete the topic
@@ -104,10 +105,6 @@ async def main():
     
     if debug:
         print("Debug mode enabled")
-        #add_Authentication_tag(token, "Ransomware")
-        #test_image_upload(token)
-        #post_the_most_recent_topic(token)
-        #post_with_post_id(token, 31)
         await test_scraping_site()
         return
     
@@ -120,52 +117,61 @@ async def main():
     
     # Generate topics
     try:
+        start_time = time.time()
         generated_topics = generate_topics(supabase, amount_of_topics)
-        print(f"Generated {len(generated_topics)} new topics")
-        # Iterate through each recently generated topic and gather sources and factsheets
+        print(f"Generated {len(generated_topics)} new topics in {time.time() - start_time:.2f} seconds")
+        
         for topic in generated_topics:
             print(f"Processing topic: {topic['name']}")
             
             # Gather Sources
+            start_time = time.time()
             try:
                 gather_sources(supabase, topic, MIN_SOURCES, False)
-                print("Sources gathered")
+                print(f"Sources gathered in {time.time() - start_time:.2f} seconds")
             except Exception as e:
                 print(f"Failed to gather sources: {e}")
                 await delete_topic(topic['id'])
                 continue
 
             # Generate Fact Sheets
+            start_time = time.time()
             try:
                 topic['factsheet'], topic['external_source_info'] = create_factsheets_for_sources(topic)
-                print("Factsheet created")
+                print(f"Factsheet created in {time.time() - start_time:.2f} seconds")
             except Exception as e:
                 print(f"Failed to create factsheet: {e}")
                 await delete_topic(topic['id'])
                 continue
             
             # Generate News
+            start_time = time.time()
             try:
                 post_info = post_synthesis(token, topic)
-                print(f"Post synthesized")
+                print(f"Post synthesized in {time.time() - start_time:.2f} seconds")
             except Exception as e:
                 print(f"Failed to synthesize post: {e}")
                 await delete_topic(topic['id'])
                 continue
+            
+            # Insert Post Info into Supabase
+            start_time = time.time()
             try:
                 insert_post_info_into_supabase(post_info)
-                print("Post info inserted into Supabase")
+                print(f"Post info inserted into Supabase in {time.time() - start_time:.2f} seconds")
             except Exception as e:
                 print(f"Failed to insert post info into Supabase: {e}")
                 await delete_topic(topic['id'])
                 continue
+            
+            # Create WordPress Post
+            start_time = time.time()
             try:
                 create_wordpress_post(token, post_info, datetime.now())
-                print("Post created")
+                print(f"Post created in {time.time() - start_time:.2f} seconds")
             except Exception as e:
                 print(f"Failed to create post: {e}")
                 await delete_topic(topic['id'])
-                # await delete_supabase_post(topic['id']) shouldn't be necessary with ON DELETE CASCADE
                 continue
             
     except Exception as e:

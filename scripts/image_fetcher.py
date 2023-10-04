@@ -42,8 +42,7 @@ def upload_image_to_wordpress(token, image_url, image_type, origin_id):
         print(f"Successfully uploaded image {image_name}")
         return response.json().get('id'), response.json().get('source_url')
     else:
-        print(f"Failed to upload image: {response.text}")
-        return None
+        raise Exception(f"Failed to upload image: {response.text}")
 
 def query_pexels_images(search_queries, list_of_supabase_images):
     for query in search_queries:
@@ -65,7 +64,7 @@ def query_pexels_images(search_queries, list_of_supabase_images):
             except Exception as e:
                 print(f"Error querying Pexels for {query} on page {page}: {e}")
                 break  # Move to the next query in case of an error
-    return None  # Return None if no unique photo is found for all queries
+    raise Exception(f"Failed to find a unique photo for all queries: {search_queries}")
 
 def process_photo(photo, query):
     response = requests.head(photo.original)
