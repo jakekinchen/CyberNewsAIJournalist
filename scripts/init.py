@@ -108,13 +108,16 @@ async def main():
         await test_scraping_site()
         return
     
+    #print(test_scraping_site())
+
     # Upload new cisa exploits
+    start_time = time.time()
     result = await get_cisa_exploits()
     if result == False:
         print("Failed to get CISA exploits")
+        return
     else:
-        print("Successfully got CISA exploits")
-    
+        print(f"Got CISA exploits in {time.time() - start_time:.2f} seconds")
     # Generate topics
     try:
         start_time = time.time()
@@ -138,12 +141,19 @@ async def main():
             start_time = time.time()
             try:
                 topic['factsheet'], topic['external_source_info'] = create_factsheets_for_sources(topic)
+                if topic['factsheet'] is None:
+                    print("Failed to create any factsheets")
+                    await delete_topic(topic['id'])
+                    continue
                 print(f"Factsheet created in {time.time() - start_time:.2f} seconds")
             except Exception as e:
                 print(f"Failed to create factsheet: {e}")
                 await delete_topic(topic['id'])
                 continue
-            
+            if topic['factsheet'] is None:
+                print("Failed to create any factsheets")
+                await delete_topic(topic['id'])
+                continue
             # Generate News
             start_time = time.time()
             try:

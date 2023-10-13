@@ -70,7 +70,7 @@ def process_photo(photo, query):
     response = requests.head(photo.original)
     image_type = response.headers['Content-Type']
     filename = get_filename(photo.id, image_type)
-    image_url = photo.landscape if photo.landscape else photo.original
+    image_url = photo.landscape
     return {
         'origin_id': photo.id,
         'url': image_url,
@@ -90,7 +90,9 @@ def fetch_images_from_queries(search_queries, token, topic_id):
         print("Failed to authenticate with WordPress.")
         return []
     
+    print("Getting list of images from Supabase")
     list_of_supabase_images = get_list_of_supabase_images() or []
+    print("Got list of images from Supabase")
     image = query_pexels_images(search_queries, list_of_supabase_images)
     
     if not image:
@@ -105,6 +107,7 @@ def fetch_images_from_queries(search_queries, token, topic_id):
     wp_id, wp_url = result
     image.update({'wp_id': wp_id, 'wp_url': wp_url, 'topic_id': topic_id})
     try:
+        print("Inserting image into Supabase")
         supabase.table("images").insert(image).execute()
         print(f"Inserted image {image['origin_id']} into Supabase")
         return [image]

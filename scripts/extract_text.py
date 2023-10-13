@@ -34,11 +34,16 @@ def test_scraping_site():
     html = scrape_content(url, depth=1, exclude_internal_links=True, include_links=True)
     print(html)
 
-def establish_connection(url, prioritize_res_proxy=False):
+def test_scraping_site_msn():
+    url = 'https://nvd.nist.gov/vuln/detail/CVE-2023-20109'
+    html = scrape_content(url, depth=1, exclude_internal_links=True, include_links=True)
+    print(html)
+
+def establish_connection(url, prioritize_res_proxy=True):
     hostname = urlparse(url).hostname
 
-    if hostname == 'nvd.nist.gov':
-        return fetch_without_proxy(url)
+    #if hostname == 'nvd.nist.gov':
+    #    return fetch_without_proxy(url)
     
     if prioritize_res_proxy:
         return fetch_using_dc_proxy(url) or fetch_using_res_proxy(url) or fetch_using_scraping_bee(url) or fetch_without_proxy(url)

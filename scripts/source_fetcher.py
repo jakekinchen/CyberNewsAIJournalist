@@ -3,6 +3,7 @@ import requests
 from dotenv import load_dotenv
 from datetime import datetime
 from extract_text import scrape_content
+import logging
 
 # Load .env file
 load_dotenv()
@@ -10,14 +11,15 @@ load_dotenv()
 # Access your API keys
 bing_api_key = os.getenv('BING_SEARCH_KEY')
 
+
 def gather_and_store_sources(supabase, url, topic_id, date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources):
     # Check if the URL is already in existing_sources to avoid duplicate scraping
+    """ the following snippest is to avoid duplicate sources but this isn't necessary with better source quality control methods
     if url in existing_sources:
         print(f"URL {url} already exists in sources.")  # Optional, for debugging
         return
-    
+    """
     content, external_links = scrape_content(url, depth=depth, exclude_internal_links=exclude_internal_links)
-    
     # Append the current source into accumulated_sources if content is scraped successfully
     if content:
         accumulated_sources.append({
@@ -50,7 +52,7 @@ def gather_sources(supabase, topic, MIN_SOURCES=2, overload=False, depth=2, excl
         related_sources = search_related_sources(topic["name"], len(existing_sources))
 
         for source in related_sources[:required_sources]:
-            if source['url'] == "https://thehackernews.com/search?":  # Skip the URL to be deleted
+            if source['url'] == "https://thehackernews.com/search?" or "msn.com" in source['url']:  # Skip the URL to be deleted
                 continue
 
             gather_and_store_sources(supabase, source["url"], topic["id"], date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources)

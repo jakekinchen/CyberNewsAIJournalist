@@ -23,7 +23,6 @@ def get_exploits():
 def isolate_new_exploits(exploits):
     try:
         existing_exploits = supabase.table('exploits').select('cve, url').execute()
-        print("Successfully queried existing exploits")
     except Exception as error:
         print(f'Failed to query existing exploits: {error}')
         return exploits
@@ -31,6 +30,8 @@ def isolate_new_exploits(exploits):
         return exploits
     existing_cve_ids = [exploit['cve'] for exploit in existing_exploits.data]
     new_exploits = [exploit for exploit in exploits if exploit['cveID'] not in existing_cve_ids]
+    if len(new_exploits) == 0:
+        return None
     # Print the amount of new exploits
     print(f"Found {len(new_exploits)} new exploits")
     return new_exploits
@@ -56,13 +57,45 @@ def format_json_for_supabase(exploits, catalog_version):
         exploit['catalog_version'] = catalog_version
     return exploits
 
-def insert_new_exploits(exploits):
-    # Insert the new exploits into Supabase
+def get_list_of_supabase_exploits():
     try:
-        supabase.table('exploits').insert(exploits).execute()
-        print("Successfully inserted new exploits.")
+        response = supabase.table('exploits').select('cve').execute()
+        print("Successfully queried exploits")
     except Exception as error:
-        print(f'Failed to insert new exploits: {error}')
+        print(f'Failed to query exploits: {error}')
+        return []
+    if response.data == None:
+        return []
+    return [exploit['cve'] for exploit in response.data]
+
+def insert_or_update_exploits(exploits):
+    existing_cve_ids = get_list_of_supabase_exploits()
+    #Check if the exploits already exist in Supabase
+    #If they do, update them as a group
+    #If they don't, insert them as a group
+    exploits_to_insert = []
+    exploits_to_update = []
+    for exploit in exploits:
+        if exploit['cve'] in existing_cve_ids:
+            exploits_to_update.append(exploit)
+        else:
+            exploits_to_insert.append(exploit)
+    print(f"Amount of existing exploits: {len(existing_cve_ids)}")
+    print(f"New exploits: {[exploit['cve'] for exploit in exploits]}")
+    if exploits_to_insert:
+        try:
+            supabase.table('exploits').insert(exploits_to_insert).execute()
+            print("Successfully inserted exploits")
+        except Exception as error:
+            print(f'Failed to insert exploits: {error}')
+            return
+    if exploits_to_update:
+        try: 
+            supabase.table('exploits').update(exploits_to_update).execute()
+            print("Successfully updated exploits")
+        except Exception as error:
+            print(f'Failed to update exploits: {error}')
+            return
 
 async def get_cisa_exploits():
     # Get the exploits from CISA
@@ -75,29 +108,20 @@ async def get_cisa_exploits():
     catalog_version = exploits['catalogVersion']
     # Replace dots with dashes in the catalogVersion field value
     catalog_version = catalog_version.replace('.', '-')
-     # Query the most recent catalog_version from Supabase
-    try:
-        most_recent_exploit = supabase.table('exploits').select('catalog_version').order('date_added').limit(1).execute()
-        most_recent_catalog_version = most_recent_exploit.data[0]['catalog_version'] if most_recent_exploit.data else None
-        print(f"Successfully queried most recent catalog_version {most_recent_catalog_version}")
-        return
-    except Exception as error:
-        print(f'Failed to query the most recent catalog_version: {error}')
-        most_recent_catalog_version = None
-
-    # Check if the catalog version has changed
-    if most_recent_catalog_version == catalog_version:
-        print("Catalog version hasn't changed. Skipping CISA process.")
-        return True
     # Remove the outer parent object and isolate the child objects within vulnerabilities
     exploits = exploits['vulnerabilities']
     # Isolate the new exploits
     new_exploits = isolate_new_exploits(exploits)
+    if new_exploits is None:
+        print("No new exploits found")
+        return True
+    print("Isolated new exploits")
     # Format the new exploits for Supabase
     formatted_exploits = format_json_for_supabase(new_exploits, catalog_version)
+    print("Formatted new exploits for Supabase")
     # Insert the exploits into Supabase
     try:
-        insert_new_exploits(formatted_exploits)
+        insert_or_update_exploits(formatted_exploits)
         return True
     except Exception as error:
         print(f'Failed to insert new exploits: {error}')
@@ -114,8 +138,8 @@ def add_hyperlinks(url):
     if html is None:
         print(f'Failed to get html from {url}')
         return
-    else:
-        print(f'Successfully got html from {url}')
+    #else:
+        #print(f'Successfully got html from {url}')
         #print(html)
     soup = BeautifulSoup(html, 'html.parser')
     # Generalize the selector to get all links under `td` elements that have a `data-testid` attribute starting with "vuln-hyperlinks-link-"

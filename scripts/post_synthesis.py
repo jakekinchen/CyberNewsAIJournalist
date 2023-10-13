@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from image_fetcher import fetch_images_from_queries # Import the image fetching function
 from supabase import create_client, Client
 from wp_post import fetch_categories, fetch_tags
-from content_optimization import query_gpt, function_call_gpt, regenerate_image_queries
+from content_optimization import query_gpt, function_call_gpt, regenerate_image_queries, insert_tech_term_link
 from datetime import datetime
 import ast
 import re
@@ -114,7 +114,7 @@ def post_synthesis(token, topic):
                         },
                     "tech_term": {
                         "type": "string",
-                        "description": "The most relevant technical term in the post."
+                        "description": "A word found in the article that is technical jargon. This word will be linked to a definition in the article."
                         },
                     }
                 }
@@ -138,7 +138,6 @@ def post_synthesis(token, topic):
     # Chat completion to generate other JSON fields for post
     json_dict = post_completion(synthesized_article, json_function)
     print("Post completion generated")
-    
    # Initialize post_info
     post_info = {
         'topic_id': topic['id'],
@@ -146,10 +145,25 @@ def post_synthesis(token, topic):
         'complete_with_images': False,
         'yoast_meta': {},
     }
+    post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
+    print("What is going on here?")
 
-    #post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
+    def remove_newlines_before_title(html_content):
+        # Find the index of the <title> tag
+        title_index = html_content.find('<title>')
+        
+        # Ensure the <title> tag is present in the content
+        if title_index != -1:
+            # Replace all newline characters before the <title> tag with an empty string
+            html_content = re.sub(r'\n', '', html_content[:title_index]) + html_content[title_index:]
+        
+        return html_content
+    # Remove if there are any \n characters that appear anywhere in the section of the html before the first title <title> tag
+    post_info['content'] = remove_newlines_before_title(post_info['content'])
 
-    print(f"Image queries before dictionary extraction: {json_dict['image_queries']}")
+
+    if json_dict['image_queries']:
+        print(f"Image queries before dictionary extraction: {json_dict['image_queries']}")
 
     # Extract and validate fields from json_dict and add them to post_info
     def extract_field(field_name, default_value=None):
@@ -169,8 +183,6 @@ def post_synthesis(token, topic):
                 print(f"Failed to generate {field_name}. Continuing without {field_name}.")
 
     # Extract fields from json_dict
-    #print(f"Yoast meta before dictionary extraction: {post_info['yoast_meta']}")
-
     try:
         extract_field('title')
         extract_field('excerpt')
@@ -198,7 +210,9 @@ def post_synthesis(token, topic):
             return
         
     # Handle image_queries and inject images
+    print(f"Image queries after dictionary extraction: {post_info['image_queries']}")
     try:
+        print("Fetching images...")
         images = fetch_images_from_queries(post_info['image_queries'], token, topic['id'])
         post_info = inject_images_into_post_info(post_info, images)
     except Exception as e:
@@ -208,30 +222,6 @@ def post_synthesis(token, topic):
     # Save the post information to their respective fields in Supabase in the posts table
 
     return post_info
-
-
-def insert_tech_term_link(content: str, tech_term: str) -> str:
-    # Construct the hyperlink
-    hyperlink = f'<a href="https://techterms.com/definition/{tech_term}">{tech_term}</a>'
-
-    # Define a flag to indicate whether the tech_term has been replaced
-    replaced = False
-
-    def repl(match):
-        nonlocal replaced
-        block = match.group(0)
-        if not replaced and tech_term in block:
-            replaced = True
-            return block.replace(tech_term, hyperlink, 1)  # Replace only the first occurrence in the block
-        return block
-
-    # Use re.sub to find <p>...</p> blocks and apply the repl function to each block
-    modified_content, _ = re.subn(r'<p>.*?</p>', repl, content, flags=re.DOTALL)
-
-    # If no replacement has been done, log a warning and return the original content
-    if not replaced:
-        logging.warning(f"Tech term {tech_term} not found in the content. Returning the original content.")
-    return modified_content
 
 def inject_images_into_post_info(post_info, images, focus_keyword=None):
     if not images:  # If images are empty or None
@@ -265,6 +255,8 @@ def inject_images_into_post_info(post_info, images, focus_keyword=None):
                 
             # Create and insert the image tag
             img_tag = Tag(name='img', attrs={'src': image['wp_url'], 'alt': image['description']})
+            img_tag['width'] = '600'
+            img_tag['height'] = '260'
             p_tags[index].insert_before(img_tag)
             
             # Set the featured_media for the first image

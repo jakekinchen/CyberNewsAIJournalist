@@ -7,9 +7,11 @@ import logging
 import re
 import tiktoken
 import asyncio
+import requests
 
 # Load .env file
 load_dotenv()
+bing_api_key = os.getenv('BING_SEARCH_KEY')
 
 # Supabase configuration
 supabase_url = os.getenv('SUPABASE_ENDPOINT')
@@ -32,7 +34,7 @@ def model_optimizer(text, model):
         if token_quantity < 8096:
             return 'gpt-4'
         elif token_quantity >= 8096 and token_quantity <= 32768:
-            return 'gpt-4-32k'
+            return 'gpt-3.5-turbo-16k'
         else:
             raise Exception('Text is too long for GPT-4')
     elif model.startswith('gpt-3.5'):
@@ -41,7 +43,7 @@ def model_optimizer(text, model):
         elif token_quantity >= 4096 and token_quantity < 16384:
             return 'gpt-3.5-turbo-16k'
         elif token_quantity >= 16384 and token_quantity <= 32768:
-            return 'gpt-4-32k'
+            raise Exception('Text is too long for GPT-3.5')
         else:
             raise Exception('Text is too long for GPT-3.5')
 
@@ -58,6 +60,134 @@ def prioritize_topics(topics):
     # Process the response to get a list of titles in order of relevance
     prioritized_titles = response.choices[0].message.content.split("\n")
     return prioritized_titles
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+
+def fetch_sources_from_query(query):
+    print("Fetching sources from query: " + query)
+    # Bing Search V7 endpoint
+    endpoint = "https://api.bing.microsoft.com/v7.0/search"
+
+    # Call the Bing API
+    mkt = 'en-US'
+    params = {'q': query, 'mkt': mkt, 'count': 3, 'responseFilter': 'webpages', 'answerCount': 1, 'safeSearch': 'strict'}
+    headers = {'Ocp-Apim-Subscription-Key': bing_api_key}  # replace with your Bing API key
+
+    logging.info(f"Querying Bing API with query: {query}")
+
+    try:
+        response = requests.get(endpoint, headers=headers, params=params)
+        response.raise_for_status()
+    except requests.RequestException as e:
+        logging.error(f"Failed to get response from Bing API: {str(e)}")
+        return []
+
+    try:
+        search_result = response.json()
+    except ValueError as e:
+        logging.error(f"Failed to parse API response to JSON: {str(e)}")
+        return []
+    
+    # Extract related sources
+    related_sources = []
+
+    if 'webPages' in search_result and 'value' in search_result['webPages']:
+        #print("'webPages' in search_result and 'value' in search_result['webPages']")
+        for i, result in enumerate(search_result['webPages']['value']):
+            if all(key in result for key in ("name", "url")):
+                source = {
+                    'id': i,
+                    "name": result['name'],
+                    "url": result['url'],
+                }
+                related_sources.append(source)
+    else:
+        print("No 'webPages' or 'value' key in the response. No sources found.")
+
+    return related_sources
+
+def insert_tech_term_link(content: str, tech_term: str) -> str:
+    # Construct the hyperlink
+    link = generate_link_from_term(tech_term)
+    hyperlink = f'<a href="{link}">{tech_term}</a>'
+
+    if not hyperlink:
+        print(f"Failed to generate hyperlink for tech term {tech_term}. Returning the original content.")
+        return content
+    
+    # Define a flag to indicate whether the tech_term has been replaced
+    replaced = False
+
+    def repl(match):
+        nonlocal replaced
+        block = match.group(0)
+        if not replaced and tech_term.lower() in block.lower():  # Case-insensitive search
+            replaced = True
+            # Replace only the first occurrence in the block, case-insensitive
+            return re.sub(tech_term, hyperlink, block, flags=re.IGNORECASE, count=1)  
+        return block
+
+    # Use re.sub to find <p>...</p> blocks and apply the repl function to each block
+    modified_content, _ = re.subn(r'<p>.*?</p>', repl, content, flags=re.DOTALL)
+
+    # If no replacement has been done, log a warning and return the original content
+    if not replaced:
+        print(f"Tech term {tech_term} not found in the content. Returning the original content.")
+    return modified_content
+
+
+def generate_link_from_term(term):
+    sources = fetch_sources_from_query(term)
+    if not sources:
+        print(f"Failed to find sources for term {term}")
+        return None
+    
+    # Selects best source by integer id
+    source_id = select_tech_term_source(sources)
+    if not source_id:
+        print(f"Failed to select source from sources - returning the first source's url")
+        # Return the first source's url if there is at least one source, else return None
+        return sources[0]['url'] if sources else None
+    print(f"Selected source ID: {source_id}")
+
+    # Select the source whose integer is equal to the id of the source that best defines the tech term
+    source = next((source for source in sources if source['id'] == source_id), None)
+    print(f"Selected source: {source}")
+
+    # Return the url of the source if source is not None, else return None
+    return source['url'] if source else None
+
+def select_tech_term_source(sources):
+    functions = [
+            {
+                "name": "TechTermSourceSelector",
+                "description": "Select the source that best defines the tech term.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                    'source': {
+                        'type': 'integer',
+                        'description': 'The id of the source that best defines the tech term.',
+                        }
+                    },
+                    
+                }
+            }
+        ]
+    system_prompt = "You are a tech term source selector that selects the source that would be best for defining the tech term. This source should be the most relevant to the tech term and should be the most concise."
+    user_prompt = f"Select the source that best defines the tech term: {sources}"
+    try:
+        response = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo", functions)
+        source_id = response.get('source', None)
+        logging.debug(f"Source ID from GPT response: {source_id}")
+        if source_id is None:
+            print(f"Expected key 'source' not found in data from GPT.")
+            print(f"Here is the GPT response: {response}")
+        return source_id
+    except KeyError:
+        logging.error("Expected key 'source' not found in data from GPT.")
+        return None
+        
 
 def function_call_gpt(user_prompt, system_prompt, model, functions, function_call_mode='auto'):
     try:
@@ -123,10 +253,11 @@ def create_factsheets_for_sources(topic):
     related_sources = get_related_sources(topic['id'])
     combined_factsheet = ""
     external_source_info = []
-
     for source in related_sources:
         source_factsheet = create_factsheet(source, topic['name']) if not source['factsheet'] else source['factsheet']
-
+        if not source_factsheet:
+            print(f"Failed to create factsheet for source {source['id']}")
+            continue
         if source['external_source']:
             external_source_info.append({
                 "id": source['id'],
@@ -136,7 +267,12 @@ def create_factsheets_for_sources(topic):
         else:
             combined_factsheet += str(source_factsheet)
     
-    combined_factsheet = aggregate_factsheets(topic, combined_factsheet)
+    if combined_factsheet:
+        combined_factsheet = aggregate_factsheets(topic, combined_factsheet)
+    else:
+        print(f"Sources: {related_sources}")
+        print("No factsheets to aggregate")
+        return None, None
 
     if external_source_info:
         #external_source_info = remove_unrelated_sources(topic['name'], external_source_info)
