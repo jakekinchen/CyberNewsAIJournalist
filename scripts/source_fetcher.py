@@ -3,6 +3,7 @@ import requests
 from dotenv import load_dotenv
 from datetime import datetime
 from extract_text import scrape_content
+from content_optimization import tokenizer
 import logging
 
 # Load .env file
@@ -11,17 +12,18 @@ load_dotenv()
 # Access your API keys
 bing_api_key = os.getenv('BING_SEARCH_KEY')
 
+def check_if_content_exceeds_limit(content):
+    # Check if the source content exceeds the limit
+    if tokenizer(content, 'gpt-3.5-turbo-16k') >= 16384:
+        logging.warning(f"Source content exceeds the limit: {tokenizer(content)}")
+        return True
+
 
 def gather_and_store_sources(supabase, url, topic_id, date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources):
-    # Check if the URL is already in existing_sources to avoid duplicate scraping
-    """ the following snippest is to avoid duplicate sources but this isn't necessary with better source quality control methods
-    if url in existing_sources:
-        print(f"URL {url} already exists in sources.")  # Optional, for debugging
-        return
-    """
+
     content, external_links = scrape_content(url, depth=depth, exclude_internal_links=exclude_internal_links)
     # Append the current source into accumulated_sources if content is scraped successfully
-    if content:
+    if content and not check_if_content_exceeds_limit(content):
         accumulated_sources.append({
             "url": url,
             "content": content,
@@ -51,8 +53,12 @@ def gather_sources(supabase, topic, MIN_SOURCES=2, overload=False, depth=2, excl
     if required_sources > 0:
         related_sources = search_related_sources(topic["name"], len(existing_sources))
 
-        for source in related_sources[:required_sources]:
-            if source['url'] == "https://thehackernews.com/search?" or "msn.com" in source['url']:  # Skip the URL to be deleted
+        for source in related_sources:
+            if len(accumulated_sources) >= required_sources:
+                # Break once we've accumulated enough sources
+                break
+            
+            if source['url'] == "https://thehackernews.com/search?" or "msn.com" in source['url']:  
                 continue
 
             gather_and_store_sources(supabase, source["url"], topic["id"], date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources)
@@ -69,7 +75,7 @@ def search_related_sources(query, offset=0):
     # Call the Bing API
     endpoint = "https://api.bing.microsoft.com/v7.0/news/search"
     bing_api_key = os.getenv('BING_NEWS_KEY')
-    params = {"q": query, "mkt": "en-US", "count": 5, "offset": offset}
+    params = {"q": query, "mkt": "en-US", "count": 10, "offset": offset}
     headers = {"Ocp-Apim-Subscription-Key": bing_api_key}
     response = requests.get(endpoint, headers=headers, params=params)
     news_result = response.json()

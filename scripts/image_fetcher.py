@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from supabase import create_client, Client
 from pexels_api import API
 from typing import List, Dict, Optional, Union
+from PIL import Image
+from io import BytesIO
 
 # Load .env file
 load_dotenv()
@@ -17,6 +19,18 @@ pexels_api_key = os.getenv('PEXELS_API_KEY')
 pexels_api = API(pexels_api_key)
 # Load WP Media endpoint
 wp_media_endpoint = os.getenv('WP_MEDIA_ENDPOINT')
+
+def resize_image(content, width, height):
+    # Open the image from binary content
+    image = Image.open(BytesIO(content))
+
+    # Resize the image
+    resized_image = image.resize((width, height))
+
+    # Save the resized image to a new binary file
+    buffered = BytesIO()
+    resized_image.save(buffered, format=image.format)
+    return buffered.getvalue()
 
 def upload_image_to_wordpress(token, image_url, image_type, origin_id):
     # Fetch the image
@@ -33,9 +47,12 @@ def upload_image_to_wordpress(token, image_url, image_type, origin_id):
         'Content-Type': '',  
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.81',
     }
+
+    # Resize the image
+    image_binary = resize_image(image_response.content, 600, 260)
     
     # Upload the image
-    response = requests.post(wp_media_endpoint, headers=headers, data=image_response.content)  # Send image content as data
+    response = requests.post(wp_media_endpoint, headers=headers, data=image_binary)  # Send image content as data
     
     # Check the upload status
     if response.status_code == 201:

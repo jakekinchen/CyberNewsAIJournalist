@@ -238,6 +238,8 @@ def inject_images_into_post_info(post_info, images, focus_keyword=None):
     # If there is only one image, insert it under the h1 tag
     if len(images) == 1:
         img_tag = soup.new_tag("img", src=images[0]['wp_url'], alt=images[0]['description'])
+        img_tag['width'] = '600'
+        img_tag['height'] = '260'
         h1_tag = soup.find('h1')
         post_info['featured_media'] = images[0]['wp_id']
         if h1_tag:

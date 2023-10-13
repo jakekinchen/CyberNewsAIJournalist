@@ -97,6 +97,7 @@ async def delete_supabase_post(topic_id):
     print(f"Successfully deleted post with topic ID {topic_id}.")
 
 async def main():
+    total_start_time = time.time()
     token = get_jwt_token(wp_username, wp_password)
 
     if token is None:
@@ -186,7 +187,7 @@ async def main():
             
     except Exception as e:
         print(f"Failed to process new articles: {e}")
-    
+    print(f"Total program took {time.time() - total_start_time:.2f} seconds")
     print("Program Complete.")
 
 if __name__ == "__main__":
