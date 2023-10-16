@@ -24,7 +24,7 @@ supabase_key: str = os.getenv('SUPABASE_KEY')
 # Initialize Supabase
 supabase: Client = create_client(supabase_url = supabase_url, supabase_key = supabase_key)
 
-amount_of_topics = 1
+amount_of_topics = 2
 MIN_SOURCES = 3
 exploit_fetcher_activated = False
 debug = False
@@ -96,6 +96,64 @@ async def delete_supabase_post(topic_id):
   
     print(f"Successfully deleted post with topic ID {topic_id}.")
 
+async def process_topic(topic, token):
+    # Gather Sources
+    start_time = time.time()
+    try:
+        gather_sources(supabase, topic, MIN_SOURCES, False)
+        print(f"Sources gathered in {time.time() - start_time:.2f} seconds")
+    except Exception as e:
+        print(f"Failed to gather sources: {e}")
+        await delete_topic(topic['id'])
+        return
+
+    # Generate Fact Sheets
+    start_time = time.time()
+    try:
+        topic['factsheet'], topic['external_source_info'] = create_factsheets_for_sources(topic)
+        if topic['factsheet'] is None:
+            print("Failed to create any factsheets")
+            await delete_topic(topic['id'])
+            return
+        print(f"Factsheet created in {time.time() - start_time:.2f} seconds")
+    except Exception as e:
+        print(f"Failed to create factsheet: {e}")
+        await delete_topic(topic['id'])
+        return
+    if topic['factsheet'] is None:
+        print("Failed to create any factsheets")
+        await delete_topic(topic['id'])
+        return
+    # Generate News
+    start_time = time.time()
+    try:
+        post_info = post_synthesis(token, topic)
+        print(f"Post synthesized in {time.time() - start_time:.2f} seconds")
+    except Exception as e:
+        print(f"Failed to synthesize post: {e}")
+        await delete_topic(topic['id'])
+        return
+    
+    # Insert Post Info into Supabase
+    start_time = time.time()
+    try:
+        insert_post_info_into_supabase(post_info)
+        print(f"Post info inserted into Supabase in {time.time() - start_time:.2f} seconds")
+    except Exception as e:
+        print(f"Failed to insert post info into Supabase: {e}")
+        await delete_topic(topic['id'])
+        return
+    
+    # Create WordPress Post
+    start_time = time.time()
+    try:
+        create_wordpress_post(token, post_info, datetime.now())
+        print(f"Post created in {time.time() - start_time:.2f} seconds")
+    except Exception as e:
+        print(f"Failed to create post: {e}")
+        await delete_topic(topic['id'])
+        return
+
 async def main():
     total_start_time = time.time()
     token = get_jwt_token(wp_username, wp_password)
@@ -109,8 +167,6 @@ async def main():
         await test_scraping_site()
         return
     
-    #print(test_scraping_site())
-
     # Upload new cisa exploits
     start_time = time.time()
     result = await get_cisa_exploits()
@@ -124,67 +180,9 @@ async def main():
         start_time = time.time()
         generated_topics = generate_topics(supabase, amount_of_topics)
         print(f"Generated {len(generated_topics)} new topics in {time.time() - start_time:.2f} seconds")
-        
         for topic in generated_topics:
             print(f"Processing topic: {topic['name']}")
-            
-            # Gather Sources
-            start_time = time.time()
-            try:
-                gather_sources(supabase, topic, MIN_SOURCES, False)
-                print(f"Sources gathered in {time.time() - start_time:.2f} seconds")
-            except Exception as e:
-                print(f"Failed to gather sources: {e}")
-                await delete_topic(topic['id'])
-                continue
-
-            # Generate Fact Sheets
-            start_time = time.time()
-            try:
-                topic['factsheet'], topic['external_source_info'] = create_factsheets_for_sources(topic)
-                if topic['factsheet'] is None:
-                    print("Failed to create any factsheets")
-                    await delete_topic(topic['id'])
-                    continue
-                print(f"Factsheet created in {time.time() - start_time:.2f} seconds")
-            except Exception as e:
-                print(f"Failed to create factsheet: {e}")
-                await delete_topic(topic['id'])
-                continue
-            if topic['factsheet'] is None:
-                print("Failed to create any factsheets")
-                await delete_topic(topic['id'])
-                continue
-            # Generate News
-            start_time = time.time()
-            try:
-                post_info = post_synthesis(token, topic)
-                print(f"Post synthesized in {time.time() - start_time:.2f} seconds")
-            except Exception as e:
-                print(f"Failed to synthesize post: {e}")
-                await delete_topic(topic['id'])
-                continue
-            
-            # Insert Post Info into Supabase
-            start_time = time.time()
-            try:
-                insert_post_info_into_supabase(post_info)
-                print(f"Post info inserted into Supabase in {time.time() - start_time:.2f} seconds")
-            except Exception as e:
-                print(f"Failed to insert post info into Supabase: {e}")
-                await delete_topic(topic['id'])
-                continue
-            
-            # Create WordPress Post
-            start_time = time.time()
-            try:
-                create_wordpress_post(token, post_info, datetime.now())
-                print(f"Post created in {time.time() - start_time:.2f} seconds")
-            except Exception as e:
-                print(f"Failed to create post: {e}")
-                await delete_topic(topic['id'])
-                continue
-            
+            await process_topic(topic, token)
     except Exception as e:
         print(f"Failed to process new articles: {e}")
     print(f"Total program took {time.time() - total_start_time:.2f} seconds")
