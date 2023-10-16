@@ -14,8 +14,9 @@ bing_api_key = os.getenv('BING_SEARCH_KEY')
 
 def check_if_content_exceeds_limit(content):
     # Check if the source content exceeds the limit
-    if tokenizer(content, 'gpt-3.5-turbo-16k') >= 16384:
-        logging.warning(f"Source content exceeds the limit: {tokenizer(content)}")
+    token_quantity = tokenizer(content, 'gpt-3.5-turbo-16k')
+    if token_quantity >= 16384:
+        logging.warning(f"Source content exceeds the limit: {token_quantity}")
         return True
 
 

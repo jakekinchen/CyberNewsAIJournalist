@@ -20,12 +20,25 @@ pexels_api = API(pexels_api_key)
 # Load WP Media endpoint
 wp_media_endpoint = os.getenv('WP_MEDIA_ENDPOINT')
 
-def resize_image(content, width, height):
+def resize_image(content, base_width, base_height):
     # Open the image from binary content
     image = Image.open(BytesIO(content))
 
-    # Resize the image
-    resized_image = image.resize((width, height))
+    # Calculate aspect ratio
+    original_width, original_height = image.size
+    aspect_ratio = original_width / original_height
+
+    # Calculate new dimensions to fit within specified width and height 
+    # while maintaining the original aspect ratio
+    if original_width > original_height:
+        new_width = base_width
+        new_height = int(base_width / aspect_ratio)
+    else:
+        new_height = base_height
+        new_width = int(base_height * aspect_ratio)
+
+    # Resize the image using the LANCZOS filter
+    resized_image = image.resize((new_width, new_height), Image.Resampling.LANCZOS)
 
     # Save the resized image to a new binary file
     buffered = BytesIO()
@@ -49,7 +62,7 @@ def upload_image_to_wordpress(token, image_url, image_type, origin_id):
     }
 
     # Resize the image
-    image_binary = resize_image(image_response.content, 600, 260)
+    image_binary = resize_image(image_response.content, 760, 340)
     
     # Upload the image
     response = requests.post(wp_media_endpoint, headers=headers, data=image_binary)  # Send image content as data

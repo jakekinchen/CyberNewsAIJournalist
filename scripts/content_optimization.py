@@ -107,30 +107,27 @@ def fetch_sources_from_query(query):
     return related_sources
 
 def insert_tech_term_link(content: str, tech_term: str) -> str:
-    # Construct the hyperlink
     link = generate_link_from_term(tech_term)
-    hyperlink = f'<a href="{link}">{tech_term}</a>'
 
-    if not hyperlink:
+    if not link:
         print(f"Failed to generate hyperlink for tech term {tech_term}. Returning the original content.")
         return content
     
-    # Define a flag to indicate whether the tech_term has been replaced
     replaced = False
 
     def repl(match):
         nonlocal replaced
-        block = match.group(0)
-        if not replaced and tech_term.lower() in block.lower():  # Case-insensitive search
+        word = match.group(0)  # Extract the matched word
+
+        hyperlink = f'<a href="{link}">{word}</a>'
+        if not replaced:
             replaced = True
-            # Replace only the first occurrence in the block, case-insensitive
-            return re.sub(tech_term, hyperlink, block, flags=re.IGNORECASE, count=1)  
-        return block
+            return hyperlink
+        return word
 
-    # Use re.sub to find <p>...</p> blocks and apply the repl function to each block
-    modified_content, _ = re.subn(r'<p>.*?</p>', repl, content, flags=re.DOTALL)
+    # Use re.sub to find all case-insensitive occurrences of the tech term and apply the repl function
+    modified_content, _ = re.subn(r'\b' + re.escape(tech_term) + r'\b', repl, content, flags=re.IGNORECASE)
 
-    # If no replacement has been done, log a warning and return the original content
     if not replaced:
         print(f"Tech term {tech_term} not found in the content. Returning the original content.")
     return modified_content
@@ -189,7 +186,8 @@ def select_tech_term_source(sources):
         return None
         
 
-def function_call_gpt(user_prompt, system_prompt, model, functions, function_call_mode='auto'):
+def function_call_gpt(user_prompt, system_prompt, model, functions, function_call_mode="auto"):
+    function_call_mode={"name": f"{functions[0]['name']}"}
     try:
         response = openai.ChatCompletion.create(
             model=model,
@@ -204,6 +202,7 @@ def function_call_gpt(user_prompt, system_prompt, model, functions, function_cal
         return json.loads(response.choices[0].message.function_call.arguments)
     except Exception as err:
         logging.error(err)
+        print(f"Parameters: {functions}")
         print (f"Failed to call function: {err}")
 
 def query_gpt(user_prompt, system_prompt="You are a response machine that only responds with the requested information", model='gpt-3.5-turbo'):
@@ -254,6 +253,7 @@ def create_factsheets_for_sources(topic):
     combined_factsheet = ""
     external_source_info = []
     for source in related_sources:
+        #if source['external_source'].endswith("pdf"):
         source_factsheet = create_factsheet(source, topic['name']) if not source['factsheet'] else source['factsheet']
         if not source_factsheet:
             print(f"Failed to create factsheet for source {source['id']}")
@@ -424,7 +424,7 @@ def regenerate_image_queries(post_info):
         ]
     try:
         logging.info("Regenerating image queries")
-        image_queries = function_call_gpt(user_prompt, system_prompt, "gpt-3.5", functions)
+        image_queries = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo", functions)
         print(f"Image queries generated: {image_queries}")
         return image_queries
     except Exception as e:

@@ -16,4 +16,5 @@ storage3
 supafunc
 certifi
 tiktoken
+Pillow
 #playwright==1.38

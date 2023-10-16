@@ -132,7 +132,7 @@ def post_synthesis(token, topic):
     # Sanitize factsheet by replacing newline characters and other special characters with a space
     sanitized_factsheet = re.sub(r'[\n\r]', ' ', factsheet)
 
-    user_messages = f"{sanitized_factsheet}" + "\n\n And here are external sources you can use to add helpful information and link with an a-tag with href at the external source's url" + f"{external_source_info}"
+    user_messages = f"{sanitized_factsheet}" + "\n\n And here are external sources you can use to add helpful information and link with an a-tag with href at the external source's url" + f"{external_source_info}: Make sure to use 'a' tags with hrefs to link to the external sources. Use the tag on the word or phrase that is most relevant to the external source."
     synthesized_article = query_gpt(user_messages, synthesis_prompt, model='gpt-4')
     print("Synthesized article generated")
     # Chat completion to generate other JSON fields for post
@@ -146,7 +146,6 @@ def post_synthesis(token, topic):
         'yoast_meta': {},
     }
     post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
-    print("What is going on here?")
 
     def remove_newlines_before_title(html_content):
         # Find the index of the <title> tag
@@ -160,10 +159,6 @@ def post_synthesis(token, topic):
         return html_content
     # Remove if there are any \n characters that appear anywhere in the section of the html before the first title <title> tag
     post_info['content'] = remove_newlines_before_title(post_info['content'])
-
-
-    if json_dict['image_queries']:
-        print(f"Image queries before dictionary extraction: {json_dict['image_queries']}")
 
     # Extract and validate fields from json_dict and add them to post_info
     def extract_field(field_name, default_value=None):
@@ -210,7 +205,6 @@ def post_synthesis(token, topic):
             return
         
     # Handle image_queries and inject images
-    print(f"Image queries after dictionary extraction: {post_info['image_queries']}")
     try:
         print("Fetching images...")
         images = fetch_images_from_queries(post_info['image_queries'], token, topic['id'])
@@ -238,8 +232,8 @@ def inject_images_into_post_info(post_info, images, focus_keyword=None):
     # If there is only one image, insert it under the h1 tag
     if len(images) == 1:
         img_tag = soup.new_tag("img", src=images[0]['wp_url'], alt=images[0]['description'])
-        img_tag['width'] = '600'
-        img_tag['height'] = '260'
+        #img_tag['width'] = '600'
+        #img_tag['height'] = '260'
         h1_tag = soup.find('h1')
         post_info['featured_media'] = images[0]['wp_id']
         if h1_tag:

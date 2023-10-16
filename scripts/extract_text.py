@@ -6,107 +6,49 @@ import os
 import random
 from dotenv import load_dotenv
 from urllib.parse import urlparse
-from scrapingbee import ScrapingBeeClient
-#from playwright.async_api import async_playwright
-#import asyncio
+import certifi
 
 load_dotenv()
-brightdata_host = os.getenv('BRIGHTDATA_HOST')
 
-dc_username = os.getenv('BRIGHTDATA_DC_USERNAME')
-dc_password = os.getenv('BRIGHTDATA_DC_PASSWORD')
-dc_port = os.getenv('BRIGHTDATA_DC_PORT')
-
-res_username = os.getenv('BRIGHTDATA_RES_USERNAME')
-res_password = os.getenv('BRIGHTDATA_RES_PASSWORD')
-res_port = os.getenv('BRIGHTDATA_RES_PORT')
-
-sb_username = os.getenv('BRIGHTDATA_SB_USERNAME')
-sb_password = os.getenv('BRIGHTDATA_SB_PASSWORD')
-sb_port = os.getenv('BRIGHTDATA_SB_PORT')
-
-scraping_bee_api_key = os.getenv('SCRAPING_BEE_API_KEY')
-
-headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
-
-def test_scraping_site():
+async def test_scraping_site():
     url = 'https://nvd.nist.gov/vuln/detail/CVE-2023-20109'
     html = scrape_content(url, depth=1, exclude_internal_links=True, include_links=True)
     print(html)
 
-def test_scraping_site_msn():
-    url = 'https://nvd.nist.gov/vuln/detail/CVE-2023-20109'
-    html = scrape_content(url, depth=1, exclude_internal_links=True, include_links=True)
-    print(html)
-
-def establish_connection(url, prioritize_res_proxy=True):
+def establish_connection(url):
     hostname = urlparse(url).hostname
-
-    #if hostname == 'nvd.nist.gov':
-    #    return fetch_without_proxy(url)
-    
-    if prioritize_res_proxy:
-        return fetch_using_dc_proxy(url) or fetch_using_res_proxy(url) or fetch_using_scraping_bee(url) or fetch_without_proxy(url)
+    if '.gov' in hostname:
+        fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
     else:
-        return fetch_using_dc_proxy(url) or fetch_using_scraping_bee(url) or fetch_without_proxy(url)
+        return fetch_using_proxy(url, 'dc') or fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
+
+def fetch_using_proxy(url, proxy_type=None):
+    ca_bundle_path = '/usr/local/share/ca-certificates/CA-BrightData.crt'
+
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
     
-def fetch_using_scraping_bee(url):
-    client = ScrapingBeeClient(api_key=scraping_bee_api_key)
+    # Check if proxy_type is not None and not an empty string
+    if proxy_type:
+        # Convert proxy type to uppercase
+        proxy_type = proxy_type.upper()
+        # Get the proxy credentials and port from environment variables
+        username = os.getenv(f'BRIGHTDATA_{proxy_type}_USERNAME')
+        password = os.getenv(f'BRIGHTDATA_{proxy_type}_PASSWORD')
+        port = os.getenv(f'BRIGHTDATA_{proxy_type}_PORT')
+        # Construct the proxy URL
+        super_proxy = f"http://{username}:{password}@brd.superproxy.io:{port}"
+        proxies = {"http": super_proxy, "https": super_proxy}
+    else:
+        proxies = None
+        proxy_type = 'no'
+    
+    # Try to fetch the URL using the proxy (if specified)
     try:
-        response = client.get(url=url, params={'render_js': 'false'})
-        if response.status_code == 200:
-            return response.content
-        else:
-            raise Exception(f"Error with Scraping Bee for {url}: {response.content}")
-    except Exception as e:
-        print(f"Error with Scraping Bee for {url}: {e}")
-        return None
-
-def fetch_using_dc_proxy(url):
-    session_id = random.randint(0, 1000000)
-    super_proxy = f"http://brd-customer-{dc_username}-session-{session_id}-zone-unblocker:{dc_password}@brd.superproxy.io:{dc_port}"
-    proxies = {"http": super_proxy, "https": super_proxy}
-    try:
-        response = requests.get(url, proxies=proxies, headers=headers, verify=False)
+        response = requests.get(url, proxies=proxies, headers=headers, verify=ca_bundle_path) 
         response.raise_for_status()
         return response.text
     except requests.exceptions.RequestException as e:
-        print(f"Error with DC proxy for {url}: {e}")
-        return None
-
-def fetch_using_res_proxy(url):
-    session_id = random.randint(0, 1000000)
-    res_super_proxy = f"http://brd-customer-{res_username}-session-{session_id}-zone-unblocker:{res_password}@brd.superproxy.io:{res_port}"
-    res_proxies = {"http": res_super_proxy, "https": res_super_proxy}
-    try:
-        res_response = requests.get(url, proxies=res_proxies, headers=headers, verify=False)
-        res_response.raise_for_status()
-        return res_response.text
-    except requests.exceptions.RequestException as e:
-        print(f"Error with RES proxy for {url}: {e}")
-        return None
-
-"""
-async def fetch_using_scraping_browser(url):
-    try:
-        async with async_playwright() as p:
-            browser = await p.chromium.connect_over_cdp(f'wss://{sb_username}:{sb_password}@{brightdata_host}:{sb_port}')
-            page = await browser.new_page()
-            await page.goto(url, timeout=2 * 60 * 1000)
-            html = await page.content()
-            await browser.close()
-            return html
-    except Exception as e:
-        print(f"Error with scraping browser for {url}: {e}")
-        return None
-"""
-def fetch_without_proxy(url):
-    try:
-        response = requests.get(url, headers=headers, verify=False)
-        response.raise_for_status()
-        return response.text
-    except requests.exceptions.RequestException as e:
-        print(f"Error without proxy for {url}: {e}")
+        print(f"Error with using {proxy_type} proxy for {url}: {e}")
         return None
     
 def is_valid_http_url(url):
@@ -129,8 +71,19 @@ def extract_external_links(soup, base_domain, depth, exclude_internal_links):
                     external_links.append(href)
     return external_links
 
-def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True):
+def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True, is_external=False):
     try:
+        # Check if the URL points to a PDF
+        if url.lower().endswith('.pdf'):
+            if is_external:
+                # If it's an external link, don't scrape it but include it in the external links
+                return None, [url]
+            else:
+                # If it's a main source, skip over it
+                print(f"Skipping main PDF source: {url}")
+                return None, []
+        
+        # The rest of your scraping logic remains the same
         html = establish_connection(url)
         if html is None:
             raise ValueError("Unable to retrieve HTML")

@@ -10,9 +10,13 @@ COPY ./requirements.txt /app/requirements.txt
 
 # Install any needed packages specified in requirements.txt
 RUN python3 -m ensurepip --upgrade
-#RUN pip install playwright==1.38
-#RUN python -m playwright install chromium
 RUN pip3 install --no-cache-dir -r /app/requirements.txt
+# Install w-get
+RUN apt-get update && apt-get install -y wget
+# Download the CA certificate
+RUN wget -O /usr/local/share/ca-certificates/CA-BrightData.crt https://help.brightdata.com/hc/en-us/article_attachments/6843466967057
+# Update the certificates
+RUN update-ca-certificates
 
 # Make port 80 available to the world outside this container
 EXPOSE 80
