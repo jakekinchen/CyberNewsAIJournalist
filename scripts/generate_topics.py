@@ -1,4 +1,4 @@
-import requests
+import httpx
 import xml.etree.ElementTree as ET
 import json
 import logging
@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 def fetch_and_process_xml(url):
-    response = requests.get(url)
+    response = httpx.get(url)
     data = response.text
     etree = ET.ElementTree(ET.fromstring(data))
     return etree.findall("./channel/item")

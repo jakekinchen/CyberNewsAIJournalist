@@ -16,5 +16,8 @@ storage3
 supafunc
 certifi
 tiktoken
-Pillow
+pillow
+httpx
+pyopenssl
+tenacity
 #playwright==1.38

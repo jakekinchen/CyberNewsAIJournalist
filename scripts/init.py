@@ -1,28 +1,22 @@
 import os
-import requests
+import httpx
 import datetime
 from datetime import datetime, timedelta
 from generate_topics import generate_topics
-from supabase import create_client, Client
+from supabase_utils import supabase
+from utils import inspect_all_methods
 from source_fetcher import gather_sources
 from content_optimization import create_factsheets_for_sources
 from post_synthesis import post_synthesis, insert_post_info_into_supabase
 from wp_post import create_wordpress_post
 from extract_text import test_scraping_site
 import asyncio
-import httpx
 from cisa import get_cisa_exploits
 # Load environment variables
 from dotenv import load_dotenv
 import logging
 import time
 load_dotenv()
-
-# Supabase configuration
-supabase_url: str = os.getenv('SUPABASE_ENDPOINT')
-supabase_key: str = os.getenv('SUPABASE_KEY')
-# Initialize Supabase
-supabase: Client = create_client(supabase_url = supabase_url, supabase_key = supabase_key)
 
 amount_of_topics = 2
 MIN_SOURCES = 3
@@ -33,8 +27,7 @@ synthesize_factsheets = False
 # Access your API keys and token
 wp_username = os.getenv('WP_USERNAME')
 wp_password = os.getenv('WP_PASSWORD')
-wp_token = os.getenv('WP_TOKEN')  # Get the token from environment variables
-#os.getenv('WP_TOKEN')  # Get the token from environment variables
+wp_token = os.getenv('WP_TOKEN')
 
 # Get the JWT token for WordPress
 def get_jwt_token(username, password):
@@ -48,7 +41,7 @@ def get_jwt_token(username, password):
         'username': username,
         'password': password
     }
-    response = requests.post(token_endpoint, data=payload)
+    response = httpx.post(token_endpoint, data=payload)
     if response.status_code == 200:
         token = response.json().get('token')  # Get token directly from JSON response
         #logging.info(f"Received token: {token}")
@@ -65,25 +58,6 @@ async def delete_topic(topic_id):
         print(f"Failed to delete topic: {e}")
         return
     print(f"Successfully deleted topic with ID {topic_id} and all related sources.")
-
-def post_the_most_recent_topic(token):
-    # Get the most recent topic
-    response = supabase.table("topics").select("*").execute()
-    topic = response.data[0]
-    # Post the most recent topic
-    post_info = post_synthesis(token, topic)
-    # Upload post info to wordpress if post_info['complete_with_images'] is not None and post_info['complete_with_images'] == True:
-    if post_info['complete_with_images'] == True:
-        create_wordpress_post(post_info, datetime.now() + datetime.timedelta(days=1))
-    else:
-        print("Uploaded to Supabase but not to WordPress because the WP database would not allow images to be uploaded")
-
-def post_with_post_id(token, post_id):
-    #Take the post from supabase with the post id and post it an hour from now to the wordpress site
-    response = supabase.table("posts").select("*").eq("id", post_id).execute()
-    post_info = response.data[0]
-    print(f"Post info: {post_info}")
-    create_wordpress_post(token, post_info, datetime.now() + timedelta(hours=1))
 
 async def delete_supabase_post(topic_id):
     # topic_id is a foreign key in the supabase table posts
@@ -128,6 +102,10 @@ async def process_topic(topic, token):
     start_time = time.time()
     try:
         post_info = post_synthesis(token, topic)
+        if post_info is None:
+            print("Failed to create post info")
+            await delete_topic(topic['id'])
+            return
         print(f"Post synthesized in {time.time() - start_time:.2f} seconds")
     except Exception as e:
         print(f"Failed to synthesize post: {e}")
@@ -154,6 +132,16 @@ async def process_topic(topic, token):
         await delete_topic(topic['id'])
         return
 
+async def fetch_cisa_exploits():
+    # Upload new cisa exploits
+    start_time = time.time()
+    result = await get_cisa_exploits()
+    if result == False:
+        print("Failed to get CISA exploits")
+        return
+    else:
+        print(f"Got CISA exploits in {time.time() - start_time:.2f} seconds")
+
 async def main():
     total_start_time = time.time()
     token = get_jwt_token(wp_username, wp_password)
@@ -164,17 +152,14 @@ async def main():
     
     if debug:
         print("Debug mode enabled")
-        await test_scraping_site()
+        #await test_scraping_site()
+        inspect_all_methods(['load_dotenv', 'create_client'])
+        #await fetch_cisa_exploits()
+
         return
     
-    # Upload new cisa exploits
-    start_time = time.time()
-    result = await get_cisa_exploits()
-    if result == False:
-        print("Failed to get CISA exploits")
-        return
-    else:
-        print(f"Got CISA exploits in {time.time() - start_time:.2f} seconds")
+    await fetch_cisa_exploits()
+    
     # Generate topics
     try:
         start_time = time.time()

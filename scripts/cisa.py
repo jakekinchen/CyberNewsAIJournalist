@@ -1,19 +1,16 @@
 #Download the Json at the following url and save the attributes to the supabase table labeled exploits: https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json
-import requests
+import httpx
 import json
 import os
-from supabase import create_client, Client
+from supabase_utils import supabase
 from dotenv import load_dotenv
 from bs4 import BeautifulSoup
-
-supabase_url = os.getenv('SUPABASE_ENDPOINT')
-supabase_key = os.getenv('SUPABASE_KEY')
-supabase: Client = create_client(supabase_url, supabase_key)
+from datetime import datetime
 
 def get_exploits():
     # Get the JSON from CISA
     try:
-        response = requests.get("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json")
+        response = httpx.get("https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json")
     except:
         return
     # Convert the JSON to a Python dictionary
@@ -36,6 +33,9 @@ def isolate_new_exploits(exploits):
     print(f"Found {len(new_exploits)} new exploits")
     return new_exploits
 
+# New exploits: ['CVE-2023-20198', 'CVE-2023-4966']
+#python_scraping_test-app-1  | Failed to insert exploits: {'code': 'PGRST204', 'details': None, 'hint': None, 'message': "Column 'knownRansomwareCampaignUse' of relation 'exploits' does not exist"}
+
 def format_json_for_supabase(exploits, catalog_version):
     # take each object and replace each object's field names cveID, vendorProject, product, vulnerabilityName, dateAdded, shortDescription, requiredAction, dueDate, and notes to cve, vendor_project, product, vulnerability_name, date_added, short_description, required_action, due_date, and notes respectively
     # also for each object, add field url that is the string https://nvd.nist.gov/vuln/detail/ + the cve field
@@ -44,6 +44,7 @@ def format_json_for_supabase(exploits, catalog_version):
     # then return the array of objects
     for exploit in exploits:
         exploit['cve'] = exploit.pop('cveID')
+        exploit['known_ransomware_campaign_use'] = exploit.pop('knownRansomwareCampaignUse')
         exploit['vendor_project'] = exploit.pop('vendorProject')
         exploit['vulnerability_name'] = exploit.pop('vulnerabilityName')
         exploit['date_added'] = exploit.pop('dateAdded')
@@ -87,6 +88,11 @@ def insert_or_update_exploits(exploits):
             supabase.table('exploits').insert(exploits_to_insert).execute()
             print("Successfully inserted exploits")
         except Exception as error:
+            if error.code == 'PGRST204':
+                print(f"Failed to insert exploits because {error.message}")
+                print(f"Here is what we tried to insert{exploits_to_insert}")
+                print("There may be a new column in the exploits table that needs to be added to the Supabase table")
+                return
             print(f'Failed to insert exploits: {error}')
             return
     if exploits_to_update:
@@ -130,7 +136,7 @@ async def get_cisa_exploits():
 def add_hyperlinks(url):
     # children of the class tag <td data-testid="vuln-hyperlinks-link-2"> are the hyperlinks
     try:
-        response = requests.get(url)
+        response = httpx.get(url)
     except Exception as error:
         print(f'Failed to get response from {url}: {error}')
         return

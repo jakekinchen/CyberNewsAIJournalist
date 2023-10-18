@@ -3,9 +3,9 @@ import os
 import openai
 from dotenv import load_dotenv
 from image_fetcher import fetch_images_from_queries # Import the image fetching function
-from supabase import create_client, Client
+from supabase_utils import supabase
 from wp_post import fetch_categories, fetch_tags
-from content_optimization import query_gpt, function_call_gpt, regenerate_image_queries, insert_tech_term_link
+from content_optimization import query_gpt, function_call_gpt, regenerate_image_queries, insert_tech_term_link, seo_optimization
 from datetime import datetime
 import ast
 import re
@@ -15,10 +15,7 @@ import math
 
 # Load .env file
 load_dotenv()
-# Supabase configuration
-supabase_url = os.getenv('SUPABASE_ENDPOINT')
-supabase_key = os.getenv('SUPABASE_KEY')
-supabase = create_client(supabase_url, supabase_key)
+# Get model and prompt from environment variables
 model = os.getenv('MODEL')
 synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
 # Set your OpenAI API key and organization
@@ -133,12 +130,26 @@ def post_synthesis(token, topic):
     sanitized_factsheet = re.sub(r'[\n\r]', ' ', factsheet)
 
     user_messages = f"{sanitized_factsheet}" + "\n\n And here are external sources you can use to add helpful information and link with an a-tag with href at the external source's url" + f"{external_source_info}: Make sure to use 'a' tags with hrefs to link to the external sources. Use the tag on the word or phrase that is most relevant to the external source."
-    synthesized_article = query_gpt(user_messages, synthesis_prompt, model='gpt-4')
+    raw_synthesized_article = query_gpt(user_messages, synthesis_prompt, model='gpt-4')
+    if not raw_synthesized_article:
+        print("Synthesized article is empty. Continuing...")
+        return None
+    synthesized_article = None
+    try:
+        synthesized_article = seo_optimization(raw_synthesized_article)
+    except Exception as e:
+        print(f"Failed to optimize the article for SEO: {e}")
+    if not synthesized_article:
+        print("Synthesized article is empty after seo optimization. Continuing...")
+        synthesized_article = raw_synthesized_article
     print("Synthesized article generated")
     # Chat completion to generate other JSON fields for post
     json_dict = post_completion(synthesized_article, json_function)
     print("Post completion generated")
    # Initialize post_info
+    if json_dict is None:
+         print("JSON dict from post completion is None")
+         return None
     post_info = {
         'topic_id': topic['id'],
         'content': synthesized_article + "\n\nIf you enjoyed this article, please check out our other articles on <a href=\"https://cybernow.info\">CyberNow</a>",
@@ -208,9 +219,12 @@ def post_synthesis(token, topic):
     try:
         print("Fetching images...")
         images = fetch_images_from_queries(post_info['image_queries'], token, topic['id'])
+        if not images:
+            return None
         post_info = inject_images_into_post_info(post_info, images)
     except Exception as e:
         print(f"Failed to generate images: {e}")
+        return None
 
     post_info['date_created'] = datetime.now().isoformat()
     # Save the post information to their respective fields in Supabase in the posts table
@@ -293,6 +307,9 @@ def insert_post_info_into_supabase(post_info):
         if e.code == 'PGRST102':
             print("An invalid request body was sent(e.g. an empty body or malformed JSON).")
             print("Tried to insert the following post info:")
+        if e.code == '22P02':
+            print("An invalid request body was sent(e.g. an empty body or malformed JSON).")
+            print(f"Tried to insert the following post info:{post_info}")
         else:
             print(f"Failed to save post information to Supabase. Continuing...")
             return

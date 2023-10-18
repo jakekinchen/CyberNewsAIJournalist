@@ -1,5 +1,5 @@
 import os
-import requests
+import httpx
 from dotenv import load_dotenv
 from datetime import datetime
 from extract_text import scrape_content
@@ -20,9 +20,9 @@ def check_if_content_exceeds_limit(content):
         return True
 
 
-def gather_and_store_sources(supabase, url, topic_id, date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources):
+def gather_and_store_sources(supabase, url, topic_id, date_accessed, depth, existing_sources, accumulated_sources):
 
-    content, external_links = scrape_content(url, depth=depth, exclude_internal_links=exclude_internal_links)
+    content, external_links = scrape_content(url, depth=depth)
     # Append the current source into accumulated_sources if content is scraped successfully
     if content and not check_if_content_exceeds_limit(content):
         accumulated_sources.append({
@@ -37,10 +37,10 @@ def gather_and_store_sources(supabase, url, topic_id, date_accessed, depth, excl
     # Recursively gather and store sources for external links found
     if depth > 1 and external_links:
         for link in external_links:
-            gather_and_store_sources(supabase, link, topic_id, date_accessed, depth - 1, exclude_internal_links, existing_sources, accumulated_sources)
+            gather_and_store_sources(supabase, link, topic_id, date_accessed, depth - 1, existing_sources, accumulated_sources)
 
 
-def gather_sources(supabase, topic, MIN_SOURCES=2, overload=False, depth=2, exclude_internal_links=True):
+def gather_sources(supabase, topic, MIN_SOURCES=2, overload=False, depth=2):
     date_accessed = datetime.now().isoformat()
 
     response = supabase.table("sources").select("url").eq("topic_id", topic["id"]).execute()
@@ -59,10 +59,10 @@ def gather_sources(supabase, topic, MIN_SOURCES=2, overload=False, depth=2, excl
                 # Break once we've accumulated enough sources
                 break
             
-            if source['url'] == "https://thehackernews.com/search?" or "msn.com" in source['url']:  
+            if source['url'] == "https://thehackernews.com/search?" or "msn.com" in source['url'] or "twitter.com" in source['url']:  
                 continue
 
-            gather_and_store_sources(supabase, source["url"], topic["id"], date_accessed, depth, exclude_internal_links, existing_sources, accumulated_sources)
+            gather_and_store_sources(supabase, source["url"], topic["id"], date_accessed, depth, existing_sources, accumulated_sources)
 
     # Batch insert the accumulated sources into Supabase
     if accumulated_sources:
@@ -78,7 +78,7 @@ def search_related_sources(query, offset=0):
     bing_api_key = os.getenv('BING_NEWS_KEY')
     params = {"q": query, "mkt": "en-US", "count": 10, "offset": offset}
     headers = {"Ocp-Apim-Subscription-Key": bing_api_key}
-    response = requests.get(endpoint, headers=headers, params=params)
+    response = httpx.get(endpoint, headers=headers, params=params)
     news_result = response.json()
 
     # Extract related sources
@@ -106,7 +106,7 @@ def search_related_articles(topic):
 
     print("Querying Bing API with topic: " + str(topic))
 
-    response = requests.get(endpoint, headers=headers, params=params)
+    response = httpx.get(endpoint, headers=headers, params=params)
     response.raise_for_status()
 
     news_result = response.json()

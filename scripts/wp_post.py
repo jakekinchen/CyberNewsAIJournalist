@@ -1,6 +1,6 @@
 import os
 import json
-import requests
+import httpx
 import csv
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
@@ -45,7 +45,7 @@ def add_tag_to_wordpress(token, tag):
     tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
 
     # Check if the tag already exists
-    response = requests.get(tags_endpoint, headers=headers)
+    response = httpx.get(tags_endpoint, headers=headers)
     if response.status_code == 200:
         tags = response.json()
         for existing_tag in tags:
@@ -60,7 +60,7 @@ def add_tag_to_wordpress(token, tag):
     payload = {
         'name': tag
     }
-    response = requests.post(tags_endpoint, headers=headers, json=payload)
+    response = httpx.post(tags_endpoint, headers=headers, json=payload)
     if response.status_code == 201:
         print(f"Created tag '{tag}'")
         return response.json().get('id')
@@ -102,7 +102,7 @@ def create_wordpress_post(token, post_info, post_time):
        # else:
        #     print(f"Skipping invalid field: {key}, expected type {post_fields.get(key, 'Unknown')} but got {type(value)}")
     
-    response = requests.post(post_endpoint, json=sanitized_post_info, headers=headers)
+    response = httpx.post(post_endpoint, json=sanitized_post_info, headers=headers)
     
     if response.status_code == 201:
         print("Post created successfully.")
@@ -117,7 +117,7 @@ def fetch_categories(token):
     
     # Fetch the categories
     categories_endpoint = "http://cybernow.info/wp-json/wp/v2/categories"
-    response = requests.get(categories_endpoint, headers=headers)
+    response = httpx.get(categories_endpoint, headers=headers)
     
     if response.status_code == 200:
         categories = response.json()
@@ -141,7 +141,7 @@ def fetch_tags(token):
     
     # Fetch the tags
     tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
-    response = requests.get(tags_endpoint, headers=headers)
+    response = httpx.get(tags_endpoint, headers=headers)
     
     if response.status_code == 200:
         tags = response.json()

@@ -1,32 +1,88 @@
 import openai
 from dotenv import load_dotenv
 import os
-from supabase import create_client, Client
+from supabase_utils import supabase
 import json
 import logging
 import re
 import tiktoken
 import asyncio
-import requests
+import httpx
+from test import HTMLMetrics
+from tenacity import (
+    retry,
+    stop_after_attempt,
+    wait_random_exponential,
+    retry_if_exception_type
+)
+import json
+import logging
 
 # Load .env file
 load_dotenv()
 bing_api_key = os.getenv('BING_SEARCH_KEY')
-
-# Supabase configuration
-supabase_url = os.getenv('SUPABASE_ENDPOINT')
-supabase_key = os.getenv('SUPABASE_KEY')
-supabase = create_client(supabase_url, supabase_key)
+response_machine_prompt = os.getenv('RESPONSE_MACHINE_PROMPT')
+tech_term_prompt = os.getenv('TECH_TERM_PROMPT')
 
 # Set your OpenAI API key and organization
 openai.api_key = os.getenv('OPENAI_KEY')
 openai.organization = os.getenv('OPENAI_ORGANIZATION')
 
+# Define the retry behavior
+@retry(
+    retry=retry_if_exception_type((openai.error.APIError, 
+                                  openai.error.APIConnectionError, 
+                                  openai.error.RateLimitError, 
+                                  openai.error.ServiceUnavailableError, 
+                                  openai.error.Timeout)),
+    wait=wait_random_exponential(multiplier=1, max=60),
+    stop=stop_after_attempt(10)
+)
+def _api_call_with_backoff(*args, **kwargs):
+    return openai.ChatCompletion.create(*args, **kwargs)
+
+def function_call_gpt(user_prompt, system_prompt, model, functions, function_call_mode="auto"):
+    function_call_mode = {"name": f"{functions[0]['name']}"}
+    try:
+        response = _api_call_with_backoff(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            functions=functions,
+            function_call=function_call_mode
+        )
+        return json.loads(response.choices[0].message.function_call.arguments)
+    except Exception as err:
+        logging.error(err)
+        print(f"Parameters: {functions}")
+        print(f"Failed to call function: {err}")
+
+def query_gpt(user_prompt, system_prompt=response_machine_prompt, model='gpt-3.5-turbo'):
+    context = f"{system_prompt} {user_prompt}"
+    try:
+        model = model_optimizer(context, model)  # assuming model_optimizer is defined elsewhere
+    except Exception as e:
+        logging.error(e)
+        raise Exception(e)
+    try:
+        response = _api_call_with_backoff(
+            model=model,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            request_timeout=150,
+        )
+        return response.choices[0].message.content
+    except openai.error.APIConnectionError as err:
+        logging.error(err)
+
 def tokenizer(string: str, encoding_name: str) -> int:
     encoding = tiktoken.encoding_for_model(encoding_name)
     num_tokens = len(encoding.encode(string))
     return num_tokens
-
 
 def model_optimizer(text, model):
     token_quantity = tokenizer(text, model)
@@ -46,6 +102,55 @@ def model_optimizer(text, model):
             raise Exception('Text is too long for GPT-3.5')
         else:
             raise Exception('Text is too long for GPT-3.5')
+        
+def seo_optimization(content):
+    print("Entering seo optimization")
+    max_attempts = 3
+    attempt = 0
+
+    while attempt < max_attempts:
+        needs_optimization, seo_prompt = assess_seo_needs(content)
+        
+        if not needs_optimization:
+            if attempt == 0:
+                print("Content does not need optimization")
+            else:
+                print("Optimization successful on attempt", attempt)
+            return content
+        
+        print(f"Optimizing content, attempt {attempt + 1}")
+        content = optimize_content(seo_prompt, content)
+        attempt += 1
+    print("Optimization not successful after maximum attempts.")
+    return content
+
+def assess_seo_needs(content):
+    metrics = HTMLMetrics(content)
+    
+    seo_prompt, score = generate_seo_prompt(metrics)
+    needs_optimization = score > 1
+
+    return needs_optimization, seo_prompt
+
+def generate_seo_prompt(metrics):
+    seo_prompt = ""
+    score = 0
+    if metrics.subheading_distribution() > 0:
+        seo_prompt += "There's a paragraph in this article that's too long. Break it up. "
+        score += 1
+    
+    if metrics.sentence_length() > 25:
+        seo_prompt += "More than a quarter of the sentences are too long. Shorten them. "
+        score += 1
+    
+    if metrics.transition_words() < 30:
+        seo_prompt += "The article lacks transition words. Add some to improve flow. "
+        score += 1
+    return seo_prompt, score
+
+def optimize_content(seo_prompt, content):
+    seo_prompt += "Optimize the article for SEO. Maintain the HTML structure and syntax. "
+    return query_gpt(content, seo_prompt, model='gpt-4')
 
 def prioritize_topics(topics):
     response = None
@@ -61,8 +166,6 @@ def prioritize_topics(topics):
     prioritized_titles = response.choices[0].message.content.split("\n")
     return prioritized_titles
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-
 def fetch_sources_from_query(query):
     print("Fetching sources from query: " + query)
     # Bing Search V7 endpoint
@@ -76,9 +179,9 @@ def fetch_sources_from_query(query):
     logging.info(f"Querying Bing API with query: {query}")
 
     try:
-        response = requests.get(endpoint, headers=headers, params=params)
+        response = httpx.get(endpoint, headers=headers, params=params)
         response.raise_for_status()
-    except requests.RequestException as e:
+    except httpx.RequestError as e:
         logging.error(f"Failed to get response from Bing API: {str(e)}")
         return []
 
@@ -171,7 +274,7 @@ def select_tech_term_source(sources):
                 }
             }
         ]
-    system_prompt = "You are a tech term source selector that selects the source that would be best for defining the tech term. This source should be the most relevant to the tech term and should be the most concise."
+    system_prompt = tech_term_prompt
     user_prompt = f"Select the source that best defines the tech term: {sources}"
     try:
         response = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo", functions)
@@ -184,48 +287,6 @@ def select_tech_term_source(sources):
     except KeyError:
         logging.error("Expected key 'source' not found in data from GPT.")
         return None
-        
-
-def function_call_gpt(user_prompt, system_prompt, model, functions, function_call_mode="auto"):
-    function_call_mode={"name": f"{functions[0]['name']}"}
-    try:
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            functions = functions, 
-            function_call = function_call_mode
-        )
-        # If functions is not a null array then return response.choices[0].message.function_call.arguments then use json loads on it
-        return json.loads(response.choices[0].message.function_call.arguments)
-    except Exception as err:
-        logging.error(err)
-        print(f"Parameters: {functions}")
-        print (f"Failed to call function: {err}")
-
-def query_gpt(user_prompt, system_prompt="You are a response machine that only responds with the requested information", model='gpt-3.5-turbo'):
-    context = f"{system_prompt} {user_prompt}"
-    try:
-        model = model_optimizer(context, model)
-    except Exception as e:
-        logging.error(e)
-        raise Exception(e)
-    try:
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system_prompt},
-                {"role": "user", "content": user_prompt}
-            ],
-            request_timeout = 150,
-        )
-        
-        # If functions is not a null array then return response.choices[0].message.function_call.arguments then use json loads on it
-        return response.choices[0].message.content
-    except openai.error.APIConnectionError as err:
-        logging.error(err)
     
 def create_factsheet(source, topic_name):
     # if source's factsheet is empty or null
@@ -425,6 +486,7 @@ def regenerate_image_queries(post_info):
     try:
         logging.info("Regenerating image queries")
         image_queries = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo", functions)
+        image_queries = image_queries['image_queries']
         print(f"Image queries generated: {image_queries}")
         return image_queries
     except Exception as e:

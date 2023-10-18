@@ -1,77 +1,129 @@
-import requests
+import httpx
 from bs4 import BeautifulSoup
-from requests.adapters import HTTPAdapter
-from requests.packages.urllib3.util.retry import Retry
 import os
-import random
 from dotenv import load_dotenv
 from urllib.parse import urlparse
 import certifi
+import ssl
+import subprocess
+import socket
+from OpenSSL import crypto
 
 load_dotenv()
 
-async def test_scraping_site():
-    url = 'https://nvd.nist.gov/vuln/detail/CVE-2023-20109'
-    html = scrape_content(url, depth=1, exclude_internal_links=True, include_links=True)
-    print(html)
+def get_proxy_url():
+    username = os.getenv(f'BRIGHTDATA_RES_USERNAME')
+    password = os.getenv(f'BRIGHTDATA_RES_PASSWORD')
+    port = os.getenv(f'BRIGHTDATA_RES_PORT')
+    # Construct the proxy URL
+    return f"https://{username}:{password}@brd.superproxy.io:{port}"
 
-def establish_connection(url):
+def collect_diagnostic_info(url, proxy_url):
+    print("=== Diagnostic Information ===")
+    
     hostname = urlparse(url).hostname
-    if '.gov' in hostname:
-        fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
-    else:
-        return fetch_using_proxy(url, 'dc') or fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
 
-def fetch_using_proxy(url, proxy_type=None):
-    ca_bundle_path = '/usr/local/share/ca-certificates/CA-BrightData.crt'
+    # 1. Basic Connection Information
+    print("\n[1. Basic Connection Information]")
+    print(f"Target URL: {url}")
+    print(f"Proxy URL: {proxy_url}")
 
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'}
-    
-    # Check if proxy_type is not None and not an empty string
-    if proxy_type:
-        # Convert proxy type to uppercase
-        proxy_type = proxy_type.upper()
-        # Get the proxy credentials and port from environment variables
-        username = os.getenv(f'BRIGHTDATA_{proxy_type}_USERNAME')
-        password = os.getenv(f'BRIGHTDATA_{proxy_type}_PASSWORD')
-        port = os.getenv(f'BRIGHTDATA_{proxy_type}_PORT')
-        # Construct the proxy URL
-        super_proxy = f"http://{username}:{password}@brd.superproxy.io:{port}"
-        proxies = {"http": super_proxy, "https": super_proxy}
-    else:
-        proxies = None
-        proxy_type = 'no'
-    
-    # Try to fetch the URL using the proxy (if specified)
+    # 2. DNS Resolution
+    print("\n[2. DNS Resolution]")
     try:
-        response = requests.get(url, proxies=proxies, headers=headers, verify=ca_bundle_path) 
+        ip_address = socket.gethostbyname(hostname)
+        print(f"IP Address of {hostname}: {ip_address}")
+    except Exception as e:
+        print(f"Error during DNS resolution: {e}")
+
+    # 3. SSL/TLS Information
+    print("\n[3. SSL/TLS Information]")
+    try:
+        context = ssl.create_default_context()
+        with socket.create_connection((hostname, 443)) as sock:
+            with context.wrap_socket(sock, server_hostname=hostname) as ssock:
+                print("SSL/TLS Version:", ssock.version())
+                print("Cipher:", ssock.cipher())
+                print("SSL/TLS Cert:", ssock.getpeercert())
+    except Exception as e:
+        print(f"Error during SSL/TLS handshake: {e}")
+
+    # 4. Direct Connection without Proxy
+    print("\n[4. Direct Connection without Proxy]")
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+    }
+    try:
+        response = httpx.get(url, headers=headers, timeout=10)
+        print(f"Status Code: {response.status_code}")
+        print("Response Headers:", response.headers)
+    except httpx.RequestError as e:
+        print(f"Error during direct connection: {e}")
+
+    # 5. Connection through Proxy
+    print("\n[5. Connection through Proxy]")
+    if proxy_url:
+        proxies = {
+            "http://": proxy_url,
+            "https://": proxy_url
+        }
+        try:
+            response = httpx.get(url, headers=headers, proxies=proxies, timeout=10)
+            print(f"Status Code: {response.status_code}")
+            print("Response Headers:", response.headers)
+        except httpx.RequestError as e:
+            print(f"Error during connection through proxy: {e}")
+    else:
+        print("No proxy URL provided.")
+
+    print("\n=== End of Diagnostic Information ===")
+
+def test_connection_without_ssl_verification(url):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+    }
+    try:
+        response = httpx.get(url, headers=headers, verify=False)
         response.raise_for_status()
-        return response.text
-    except requests.exceptions.RequestException as e:
-        print(f"Error with using {proxy_type} proxy for {url}: {e}")
-        return None
+        print(f"Successfully fetched {url} without SSL verification.")
+    except httpx.RequestError as e:
+        print(f"Error while connecting to {url} without SSL verification: {e}")
+
+
+def test_ssl_handshake(url, proxy_url=None):
+    if proxy_url:
+        # Use proxy hostname and port for testing
+        hostname = urlparse(proxy_url).hostname
+        port = urlparse(proxy_url).port
+    else:
+        # Use original URL's hostname
+        hostname = urlparse(url).hostname
+        port = 443  # default for HTTPS
     
-def is_valid_http_url(url):
+    command = ["openssl", "s_client", "-connect", f"{hostname}:{port}", "-prexit"]
+    
     try:
-        parsed_url = urlparse(url)
-        return all([parsed_url.scheme, parsed_url.netloc, parsed_url.scheme in ['http', 'https']])
-    except ValueError:
-        return False
+        result = subprocess.run(command, capture_output=True, text=True, timeout=10)
+        print("=== SSL Handshake Output ===")
+        print(result.stdout)
+        print("============================")
+    except subprocess.TimeoutExpired:
+        print("The openssl command timed out.")
+    except Exception as e:
+        print(f"Error executing openssl command: {e}")
 
-def extract_external_links(soup, base_domain, depth, exclude_internal_links):
-    external_links = []
-    if depth > 0:
-        for p in soup.find_all('p'):
-            for a in p.find_all('a', href=True):
-                href = a['href']
-                # Validate URL and exclude internal links based on the provided conditions
-                if is_valid_http_url(href) and not (
-                    exclude_internal_links and (base_domain in href or href.startswith('/'))
-                ):
-                    external_links.append(href)
-    return external_links
+async def test_scraping_site():
+   # Setup
+    target_url = "https://www.npr.org/2023/10/17/1206450553/worlds-hottest-pepper-guinness-record-pepper-x"
+    username = os.getenv('BRIGHTDATA_DC_USERNAME')
+    password = os.getenv('BRIGHTDATA_DC_PASSWORD')
+    port = os.getenv('BRIGHTDATA_DC_PORT')
+    proxy_url = f"https://{username}:{password}@brd.superproxy.io:{port}"
 
-def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True, is_external=False):
+    # Call the diagnostic function
+    collect_diagnostic_info(target_url, proxy_url)
+
+def scrape_content(url, depth=1, include_links=True, is_external=False):
     try:
         # Check if the URL points to a PDF
         if url.lower().endswith('.pdf'):
@@ -82,15 +134,11 @@ def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True
                 # If it's a main source, skip over it
                 print(f"Skipping main PDF source: {url}")
                 return None, []
-        
         # The rest of your scraping logic remains the same
-        html = establish_connection(url)
-        if html is None:
+        soup = establish_connection(url)
+        if soup is None:
             raise ValueError("Unable to retrieve HTML")
-
-        soup = BeautifulSoup(html, 'html.parser')
         content = None
-
         # Specific handling for certain websites
         if 'thehackernews.com' in url or 'yahoo.com' in url:
             content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
@@ -98,7 +146,6 @@ def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True
             content = ' '.join([p.get_text().strip() for p in soup.find_all('p', attrs={'data-type': 'paragraph'})])
         elif 'exploit-db.com' in url:
             return exploit_db_content(soup)
-
         # Generic handling for other websites
         else:
             possible_selectors = [
@@ -111,23 +158,104 @@ def scrape_content(url, depth=1, exclude_internal_links=True, include_links=True
                 if selected_content:
                     content = selected_content.get_text().strip()
                     break
-        
         # Fallback to using <p> tag text if no content found using selectors
         if not content:
             content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
-
         # Extract links if needed
         external_links = []
         if include_links:
             base_domain = urlparse(url).netloc
-            external_links = extract_external_links(soup, base_domain, depth, exclude_internal_links)
+            external_links = extract_external_links(soup, base_domain, depth)
             return content, external_links
-
     except Exception as error:
         print(f"Failed to scrape URL: {url}. Error: {error}")
         if include_links:
             return None, []  # Return empty list of links in case of error when include_links is True
         return None
+
+def establish_connection(url):
+    hostname = urlparse(url).hostname
+    if '.gov' in hostname:
+        return fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
+    else:
+        return fetch_using_proxy(url, 'dc') or fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
+
+def fetch_using_proxy(url, proxy_type=None, verify_ssl=False):
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
+    }
+
+    if proxy_type:
+        proxy_type = proxy_type.upper()
+        username = os.getenv(f'BRIGHTDATA_{proxy_type}_USERNAME')
+        password = os.getenv(f'BRIGHTDATA_{proxy_type}_PASSWORD')
+        port = os.getenv(f'BRIGHTDATA_{proxy_type}_PORT')
+        if not verify_ssl:
+            super_proxy = f"http://{username}:{password}@brd.superproxy.io:{port}"
+        else:
+            super_proxy = f"https://{username}:{password}@brd.superproxy.io:{port}"
+        proxies = {"http://": super_proxy, "https://": super_proxy}
+    else:
+        proxies = None
+        proxy_type = 'no'
+    
+    print(f"Fetching {url} using {proxy_type} proxy")
+
+    # Create SSL context with modern protocols
+    ssl_context = ssl.create_default_context()
+    ssl_context.set_ciphers('DEFAULT@SECLEVEL=2')
+    ssl_context.set_alpn_protocols(['h2', 'http/1.1'])
+    ssl_context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
+
+    BRIGHTDATA_CERT_PATH = '/usr/local/share/ca-certificates/CA-BrightData.crt'
+    if os.path.exists(BRIGHTDATA_CERT_PATH):
+        ssl_context.load_verify_locations(cafile=BRIGHTDATA_CERT_PATH)
+    else:
+        print("BrightData certificate not found!")
+
+    # Decide on SSL verification
+    if not verify_ssl or '.gov' in urlparse(url).netloc:
+        verify = False
+    else:
+        verify = ssl_context
+    
+    try:
+        response = httpx.get(url, proxies=proxies, headers=headers, verify=verify)
+        response.raise_for_status()
+        if response.status_code != 200:
+            print(f"Response status code: {response.status_code}")
+            print(f"Failed to fetch {url} using {proxy_type} proxy: {response.text}")
+            print(f"proxies: {proxies}, headers: {headers}, verify: {verify}")
+        else:
+            return BeautifulSoup(response.text, 'html.parser')
+    except httpx.RequestError as e:
+        # If there's a TLS version mismatch error, you could potentially add a mechanism here to adapt and retry.
+        print(f"Error with using {proxy_type} proxy for {url}: {e}")
+        print(f"proxies: {proxies}, headers: {headers}, verify: {verify}")
+        if verify is not False:
+            for cert_details in verify.get_ca_certs():
+                print(f"Cert Details: {cert_details}")
+    
+def is_valid_http_url(url):
+    try:
+        parsed_url = urlparse(url)
+        return all([parsed_url.scheme, parsed_url.netloc, parsed_url.scheme in ['http', 'https']])
+    except ValueError:
+        return False
+
+def extract_external_links(soup, base_domain, depth):
+    external_links = []
+    exclude_internal_links = True
+    if depth > 0:
+        for p in soup.find_all('p'):
+            for a in p.find_all('a', href=True):
+                href = a['href']
+                # Validate URL and exclude internal links based on the provided conditions
+                if is_valid_http_url(href) and not (
+                    exclude_internal_links and (base_domain in href or href.startswith('/'))
+                ):
+                    external_links.append(href)
+    return external_links
 
 def exploit_db_content(soup):
     content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
