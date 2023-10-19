@@ -5,22 +5,17 @@ from dotenv import load_dotenv
 from image_fetcher import fetch_images_from_queries # Import the image fetching function
 from supabase_utils import supabase
 from wp_post import fetch_categories, fetch_tags
-from content_optimization import query_gpt, function_call_gpt, regenerate_image_queries, insert_tech_term_link, seo_optimization
+from gpt_utils import query_gpt, function_call_gpt
+from content_optimization import regenerate_image_queries, insert_tech_term_link, seo_optimization
 from datetime import datetime
-import ast
 import re
-import logging
 from bs4 import BeautifulSoup, Tag
 import math
 
 # Load .env file
 load_dotenv()
-# Get model and prompt from environment variables
-model = os.getenv('MODEL')
+# Get prompt from environment variables
 synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
-# Set your OpenAI API key and organization
-openai.api_key = os.getenv('OPENAI_KEY')
-openai.organization = os.getenv('OPENAI_ORGANIZATION')
 
 def post_completion(post_info, functions):
     instructions = "With this information, complete all of the missing fields in the JSON object (or optimize any that could be better for SEO) using the WordPressPostFieldCompletion function."
@@ -146,13 +141,14 @@ def post_synthesis(token, topic):
     # Chat completion to generate other JSON fields for post
     json_dict = post_completion(synthesized_article, json_function)
     print("Post completion generated")
+    #json_dict['content'] = ensure_focuskw_in_intro(json_dict['content'], json_dict['yoast_wpseo_focuskw'])
    # Initialize post_info
     if json_dict is None:
          print("JSON dict from post completion is None")
          return None
     post_info = {
         'topic_id': topic['id'],
-        'content': synthesized_article + "\n\nIf you enjoyed this article, please check out our other articles on <a href=\"https://cybernow.info\">CyberNow</a>",
+        'content': synthesized_article + os.getenv('END_OF_ARTICLE_TAG'),
         'complete_with_images': False,
         'yoast_meta': {},
     }
@@ -281,35 +277,3 @@ def inject_images_into_post_info(post_info, images, focus_keyword=None):
     post_info['complete_with_images'] = True
     return post_info
 
-def insert_post_info_into_supabase(post_info):
- try:
-        response = supabase.table("posts").insert([post_info]).execute()
- except Exception as e:
-        print(f"An error occurred: {e}")
-        if e.code == '23505':
-            print(f"Post with the slug {post_info['slug']} already exists. Continuing...")
-            print("Deleting the post in Supabase...")
-            try:
-                response = supabase.table("posts").delete().eq('slug', post_info['slug']).execute()
-                print("Post deleted.")
-                # Try to insert the post again
-                try:
-                    response = supabase.table("posts").insert([post_info]).execute()
-                    print("Post inserted.")
-                except Exception as e:
-                    print(f"Failed to insert the post: {e}")
-                    print("Continuing...")
-                    return
-            except Exception as e:
-                print(f"Failed to delete the post: {e}")
-                print("Continuing...")
-                return
-        if e.code == 'PGRST102':
-            print("An invalid request body was sent(e.g. an empty body or malformed JSON).")
-            print("Tried to insert the following post info:")
-        if e.code == '22P02':
-            print("An invalid request body was sent(e.g. an empty body or malformed JSON).")
-            print(f"Tried to insert the following post info:{post_info}")
-        else:
-            print(f"Failed to save post information to Supabase. Continuing...")
-            return

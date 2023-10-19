@@ -3,11 +3,10 @@ import httpx
 import datetime
 from datetime import datetime, timedelta
 from generate_topics import generate_topics
-from supabase_utils import supabase
+from supabase_utils import supabase, insert_post_info_into_supabase
 from utils import inspect_all_methods
-from source_fetcher import gather_sources
-from content_optimization import create_factsheets_for_sources
-from post_synthesis import post_synthesis, insert_post_info_into_supabase
+from source_fetcher import gather_sources, create_factsheets_for_sources
+from post_synthesis import post_synthesis
 from wp_post import create_wordpress_post
 from extract_text import test_scraping_site
 import asyncio
@@ -18,7 +17,7 @@ import logging
 import time
 load_dotenv()
 
-amount_of_topics = 2
+amount_of_topics = 1
 MIN_SOURCES = 3
 exploit_fetcher_activated = False
 debug = False
@@ -84,7 +83,7 @@ async def process_topic(topic, token):
     # Generate Fact Sheets
     start_time = time.time()
     try:
-        topic['factsheet'], topic['external_source_info'] = create_factsheets_for_sources(topic)
+        topic['factsheet'], topic['external_source_info'] = await create_factsheets_for_sources(topic)
         if topic['factsheet'] is None:
             print("Failed to create any factsheets")
             await delete_topic(topic['id'])
@@ -152,8 +151,8 @@ async def main():
     
     if debug:
         print("Debug mode enabled")
-        #await test_scraping_site()
-        inspect_all_methods(['load_dotenv', 'create_client'])
+        await test_scraping_site()
+        #inspect_all_methods(['load_dotenv', 'create_client'])
         #await fetch_cisa_exploits()
 
         return

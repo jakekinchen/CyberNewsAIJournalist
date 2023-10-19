@@ -3,7 +3,7 @@ import xml.etree.ElementTree as ET
 import json
 import logging
 from datetime import datetime
-from content_optimization import query_gpt
+from gpt_utils import query_gpt
 from dotenv import load_dotenv
 
 # Load environment variables

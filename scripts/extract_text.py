@@ -62,6 +62,10 @@ def collect_diagnostic_info(url, proxy_url):
 
     # 5. Connection through Proxy
     print("\n[5. Connection through Proxy]")
+    context = ssl.create_default_context()
+    BRIGHTDATA_CERT_PATH = '/usr/local/share/ca-certificates/CA-BrightData.crt'
+    
+    context.load_cert_chain(certfile=BRIGHTDATA_CERT_PATH)
     if proxy_url:
         proxies = {
             "http://": proxy_url,

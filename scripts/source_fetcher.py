@@ -3,14 +3,252 @@ import httpx
 from dotenv import load_dotenv
 from datetime import datetime
 from extract_text import scrape_content
-from content_optimization import tokenizer
 import logging
+from supabase_utils import supabase
+import re
+import json
+import asyncio
+from gpt_utils import query_gpt, function_call_gpt, tokenizer
 
 # Load .env file
 load_dotenv()
 
 # Access your API keys
 bing_api_key = os.getenv('BING_SEARCH_KEY')
+
+async def create_factsheet(source, topic_name):
+    # if source's factsheet is empty or null
+    if not source['factsheet']:
+        # Sanitize content by replacing newline characters with a space
+        sanitized_content = re.sub(r'[\n\r]', ' ', source['content'])
+        
+        system_prompt = os.getenv('FACTSHEET_SYSTEM_PROMPT')
+        user_prompt = f"When you make a factsheet, keep each fact together in a sentence so each fact is separated by a period. Try to chunk together information that is related to {topic_name}. Now give the factsheet for the following information: {sanitized_content}"
+        
+        try:
+            loop = asyncio.get_event_loop()
+            facts = await loop.run_in_executor(None, query_gpt, user_prompt, system_prompt, 'gpt-3.5-turbo-16k')
+        except Exception as gpt3_error:
+            print(f'Failed to synthesize facts for source {source["id"]} with model', gpt3_error)
+            return None
+        facts_json = json.dumps(facts)
+        
+        # Assuming supabase update is also async, if not wrap it in run_in_executor
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, supabase.table('sources').update({"factsheet": facts_json}).eq('id', source['id']).execute)
+        
+        return facts
+    else:
+        print(f'Factsheet already exists for source {source["id"]}')
+        return None
+
+async def create_factsheets_for_sources(topic):
+    related_sources = get_related_sources(topic['id'])
+    combined_factsheet = ""
+    external_source_info = []
+    
+    # Create tasks for each source's factsheet
+    tasks = []
+    for source in related_sources:
+        if not source['factsheet']:
+            tasks.append(create_factsheet(source, topic['name']))
+        else:
+            tasks.append(source['factsheet'])
+
+    # Use asyncio.gather to run tasks concurrently and get results
+    factsheets = await asyncio.gather(*tasks)
+    
+    # Process the results
+    for idx, source_factsheet in enumerate(factsheets):
+        source = related_sources[idx]
+        if not source_factsheet:
+            print(f"Failed to create factsheet for source {source['id']}")
+            continue
+        if source['external_source']:
+            external_source_info.append({
+                "id": source['id'],
+                "url": source['url'],
+                "factsheet": source_factsheet
+            })
+        else:
+            combined_factsheet += str(source_factsheet)
+    
+    # Rest of your method remains largely unchanged
+    if combined_factsheet:
+        combined_factsheet = aggregate_factsheets(topic, combined_factsheet)
+    else:
+        print(f"Sources: {related_sources}")
+        print("No factsheets to aggregate")
+        return None, None
+
+    if external_source_info:
+        #external_source_info = remove_unrelated_sources(topic['name'], external_source_info)
+        update_external_source_info(topic['id'], external_source_info)
+    
+    return combined_factsheet, external_source_info
+
+
+def aggregate_factsheets(topic, combined_factsheet):
+    try:
+        if combined_factsheet:
+            system_prompt = "You are an expert at summarizing topics while being able to maintain every single detail. You utilize a lossless compression algorithm to keep the factual details together"
+            user_prompt = f"When you make a factsheet, keep each fact together in a sentence so each fact is separated by a period. Try to chunk together information that is related to {topic['name']}. Now give the factsheet for the following information: {combined_factsheet} "
+            facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
+            facts_json = json.dumps(facts)
+            supabase.table('topics').update({"factsheet": facts_json}).eq('id', topic['id']).execute()
+            return facts
+        else:
+            raise Exception("No factsheets to aggregate")
+    except Exception as gpt3_error:
+        logging.error(f'Failed to synthesize factsheets for topic {topic["id"]}', gpt3_error)
+
+def aggregate_factsheets_from_topic(topic):
+    # Get all of the factsheets for the topic, and query gpt to aggregate them into a single factsheet
+    # Then update the topic's factsheet in supabase
+    try:
+        response = supabase.table('sources').select('*').eq('topic_id', topic['id']).execute()
+        #print(f"Sources queried:{response.data}") functions properly
+        related_sources = response.data or []
+    except Exception as e:
+        print(f'Failed to get related sources for topic {topic["id"]}', e)
+        return
+    if related_sources:
+        system_prompt = "You are an expert at summarizing topics while being able to maintain every single detail. You utilize a lossless compression algorithm to keep the factual details together"
+        user_prompt = f"When you make a factsheet, keep each fact together in a sentence so each fact is separated by a period. Try to chunk together information that is related to {topic['name']}. Now give the factsheet for the following information: {related_sources} "
+        try:
+            facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
+            facts_json = json.dumps(facts)
+            supabase.table('topics').update({"factsheet": facts_json}).eq('id', topic['id']).execute()
+            return facts
+        except Exception as gpt3_error:
+            logging.error(f'Failed to synthesize factsheets from topic {topic["id"]}', gpt3_error)
+
+def get_related_sources(topic_id):
+    try:
+        response = supabase.table('sources').select('*').eq('topic_id', topic_id).execute()
+        return response.data or []
+    except Exception as e:
+        print(f'Failed to get related sources for topic {topic_id}', e)
+        return []
+
+def update_external_source_info(topic_id, external_source_info):
+    formatted_info = ",".join([f"{info['id']}:{info['url']}:[{info['factsheet']}]" for info in external_source_info])
+    try:
+        response = supabase.table('topics').update({"external_source_info": formatted_info}).eq('id', topic_id).execute()
+    except Exception as e:
+        print(f'Failed to update external source info for topic {topic_id}', e)
+
+def remove_unrelated_sources(topic_name, external_source_info):
+    unrelated_source_ids = identify_unrelated_sources(topic_name, external_source_info)
+
+    if unrelated_source_ids:
+        remove_sources_from_supabase(unrelated_source_ids)
+        external_source_info = [source_info for source_info in external_source_info if source_info['id'] not in unrelated_source_ids]
+    return external_source_info
+    
+def identify_unrelated_sources(topic_name, external_source_info):
+    print(f"We have {len(external_source_info)} external sources to check for topic {topic_name}")
+    formatted_sources = ",".join([f"{info['id']}:{info['url']}:[{info['factsheet']}]" for info in external_source_info])
+    system_prompt = "You are a source remover that removes sources that are not related to the topic."
+    user_prompt = f"List the source id's that are not related to {topic_name} from the following list: {formatted_sources}"
+    functions = [
+            {
+                "name": "SourceRemover",
+                "description": "Remove sources that are not related to the topic.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                    'sources': {
+                        'type': 'array',
+                        'description': 'A list of sources to remove.',
+                        'items': { 
+                            "type": "integer", 
+                            "description": "The id of the source to remove." 
+                            },
+                        }
+                    },
+                    
+                }
+            }
+        ]
+    try:
+        gpt_response = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo-16k", functions)
+        
+        # Extracting the source IDs directly from the response
+        unrelated_source_ids = gpt_response.get('sources', [])
+        
+        return unrelated_source_ids
+    except KeyError:
+        print(f"Expected key 'sources' not found in data from GPT.")
+        return []
+    except ValueError:
+        print(f"One of the source IDs from GPT is not an integer.")
+        return []
+    except Exception as e:
+        print(f"Failed to identify unrelated sources for topic {topic_name}: {e}")
+        return []
+    
+def delete_source(source_id):
+    # Delete the topic
+    try:
+        response = supabase.table("sources").delete().eq("id", source_id).execute()
+    except Exception as e:
+        print(f"Failed to delete source: {e}")
+        return
+    print(f"Successfully deleted source with ID {source_id} and all related sources.")
+
+def remove_sources_from_supabase(unrelated_source_ids):
+    try:
+        for source_id in unrelated_source_ids:
+            # Assuming you have a function to remove a source by id from Supabase
+            delete_source(source_id)
+        print(f"Removed unrelated sources: {', '.join(map(str, unrelated_source_ids))}")
+    except Exception as e:
+        print(f"Failed to remove unrelated sources: {', '.join(map(str, unrelated_source_ids))}. Error: {e}")
+
+def fetch_sources_from_query(query):
+    print("Fetching sources from query: " + query)
+    # Bing Search V7 endpoint
+    endpoint = os.getenv('BING_SEARCH_ENDPOINT')
+
+    # Call the Bing API
+    mkt = 'en-US'
+    params = {'q': query, 'mkt': mkt, 'count': 3, 'responseFilter': 'webpages', 'answerCount': 1, 'safeSearch': 'strict'}
+    headers = {'Ocp-Apim-Subscription-Key': bing_api_key}  # replace with your Bing API key
+
+    logging.info(f"Querying Bing API with query: {query}")
+
+    try:
+        response = httpx.get(endpoint, headers=headers, params=params)
+        response.raise_for_status()
+    except httpx.RequestError as e:
+        logging.error(f"Failed to get response from Bing API: {str(e)}")
+        return []
+
+    try:
+        search_result = response.json()
+    except ValueError as e:
+        logging.error(f"Failed to parse API response to JSON: {str(e)}")
+        return []
+    
+    # Extract related sources
+    related_sources = []
+
+    if 'webPages' in search_result and 'value' in search_result['webPages']:
+        #print("'webPages' in search_result and 'value' in search_result['webPages']")
+        for i, result in enumerate(search_result['webPages']['value']):
+            if all(key in result for key in ("name", "url")):
+                source = {
+                    'id': i,
+                    "name": result['name'],
+                    "url": result['url'],
+                }
+                related_sources.append(source)
+    else:
+        print("No 'webPages' or 'value' key in the response. No sources found.")
+
+    return related_sources
+
 
 def check_if_content_exceeds_limit(content):
     # Check if the source content exceeds the limit

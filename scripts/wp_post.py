@@ -101,13 +101,13 @@ def create_wordpress_post(token, post_info, post_time):
             sanitized_post_info[key] = value
        # else:
        #     print(f"Skipping invalid field: {key}, expected type {post_fields.get(key, 'Unknown')} but got {type(value)}")
-    
     response = httpx.post(post_endpoint, json=sanitized_post_info, headers=headers)
     
     if response.status_code == 201:
         print("Post created successfully.")
         return response.json()  # Return the post data
     else:
+        print(sanitized_post_info)
         raise Exception(f"Failed to create post: {response.text}")
 
 

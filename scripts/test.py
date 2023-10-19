@@ -1,3 +1,4 @@
+#test.py
 from bs4 import BeautifulSoup
 import re
 
@@ -89,5 +90,70 @@ class HTMLMetrics:
     def sentence_length(self):
         long_sentences = sum(1 for sentence in self.sentences if len(sentence.split()) > 20)
         return (long_sentences / len(self.sentences)) * 100
+    
+    
+"""
+• Keyphrase in introduction: Your keyphrase or its synonyms do not appear in the first paragraph. Make sure the topic is clear immediately.
+• Keyphrase in SEO title: Not all the words from your keyphrase "Jupyter Notebooks cyberattacks" appear in the SEO title. For the best SEO results write the exact match of your keyphrase in the SEO title, and put the keyphrase at the beginning of the title.
+^ Improvements (2)
+• Image Keyphrase: Images on this page do not have alt attributes with at least half of the words from your keyphrase. Fix that!
+• Meta description length: The meta description is too short (under 120 characters).
+Up to 156 characters are available. 
+
+content_optimization.py
+---------------
+def seo_optimization(content):
+    print("Entering seo optimization")
+    max_attempts = 3
+    attempt = 0
+
+    while attempt < max_attempts:
+        needs_optimization, seo_prompt = assess_seo_needs(content)
+        
+        if not needs_optimization:
+            if attempt == 0:
+                print("Content does not need optimization")
+            else:
+                print("Optimization successful on attempt", attempt)
+            return content
+        
+        print(f"Optimizing content, attempt {attempt + 1}")
+        content = optimize_content(seo_prompt, content)
+        attempt += 1
+    print("Optimization not successful after maximum attempts.")
+    return content
+
+def assess_seo_needs(content):
+    metrics = HTMLMetrics(content)
+    
+    seo_prompt, score = generate_seo_prompt(metrics)
+    needs_optimization = score > 1
+
+    return needs_optimization, seo_prompt
+
+def generate_seo_prompt(metrics):
+    seo_prompt = ""
+    score = 0
+    if metrics.subheading_distribution() > 0:
+        seo_prompt += "There's a paragraph in this article that's too long. Break it up. "
+        score += 1
+    
+    if metrics.sentence_length() > 25:
+        seo_prompt += "More than a quarter of the sentences are too long. Shorten them. "
+        score += 1
+    
+    if metrics.transition_words() < 30:
+        seo_prompt += "The article lacks transition words. Add some to improve flow. "
+        score += 1
+    return seo_prompt, score
+
+def optimize_content(seo_prompt, content):
+    seo_prompt += "Optimize the article for SEO. Maintain the HTML structure and syntax. "
+    return query_gpt(content, seo_prompt, model='gpt-4')
+
+
+
+
+"""
 
     
