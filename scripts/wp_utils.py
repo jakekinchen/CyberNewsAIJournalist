@@ -37,8 +37,85 @@ post_fields = {
     'yoast_meta' : dict,
 }
 
+# Access your API keys and token
+wp_username = os.getenv('WP_USERNAME')
+wp_password = os.getenv('WP_PASSWORD')
+wp_token = os.getenv('WP_TOKEN')
+
+# Get the JWT token for WordPress
+def get_jwt_token(username, password):
+
+    if wp_token:
+        logging.info("Using existing token")
+        return wp_token
+    
+    token_endpoint = "http://cybernow.info/wp-json/jwt-auth/v1/token"
+    payload = {
+        'username': username,
+        'password': password
+    }
+    response = httpx.post(token_endpoint, data=payload)
+    if response.status_code == 200:
+        token = response.json().get('token')  # Get token directly from JSON response
+        #logging.info(f"Received token: {token}")
+        return token
+    else:
+        logging.info(f"Failed to get JWT token: {response.text}")
+        raise Exception(f"Failed to get JWT token: {response.text}")
+    
+token = get_jwt_token(wp_username, wp_password)
+
+def get_wp_id_from_slug(slug):
+
+    endpoint = f"https://cybernow.info/wp-json/wp/v2/posts?slug={slug}"
+    headers = {'Authorization': f'Bearer {token}'}
+    # Make a GET request to the WordPress REST API endpoint for posts
+    response = httpx.get(endpoint, headers=headers)
+
+    # Extract the ID of the post from the response
+    return response.json()[0]["id"]
+
+def update_wp_post(post_info):
+    # Get the wordpress id from the slug
+    wp_id = get_wp_id_from_slug(post_info['slug'])
+    # Update the wordpress post
+    headers = {
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    }
+    url = f"https://cybernow.info/wp-json/wp/v2/posts/{wp_id}"
+    try:
+        post_info = type_check_post_info(post_info)
+    except Exception as e:
+        print(f"Failed to type check post info: {e}")
+        return
+    try:
+        response = httpx.post(url, json=post_info, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to update post: {response.text}")
+            return
+    except Exception as e:
+        print(f"Failed to update post: {e}")
+        return
+    print(f"Successfully updated post with id {wp_id}.")
+    return response.json()
+
+def type_check_post_info(post_info):
+    sanitized_post_info = {}
+    for key, value in post_info.items():
+        if key == 'yoast_meta' and isinstance(value, dict):
+            sanitized_yoast_meta = {}
+            for sub_key, sub_value in value.items():
+                if isinstance(sub_value, str):  # since all the yoast_meta sub fields are string type
+                    sanitized_yoast_meta[sub_key] = sub_value
+                else:
+                    print(f"Skipping invalid field in yoast_meta: {sub_key}, expected type str but got {type(sub_value)}")
+            sanitized_post_info[key] = sanitized_yoast_meta
+        elif key in post_fields and isinstance(value, post_fields[key]):
+            sanitized_post_info[key] = value
+    return sanitized_post_info
+
 def add_tag_to_wordpress(token, tag):
-    tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
     headers = {'Authorization': f'Bearer {token}'}
     
     # Fetch the tags
@@ -80,25 +157,15 @@ def create_wordpress_post(token, post_info, post_time):
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json'
     }
+
+    # Append the following fields to the post_info dictionary
+    post_info['date'] = post_time.strftime("%Y-%m-%dT%H:%M:%S")
+    post_info['date_gmt'] = (post_time - timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M:%S")
+    post_info['status'] = 'publish'
     
     # Initialize sanitized_post_info dictionary with status, date, and date_gmt
-    sanitized_post_info = {
-        'status': 'future',  # Set status to 'future'
-        'date': post_time.strftime('%Y-%m-%dT%H:%M:%S'),  # Set date and time of publishing
-        'date_gmt': (post_time - timedelta(hours=1)).strftime('%Y-%m-%dT%H:%M:%S')  # Set GMT date and time of publishing
-    }
+    sanitized_post_info = type_check_post_info(post_info)
     
-    for key, value in post_info.items():
-        if key == 'yoast_meta' and isinstance(value, dict):
-            sanitized_yoast_meta = {}
-            for sub_key, sub_value in value.items():
-                if isinstance(sub_value, str):  # since all the yoast_meta sub fields are string type
-                    sanitized_yoast_meta[sub_key] = sub_value
-                else:
-                    print(f"Skipping invalid field in yoast_meta: {sub_key}, expected type str but got {type(sub_value)}")
-            sanitized_post_info[key] = sanitized_yoast_meta
-        elif key in post_fields and isinstance(value, post_fields[key]):
-            sanitized_post_info[key] = value
        # else:
        #     print(f"Skipping invalid field: {key}, expected type {post_fields.get(key, 'Unknown')} but got {type(value)}")
     response = httpx.post(post_endpoint, json=sanitized_post_info, headers=headers)

@@ -1,83 +1,53 @@
-import openai
 from dotenv import load_dotenv
 import os
-from supabase_utils import supabase
+from supabase_utils import supabase, update_supabase_post
+from wp_utils import update_wp_post
 import logging
 import re
-from test import HTMLMetrics
+from test import ReadabilityMetrics, SeoMetrics
 import logging
 from source_fetcher import fetch_sources_from_query
-from gpt_utils import query_gpt, function_call_gpt
+from gpt_utils import query_gpt, function_call_gpt, image_query_function
+from bs4 import BeautifulSoup
 
 # Load .env file
 load_dotenv()
 bing_api_key = os.getenv('BING_SEARCH_KEY')
 response_machine_prompt = os.getenv('RESPONSE_MACHINE_PROMPT')
 tech_term_prompt = os.getenv('TECH_TERM_PROMPT')
-        
-def seo_optimization(content):
-    print("Entering seo optimization")
-    max_attempts = 3
-    attempt = 0
 
-    while attempt < max_attempts:
-        needs_optimization, seo_prompt = assess_seo_needs(content)
-        
-        if not needs_optimization:
-            if attempt == 0:
-                print("Content does not need optimization")
-            else:
-                print("Optimization successful on attempt", attempt)
-            return content
-        
-        print(f"Optimizing content, attempt {attempt + 1}")
-        content = optimize_content(seo_prompt, content)
-        attempt += 1
-    print("Optimization not successful after maximum attempts.")
-    return content
+def update_post(post_info):
+    update_supabase_post(post_info)
+    update_wp_post(post_info)
 
-def assess_seo_needs(content):
-    metrics = HTMLMetrics(content)
-    
-    seo_prompt, score = generate_seo_prompt(metrics)
-    needs_optimization = score > 1
+def test_seo_and_readability_optimization():
+    # Pull a post from Supabase and run it through the SEO and Readability optimization functions
+    # Assert that the result is what you expect
+    post_info = supabase.table('posts').select('*').eq('id', 140).execute().data
+    # Pull the image row associated with the post by locating the topic_id from the post
+    images = supabase.table('images').select('*').eq('topic_id', post_info[0]['topic_id']).execute().data
+    #print(f"Post info: {post_info}")
+    if not post_info:
+        print("Failed to get post info")
+        return
+    post_info = post_info[0]
+    print(f"Before readability optimization: {post_info['content']}")
+    post_info['content'] = readability_optimization(post_info['content'])
+    print(f"After readability optimization: {post_info['content']}")
+    post_info = seo_optimization(post_info, images)
+    print(f"After SEO optimization: {post_info['content']}")
+    #print(f"SEO optimized content: {content}")
+    print("Successfully optimized post.")
+    update_post(post_info)
+    #print("Successfully updated post.")
 
-    return needs_optimization, seo_prompt
+def readability_optimization(content):
+    metrics = ReadabilityMetrics(content)
+    return metrics.optimize_readability()
 
-def generate_seo_prompt(metrics):
-    seo_prompt = ""
-    score = 0
-    if metrics.subheading_distribution() > 0:
-        seo_prompt += "There's a paragraph in this article that's too long. Break it up. "
-        score += 1
-    
-    if metrics.sentence_length() > 25:
-        seo_prompt += "More than a quarter of the sentences are too long. Shorten them. "
-        score += 1
-    
-    if metrics.transition_words() < 30:
-        seo_prompt += "The article lacks transition words. Add some to improve flow. "
-        score += 1
-    return seo_prompt, score
-
-def optimize_content(seo_prompt, content):
-    seo_prompt += "Optimize the article for SEO. Maintain the HTML structure and syntax. "
-    return query_gpt(content, seo_prompt, model='gpt-4')
-
-def prioritize_topics(topics):
-    response = None
-    message = f"Prioritize the following topics in order of relevance to Cybersecurity:\n\n{topics}"
-    try:
-        response = query_gpt(message, "You are a data computer that outputs the pure information as a list and nothing else")
-    except openai.error.InvalidRequestError as e:
-        if 'exceeded maximum number of tokens' in str(e):
-            response = query_gpt(message, "You are a data computer that outputs the pure information as a list and nothing else", model="gpt-3.5-turbo-16k")
-        else:
-            raise e
-    # Process the response to get a list of titles in order of relevance
-    prioritized_titles = response.choices[0].message.content.split("\n")
-    return prioritized_titles
-
+def seo_optimization(post_info, images):
+    seo_optimizer = SeoMetrics(post_info, images)
+    return seo_optimizer.optimize()
 
 def insert_tech_term_link(content: str, tech_term: str) -> str:
     link = generate_link_from_term(tech_term)
@@ -159,36 +129,31 @@ def select_tech_term_source(sources):
         return None
 
 def regenerate_image_queries(post_info):
-    system_prompt = "You are a stock photo database query generator that generates queries for stock photos that are relevant to the topic yet not too similar to each other. They should be simple and convey the meaning of the topic without going for obvious keywords like 'cybersecurity' or 'hacking'."
-    user_prompt = f"Generate an array image queries for the following information: {post_info['content']}"
-    functions = [
-            {
-                "name": "ImageQueryGenerator",
-                "description": "Observe the content of the post and suggest stock photo database queries.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                    'image_queries': {
-                        'type': 'array',
-                        'description': 'A list of queries to generate images for the post.',
-                        'items': { 
-                            "type": "string", 
-                            "description": "A query to generate an image for the post. This should be a phrase that describes the contents of the image, with different words separated by space like normal. It should not be a concatenation of multiple words and should not contain a file extension." 
-                            },
-                        }
-                    },
-                    
-                }
-            }
-        ]
+    system_prompt = ("You are a stock photo database query generator that generates queries for stock photos that are relevant to the topic yet not too similar to each other. They should be simple and convey the meaning of the topic without going for obvious keywords like 'cybersecurity' or 'hacking'.")
+    user_prompt = f"Generate an array of image queries for the following information: {post_info['content']}"
+    functions = image_query_function
+    
+    # Attempt to generate image queries using GPT
     try:
-        logging.info("Regenerating image queries")
-        image_queries = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo", functions)
-        image_queries = image_queries['image_queries']
-        print(f"Image queries generated: {image_queries}")
+        logging.info("Initiating image query regeneration...")
+        response = function_call_gpt(user_prompt, system_prompt, "gpt-3.5-turbo", functions)
+        
+        image_queries = response.get('image_queries')
+        
+        if not image_queries:
+            logging.warning("GPT did not provide image queries. Using focus keyword as a fallback.")
+            focus_keyword = post_info.get('yoast_wpseo_focuskw')
+            if not focus_keyword:
+                raise ValueError("Both GPT image queries and focus keyword are absent.")
+            image_queries = [focus_keyword]
+        
+        logging.info(f"Generated image queries: {image_queries}")
         return image_queries
+        
     except Exception as e:
-        raise Exception(f"Failed to regenerate image queries: {e}")
+        logging.error(f"Error while regenerating image queries: {e}")
+        raise Exception(f"Failed to regenerate image queries due to: {e}")
+
 
 
 

@@ -3,11 +3,12 @@ import httpx
 import datetime
 from datetime import datetime, timedelta
 from generate_topics import generate_topics
-from supabase_utils import supabase, insert_post_info_into_supabase
+from supabase_utils import supabase, insert_post_info_into_supabase, delete_topic
 from utils import inspect_all_methods
 from source_fetcher import gather_sources, create_factsheets_for_sources
 from post_synthesis import post_synthesis
-from wp_post import create_wordpress_post
+from wp_utils import create_wordpress_post, token
+from content_optimization import test_seo_and_readability_optimization
 from extract_text import test_scraping_site
 import asyncio
 from cisa import get_cisa_exploits
@@ -18,56 +19,44 @@ import time
 load_dotenv()
 
 amount_of_topics = 1
-MIN_SOURCES = 3
+MIN_SOURCES = 2
 exploit_fetcher_activated = False
 debug = False
 synthesize_factsheets = False
 
-# Access your API keys and token
-wp_username = os.getenv('WP_USERNAME')
-wp_password = os.getenv('WP_PASSWORD')
-wp_token = os.getenv('WP_TOKEN')
-
-# Get the JWT token for WordPress
-def get_jwt_token(username, password):
-
-    if wp_token:
-        logging.info("Using existing token")
-        return wp_token
-    
-    token_endpoint = "http://cybernow.info/wp-json/jwt-auth/v1/token"
-    payload = {
-        'username': username,
-        'password': password
-    }
-    response = httpx.post(token_endpoint, data=payload)
-    if response.status_code == 200:
-        token = response.json().get('token')  # Get token directly from JSON response
-        #logging.info(f"Received token: {token}")
-        return token
-    else:
-        logging.info(f"Failed to get JWT token: {response.text}")
-        raise Exception(f"Failed to get JWT token: {response.text}")
-
-async def delete_topic(topic_id):
-    # Delete the topic
+# Go through every post in the posts table in Supabase and if there is a slug, then concatenate the slug with the URL https://cybernow.info/ and update the post field 'link' with the new URL
+# This is a one time script to update the links in the posts table
+def update_links():
     try:
-        response = supabase.table("topics").delete().eq("id", topic_id).execute()
-    except Exception as e:
-        print(f"Failed to delete topic: {e}")
-        return
-    print(f"Successfully deleted topic with ID {topic_id} and all related sources.")
+        posts = supabase.table('posts').select('id, slug, link').execute()
+        posts = posts.data
+        
+        # Filter out posts without slugs or with already correct links
+        posts_to_update = [
+            post for post in posts 
+            if post['slug'] and post.get('link') != f"https://cybernow.info/{post['slug']}/"
+        ]
 
-async def delete_supabase_post(topic_id):
-    # topic_id is a foreign key in the supabase table posts
-    # Delete the post
-    try:
-        response = supabase.table("posts").delete().eq("topic_id", topic_id).execute()
+        if not posts_to_update:
+            logging.info("No posts need link updates.")
+            return
+        
+        # Prepare data for bulk upsert
+        bulk_data = [
+            {'id': post['id'], 'link': f"https://cybernow.info/{post['slug']}/"} 
+            for post in posts_to_update
+        ]
+
+        # Perform the bulk upsert
+        for data in bulk_data:
+            supabase.table('posts').update(data).eq('id', data['id']).execute()
+
+        logging.info(f"Updated links for {len(bulk_data)} posts.")
+
     except Exception as e:
-        print(f"Failed to delete post: {e}")
-        return
-  
-    print(f"Successfully deleted post with topic ID {topic_id}.")
+        logging.error(f"Failed to update links: {e}")
+
+
 
 async def process_topic(topic, token):
     # Gather Sources
@@ -141,9 +130,9 @@ async def fetch_cisa_exploits():
     else:
         print(f"Got CISA exploits in {time.time() - start_time:.2f} seconds")
 
+
 async def main():
     total_start_time = time.time()
-    token = get_jwt_token(wp_username, wp_password)
 
     if token is None:
         print("Failed to get token")
@@ -151,10 +140,12 @@ async def main():
     
     if debug:
         print("Debug mode enabled")
-        await test_scraping_site()
+        #await test_scraping_site()
         #inspect_all_methods(['load_dotenv', 'create_client'])
+        #update_links()
+        #test_inject_images_into_post_info()
+        test_seo_and_readability_optimization()
         #await fetch_cisa_exploits()
-
         return
     
     await fetch_cisa_exploits()

@@ -77,3 +77,15 @@ def generate_topics(supabase, amount_of_topics, gpt_ordering=False):
     logging.info(f'Inserted {len(inserted_topics)} new topics.')
     return inserted_topics
 
+def prioritize_topics(topics):
+    response = None
+    message = f"Prioritize the following topics in order of relevance to Cybersecurity:\n\n{topics}"
+    try:
+        response = query_gpt(message, "You are a data computer that outputs the pure information as a list and nothing else")
+    except Exception as e:
+        logging.error(f"Failed to prioritize topics: {e}")
+        return []
+    # Process the response to get a list of titles in order of relevance
+    prioritized_titles = response.choices[0].message.content.split("\n")
+    return prioritized_titles
+
