@@ -514,7 +514,6 @@ class SeoMetrics:
         keyword = self.post_info['yoast_meta']['yoast_wpseo_focuskw']
         
         if not self.images:  # If images are empty or None
-            self.post_info['complete_with_images'] = False
             raise Exception("No images to inject into post info.")
         
         # Initialize BeautifulSoup object with the post content
@@ -555,7 +554,6 @@ class SeoMetrics:
             self.post_info = self.distribute_images(p_tags)
         
         self.post_info['content'] = str(soup)
-        self.post_info['complete_with_images'] = True
         print("Finished injecting images.")
         return self.post_info
     
@@ -603,7 +601,6 @@ class SeoMetrics:
             result = self.inject_images_into_post_info(self.post_info, self.images)
             
             # Example assertions (you might need more depending on what you expect)
-            assert result['complete_with_images'] == True
             assert 'Google logo' in result['content']
             # ... add more assertions as needed
             

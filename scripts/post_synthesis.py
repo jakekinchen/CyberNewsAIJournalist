@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from image_fetcher import fetch_images_from_queries # Import the image fetching function
 from supabase_utils import supabase
 from wp_utils import fetch_categories, fetch_tags
+from image_utils import ImageProcessor
 from gpt_utils import query_gpt, function_call_gpt, generate_wp_field_completion_function
 from content_optimization import regenerate_image_queries, insert_tech_term_link, readability_optimization, seo_optimization
 from datetime import datetime
@@ -64,7 +65,6 @@ def post_synthesis(token, topic):
     post_info = {
         'topic_id': topic['id'],
         'content': synthesized_article,
-        'complete_with_images': False,
         'yoast_meta': {},
     }
     
@@ -134,7 +134,9 @@ def post_synthesis(token, topic):
     # Handle image_queries and inject images
     try:
         print("Fetching images...")
-        images = fetch_images_from_queries(post_info['image_queries'], token, topic['id'])
+        image_manager = ImageProcessor()
+        images = image_manager.fetch_images_from_queries(post_info['image_queries'], topic['id'])
+        #images = fetch_images_from_queries(post_info['image_queries'], token, topic['id'])
         if not images:
             return None
         

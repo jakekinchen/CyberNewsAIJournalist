@@ -3,7 +3,7 @@ import httpx
 import datetime
 from datetime import datetime, timedelta
 from generate_topics import generate_topics
-from supabase_utils import supabase, insert_post_info_into_supabase, delete_topic
+from supabase_utils import supabase, insert_post_info_into_supabase, delete_topic, update_supabase_images_with_wp_images, delete_supabase_images_not_in_wp
 from utils import inspect_all_methods
 from source_fetcher import gather_sources, create_factsheets_for_sources
 from post_synthesis import post_synthesis
@@ -23,40 +23,6 @@ MIN_SOURCES = 2
 exploit_fetcher_activated = False
 debug = False
 synthesize_factsheets = False
-
-# Go through every post in the posts table in Supabase and if there is a slug, then concatenate the slug with the URL https://cybernow.info/ and update the post field 'link' with the new URL
-# This is a one time script to update the links in the posts table
-def update_links():
-    try:
-        posts = supabase.table('posts').select('id, slug, link').execute()
-        posts = posts.data
-        
-        # Filter out posts without slugs or with already correct links
-        posts_to_update = [
-            post for post in posts 
-            if post['slug'] and post.get('link') != f"https://cybernow.info/{post['slug']}/"
-        ]
-
-        if not posts_to_update:
-            logging.info("No posts need link updates.")
-            return
-        
-        # Prepare data for bulk upsert
-        bulk_data = [
-            {'id': post['id'], 'link': f"https://cybernow.info/{post['slug']}/"} 
-            for post in posts_to_update
-        ]
-
-        # Perform the bulk upsert
-        for data in bulk_data:
-            supabase.table('posts').update(data).eq('id', data['id']).execute()
-
-        logging.info(f"Updated links for {len(bulk_data)} posts.")
-
-    except Exception as e:
-        logging.error(f"Failed to update links: {e}")
-
-
 
 async def process_topic(topic, token):
     # Gather Sources
@@ -144,7 +110,9 @@ async def main():
         #inspect_all_methods(['load_dotenv', 'create_client'])
         #update_links()
         #test_inject_images_into_post_info()
-        test_seo_and_readability_optimization()
+        #delete_supabase_images_not_in_wp()
+        update_supabase_images_with_wp_images()
+        #test_seo_and_readability_optimization()
         #await fetch_cisa_exploits()
         return
     

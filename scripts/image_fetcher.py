@@ -26,7 +26,7 @@ class Provider(Enum):
 # Data class for photo details
 PhotoDetails = namedtuple("PhotoDetails", [
     'origin_id', 'url', 'query', 'description', 'photographer', 'photographer_url', 'type', 
-    'filename', 'provider', 'width', 'height', 'wp_id', 'wp_url', 'topic_id'
+    'file_name', 'provider', 'width', 'height', 'wp_id', 'wp_url', 'topic_id'
 ])
 
 API_CONFIG = {
@@ -197,7 +197,7 @@ def process_photo(photo, query, provider):
                 'photographer': photo.photographer,
                 'photographer_url': photo.url,
                 'type': fetch_image_type(photo.original),
-                'filename': get_filename(photo.id, fetch_image_type(photo.original)),
+                'file_name': get_filename(photo.id, fetch_image_type(photo.original)),
                 'provider': Provider.PEXELS.value,
                 'width': photo.width,
                 'height': photo.height,
@@ -214,7 +214,7 @@ def process_photo(photo, query, provider):
                 'photographer': photo['user']['name'],
                 'photographer_url': photo['user']['links']['html'],
                 'type': fetch_image_type(photo['urls']['raw']),
-                'filename': get_filename(photo['id'], fetch_image_type(photo['urls']['raw'])),
+                'file_name': get_filename(photo['id'], fetch_image_type(photo['urls']['raw'])),
                 'provider': Provider.UNSPLASH.value,
                 'width': photo['width'],
                 'height': photo['height'],
@@ -255,3 +255,4 @@ def is_photo_in_supabase(origin_id, list_of_supabase_images):
         return True
     else:
         return False
+    

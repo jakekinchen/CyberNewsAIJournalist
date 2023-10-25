@@ -5,37 +5,14 @@ import csv
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import logging
+from table_structures import wp_post_table
+from urllib.parse import urlparse
 
 # Load .env file
 load_dotenv()
 
-post_fields = {
-    'date' : datetime,
-    'date_gmt' : datetime,
-    'title' : str,
-    'content' : str,
-    'excerpt' : str,
-    'categories' : list,
-    'tags' : list,
-    'featured_media' : int,
-    'status' : str,
-    'slug' : str,
-    'format' : str,
-    'sticky' : bool,
-    'template' : str,
-    'meta' : dict,
-    'author' : int,
-    'password' : str,
-    'type' : str,
-    'comment_status' : str,
-    'ping_status' : str,
-    'generated_slug' : str,
-    'link' : str,
-    'guid' : str,
-    'modified' : datetime,
-    'modified_gmt' : datetime,
-    'yoast_meta' : dict,
-}
+# Load the post fields from the table structures
+post_fields = wp_post_table
 
 # Access your API keys and token
 wp_username = os.getenv('WP_USERNAME')
@@ -62,18 +39,32 @@ def get_jwt_token(username, password):
     else:
         logging.info(f"Failed to get JWT token: {response.text}")
         raise Exception(f"Failed to get JWT token: {response.text}")
-    
+
+# Get the JWT token for WordPress
 token = get_jwt_token(wp_username, wp_password)
 
-def get_wp_id_from_slug(slug):
+# Base URL for WordPress REST API
+BASE_URL = "https://cybernow.info/wp-json/wp/v2"
+# Headers for WordPress REST API
+HEADERS = {
+    'Authorization': f'Bearer {token}'
+}
 
-    endpoint = f"https://cybernow.info/wp-json/wp/v2/posts?slug={slug}"
+# Delete wp posts with wp
+
+def delete_wp_post(wp_id):
     headers = {'Authorization': f'Bearer {token}'}
-    # Make a GET request to the WordPress REST API endpoint for posts
-    response = httpx.get(endpoint, headers=headers)
-
-    # Extract the ID of the post from the response
-    return response.json()[0]["id"]
+    url = f"{BASE_URL}/posts/{wp_id}"
+    try:
+        response = httpx.delete(url, headers=headers)
+        if response.status_code != 200:
+            print(f"Failed to delete post: {response.text}")
+            return
+    except Exception as e:
+        print(f"Failed to delete post: {e}")
+        return
+    print(f"Successfully deleted post with id {wp_id}.")
+    return response.json()
 
 def update_wp_post(post_info):
     # Get the wordpress id from the slug
@@ -83,7 +74,7 @@ def update_wp_post(post_info):
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json'
     }
-    url = f"https://cybernow.info/wp-json/wp/v2/posts/{wp_id}"
+    url = f"{BASE_URL}/posts/{wp_id}"
     try:
         post_info = type_check_post_info(post_info)
     except Exception as e:
@@ -119,7 +110,7 @@ def add_tag_to_wordpress(token, tag):
     headers = {'Authorization': f'Bearer {token}'}
     
     # Fetch the tags
-    tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
+    tags_endpoint = f"{BASE_URL}/tags"
 
     # Check if the tag already exists
     response = httpx.get(tags_endpoint, headers=headers)
@@ -151,7 +142,7 @@ def create_wordpress_post(token, post_info, post_time):
         logging.error("Error: post_info is None")
         raise ValueError("post_info is None")
     
-    post_endpoint = "http://cybernow.info/wp-json/wp/v2/posts"
+    post_endpoint = f"{BASE_URL}/posts"
 
     headers = {
         'Authorization': f'Bearer {token}',
@@ -183,7 +174,7 @@ def fetch_categories(token):
     headers = {'Authorization': f'Bearer {token}'}
     
     # Fetch the categories
-    categories_endpoint = "http://cybernow.info/wp-json/wp/v2/categories"
+    categories_endpoint = f"{BASE_URL}/categories"
     response = httpx.get(categories_endpoint, headers=headers)
     
     if response.status_code == 200:
@@ -207,7 +198,7 @@ def fetch_tags(token):
     headers = {'Authorization': f'Bearer {token}'}
     
     # Fetch the tags
-    tags_endpoint = "http://cybernow.info/wp-json/wp/v2/tags"
+    tags_endpoint = f"{BASE_URL}/tags"
     response = httpx.get(tags_endpoint, headers=headers)
     
     if response.status_code == 200:
@@ -229,5 +220,38 @@ def fetch_wordpress_taxonomies(token):
     categories = fetch_categories(token)
     tags = fetch_tags(token)
     return categories, tags
+
+def get_all_images_from_wp():
+    images = fetch_from_wp_api("media")
+    if not images:
+        print("Failed to fetch images from WordPress.")
+        return None
+    print(f"Fetched {len(images)} images from WordPress.")
+    return images
+
+def fetch_from_wp_api(endpoint):
+    """Utility function to fetch data from WordPress API."""
+    results = []
+    page = 1
+    while True:
+        params = {'per_page': 100, 'page': page}
+        response = httpx.get(f"{BASE_URL}/{endpoint}", headers=HEADERS, params=params)
+        if response.status_code != 200:
+            print(f"Failed to fetch data from {endpoint} on page {page}: {response.text}")
+            break
+        data = response.json()
+        
+        # If data isn't a list, return it directly
+        if not isinstance(data, list):
+            return data
+        
+        print(f"Type of data: {type(data)}")
+        results.extend(data)
+        if len(data) < 100:  # Less than the maximum, so it's the last page.
+            break
+        page += 1
+    print(f"Fetched {len(results)} results from WordPress API endpoint: {endpoint}")
+    return results
+
 
 
