@@ -11,14 +11,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      
+      # If the Docker build-push-action uses set-output or save-state via stdout,
+      # check its documentation for updates or alternatives.
       - name: Build and push Docker image
         uses: docker/build-push-action@v2
         with:
           context: .
           push: true
+          # Ensure the repository name is all lowercase.
           tags: jakekinchen/cybernewsaggregator:latest
+      
+      # If the docker-run-action uses set-output or save-state via stdout,
+      # check its documentation for updates or alternatives.
       - name: Run Docker image
         uses: addnab/docker-run-action@v3
         with:
-          image: user/repo:latest
+          image: jakekinchen/cybernewsaggregator:latest # Ensure this matches the tag used above and is all lowercase
           options: -e GITHUB_TOKEN=${{ secrets.cybernow_secret }}
