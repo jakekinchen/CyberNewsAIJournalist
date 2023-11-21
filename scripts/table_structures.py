@@ -19,7 +19,8 @@ image_table = {
         'file_name': (str, type(None)),
         'width': (int, type(None)),
         'height': (int, type(None)),
-        'alt_text': (str, type(None))
+        'alt_text': (str, type(None)),
+        'alt_image_urls': (list, type(None)),
     }
 
 post_table = {

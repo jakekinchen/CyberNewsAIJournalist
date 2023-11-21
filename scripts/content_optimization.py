@@ -4,7 +4,7 @@ from supabase_utils import supabase, update_supabase_post
 from wp_utils import update_wp_post
 import logging
 import re
-from test import ReadabilityMetrics, SeoMetrics
+from format_utils import ReadabilityMetrics, SeoMetrics
 import logging
 from source_fetcher import fetch_sources_from_query
 from gpt_utils import query_gpt, function_call_gpt, image_query_function
@@ -85,6 +85,7 @@ def generate_link_from_term(term):
     # Selects best source by integer id
     source_id = select_tech_term_source(sources)
     if not source_id:
+       
         print(f"Failed to select source from sources - returning the first source's url")
         # Return the first source's url if there is at least one source, else return None
         return sources[0]['url'] if sources else None

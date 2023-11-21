@@ -92,11 +92,14 @@ def update_wp_post(post_info):
     return response.json()
 
 def type_check_post_info(post_info):
+    print("Entered type check function")
     sanitized_post_info = {}
     for key, value in post_info.items():
+        #print("Entered type check for loop")
         if key == 'yoast_meta' and isinstance(value, dict):
             sanitized_yoast_meta = {}
             for sub_key, sub_value in value.items():
+                #print("Entered yoast_meta type check for loop")
                 if isinstance(sub_value, str):  # since all the yoast_meta sub fields are string type
                     sanitized_yoast_meta[sub_key] = sub_value
                 else:
@@ -153,10 +156,9 @@ def create_wordpress_post(token, post_info, post_time):
     post_info['date'] = post_time.strftime("%Y-%m-%dT%H:%M:%S")
     post_info['date_gmt'] = (post_time - timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M:%S")
     post_info['status'] = 'publish'
-    
+    #print("added date, date_gmt, and status to post_info")
     # Initialize sanitized_post_info dictionary with status, date, and date_gmt
     sanitized_post_info = type_check_post_info(post_info)
-    
        # else:
        #     print(f"Skipping invalid field: {key}, expected type {post_fields.get(key, 'Unknown')} but got {type(value)}")
     response = httpx.post(post_endpoint, json=sanitized_post_info, headers=headers)

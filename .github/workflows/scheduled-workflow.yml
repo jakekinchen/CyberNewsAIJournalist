@@ -1,0 +1,23 @@
+name: Scheduled Python Workflow
+
+on:
+  schedule:
+    - cron: '0 9,17 * * *'
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: user/repo:latest
+      - name: Run Docker image
+        uses: addnab/docker-run-action@v3
+        with:
+          image: user/repo:latest
+          options: -e GITHUB_TOKEN=${{ secrets.cybernow_secret }}

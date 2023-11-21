@@ -8,7 +8,15 @@ from tenacity import (
     retry_if_exception_type
 )
 import openai
+from openai import OpenAI
 import tiktoken
+from PIL import Image, ImageOps
+from io import BytesIO
+
+
+client = OpenAI(
+    # Defaults to os.environ.get("OPENAI_API_KEY")
+)
 
 # Set your OpenAI API key and organization
 openai.api_key = os.getenv('OPENAI_KEY')
@@ -16,16 +24,15 @@ openai.organization = os.getenv('OPENAI_ORGANIZATION')
 
 # Define the retry behavior
 @retry(
-    retry=retry_if_exception_type((openai.error.APIError, 
-                                  openai.error.APIConnectionError, 
-                                  openai.error.RateLimitError, 
-                                  openai.error.ServiceUnavailableError, 
-                                  openai.error.Timeout)),
+    retry=retry_if_exception_type((openai.APIError, 
+                                  openai.APIConnectionError, 
+                                  openai.RateLimitError, 
+                                  openai.Timeout)),
     wait=wait_random_exponential(multiplier=1, max=60),
     stop=stop_after_attempt(10)
 )
 def _api_call_with_backoff(*args, **kwargs):
-    return openai.ChatCompletion.create(*args, **kwargs)
+    return client.chat.completions.create(*args, **kwargs)
 
 def function_call_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo', functions=[], function_call_mode="auto"):
     function_call_mode = {"name": f"{functions[0]['name']}"}
@@ -45,6 +52,50 @@ def function_call_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo', functio
         print(f"Parameters: {functions}")
         print(f"Failed to call function: {err}")
 
+def query_dalle(prompt, mode="create", size="1792x1024", image=None, mask=None, n=1):
+    if mode == 'create':
+        try:
+            response = client.images.generate(
+                model = "dall-e-3",
+                prompt = prompt,
+                n=n,
+                size = size,
+                quality="standard",
+            )
+            return response
+        except openai.APIError as err:
+            logging.error(err)
+            print(f"Error: {err}")
+    elif mode == 'edit':
+        try:
+            response = client.images.edit(
+                prompt = prompt,
+                image = image,
+                n = n,
+                mask = mask,
+                size = size,
+            )
+            return response
+        except openai.APIError as err:
+            logging.error(err)
+            print(f"Error: {err}")
+    else:
+        raise Exception('Invalid mode')
+    
+def list_models():
+    try:
+        response = client.models.list()
+        # response format is as follows SyncPage[Model](data=[Model(id='text-search-babbage-doc-001', created=1651172509)])
+        # Print the model ids on separate lines in a file called models.txt
+        with open('models.txt', 'w') as f:
+            for model in response.data:
+                f.write(model.id + '\n')
+        return
+    except openai.APIError as err:
+        logging.error(err)
+        print(f"Error: {err}")
+
+
 def query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo'):
     context = f"{system_prompt} {user_prompt}"
     try:
@@ -59,10 +110,9 @@ def query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo'):
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
-            request_timeout=150,
         )
         return response.choices[0].message.content
-    except openai.error.APIConnectionError as err:
+    except openai.APIConnectionError as err:
         logging.error(err)
 
 def tokenizer(string: str, encoding_name: str) -> int:
@@ -73,7 +123,9 @@ def tokenizer(string: str, encoding_name: str) -> int:
 def model_optimizer(text, model):
     token_quantity = tokenizer(text, model)
     if model.startswith('gpt-4'):
-        if token_quantity < 8096:
+        if token_quantity <= 4096:
+            return 'gpt-4-1106-preview'
+        if token_quantity < 8096 and token_quantity > 4096:
             return 'gpt-4'
         elif token_quantity >= 8096 and token_quantity <= 32768:
             return 'gpt-3.5-turbo-16k'
@@ -106,10 +158,10 @@ def generate_wp_field_completion_function(categories, tags):
                     },
                     'image_queries': {
                         'type': 'array',
-                        'description': 'A list of queries to generate images for the post.',
+                        'description': 'A list of prompt sentences to generate images for the post.',
                         'items': { 
                             "type": "string", 
-                            "description": "A query to generate an image for the post. This should be a phrase that describes the contents of the image, with different words separated by space like normal. It should not be a concatenation of multiple words and should not contain a file extension. Try to make it vaguely referential to the content when something specific wouldn't be expected in a stock photo database. Don't make it too obvious or too similar to other queries. Do not use super obvious queries like 'cybersecurity' or 'hacking'." 
+                            "description": "A metaphorical sentence of imagery describing the power dynamics of the news story. Make the sentence a meta representation of what is figuratively going on." 
                             },
                     },
                     "excerpt": {
@@ -173,7 +225,7 @@ image_query_function=[
                         'description': 'A list of queries to generate images for the post.',
                         'items': { 
                             "type": "string", 
-                            "description": "A query to generate an image for the post. This should be a phrase that describes the contents of the image, with different words separated by space like normal. It should not be a concatenation of multiple words and should not contain a file extension." 
+                            "description": "A query to generate an image for the post. This should be a phrase that describes the contents of the image, with different words separated by space like normal. It should not be a concatenation of multiple words and should not contain a file extension. Describe the situation happening in vivid detail, but a metaphorical personification of what is happening. Avoid the following triggers for the automatic filter system: Riot, Warrior, Battle, Fighting, Any real names, Anything that sounds like violence, Anything that can be mistaken as terrorism" 
                             },
                         }
                     },

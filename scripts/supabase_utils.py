@@ -225,6 +225,15 @@ async def delete_topic(topic_id):
         return
     print(f"Successfully deleted topic with ID {topic_id} and all related sources.")
 
+def get_a_source_from_supabase(id):
+    try: 
+        source = supabase.table('sources').select('*').eq('id', id).limit(1).execute()
+        source = source.data[0]
+    except Exception as e:
+        print(f"Failed to get a source from Supabase: {e}")
+        return None
+    return source
+
 async def delete_supabase_post(topic_id):
     # topic_id is a foreign key in the supabase table posts
     # Delete the post

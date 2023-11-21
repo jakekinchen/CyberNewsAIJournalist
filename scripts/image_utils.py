@@ -2,10 +2,11 @@ import os
 import httpx
 from dotenv import load_dotenv
 from supabase_utils import supabase
+from gpt_utils import query_dalle
 from wp_utils import token
 from pexels_api import API
 from typing import List, Dict, Optional, Union
-from PIL import Image
+from PIL import Image, ImageOps
 from io import BytesIO
 from collections import namedtuple
 from enum import Enum
@@ -14,13 +15,13 @@ from enum import Enum
 class Provider(Enum):
     UNSPLASH = "unsplash"
     PEXELS = "pexels"
+    DALLE = "dalle"
 
 # Data class for photo details
 PhotoDetails = namedtuple("PhotoDetails", [
     'origin_id', 'url', 'query', 'description', 'photographer', 'photographer_url', 'type', 
-    'file_name', 'provider', 'width', 'height', 'wp_id', 'wp_url', 'topic_id'
+    'file_name', 'provider', 'width', 'height', 'wp_id', 'wp_url', 'topic_id', 'alt_text', 'alt_image_urls'
 ])
-
 
 class ImageProcessor:
 
@@ -42,7 +43,13 @@ class ImageProcessor:
                     'Accept-Version': 'v1',
                     'Authorization': f'Client-ID {os.getenv("UNSPLASH_API_KEY")}',
                 }
+            },
+            Provider.DALLE: {
+            "endpoint": "https://api.openai.com/v1/images",
+            "headers": {
+                'Authorization': f'Bearer {os.getenv("OPENAI_API_KEY")}',
             }
+        }
             # Add similar configuration for PEXELS if needed
         }
     
@@ -77,14 +84,52 @@ class ImageProcessor:
         buffered = BytesIO()
         resized_image.save(buffered, format=image.format)
         return buffered.getvalue()
+    
+    def create_dalle_mask(self):
+        # Create a blank 1024x1024 white image
+        img = Image.new('RGB', (1024, 1024), color='white')
+        # Create a black 576x576 rectangle
+        mask_rect = Image.new('RGB', (576, 576), color='black')
+        # Paste the black rectangle in the center of the white image
+        img.paste(mask_rect, (224, 224))
+        # Convert to RGBA and make black transparent
+        img = img.convert('RGBA')
+        data = img.getdata()
+        newData = []
+        for item in data:
+            if item[0] == 0 and item[1] == 0 and item[2] == 0:
+                newData.append((0, 0, 0, 0))  # transparent
+            else:
+                newData.append(item)
+        img.putdata(newData)
+        return img
+    
+    def crop_and_resize_image(self, image_response, provider):
+        # Image is 1792 x 1024 and needs to be 
+        # Convert the image content to an Image object
+        image = Image.open(BytesIO(image_response.content))
 
-    def upload_image_to_wordpress(self, token, image_url, image_type, origin_id):
+        # Downscale to 640x360
+        image = image.resize((640, 360), resample=Image.LANCZOS)
+
+        # Convert the image back to binary
+        buffer = BytesIO()
+        image.save(buffer, format='PNG')  # Assuming PNG format for DALL·E, but you may need to adjust based on your needs
+        image_binary = buffer.getvalue()
+
+        return image_binary
+
+
+    def upload_image_to_wordpress(self, token, image_url, image_type, origin_id, provider=None):
         # Fetch the image
-        image_name = self.get_file_name(origin_id, image_type)  # Assuming get_file_name is another method in the class
+        image_name = self.get_file_name(origin_id, image_type)
         image_response = httpx.get(image_url)
+        
         if image_response.status_code != 200:
             print(f"Failed to download image: {image_response.text}")
             return None
+        
+        image_binary = self.crop_and_resize_image(image_response, provider)
         
         # Prepare headers
         headers = {
@@ -94,11 +139,8 @@ class ImageProcessor:
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/116.0.1938.81',
         }
 
-        # Resize the image
-        image_binary = self.resize_image(image_response.content, 760, 340)
-        
         # Upload the image
-        response = httpx.post(self.wp_media_endpoint, headers=headers, data=image_binary)  # Access the class attribute with self
+        response = httpx.post(self.wp_media_endpoint, headers=headers, data=image_binary)
         
         # Check the upload status
         if response.status_code == 201:
@@ -116,45 +158,52 @@ class ImageProcessor:
                 'orientation': 'landscape',
             }
             response = httpx.get(self.API_CONFIG[Provider.UNSPLASH]["endpoint"], 
-                                 headers=self.API_CONFIG[Provider.UNSPLASH]["headers"], 
-                                 params=params)
+                                headers=self.API_CONFIG[Provider.UNSPLASH]["headers"], 
+                                params=params)
             return response.json().get('results')
         elif provider == Provider.PEXELS:
             self.pexels_api.search(query, page=page, results_per_page=1)
             return self.pexels_api.get_entries()
+        elif provider == Provider.DALLE:
+            prompt = f"Make a very realistic and detailed image of {query}."
+            
+            # Step 1: Create a 512x512 image
+            response = query_dalle(prompt, mode='create', size="1792x1024")
+            url = response.data[0].url
+
+            # Create a photo object with necessary details
+            photo = {
+                'id': response.created,
+                'url': url,
+                'description': query,
+            }
+            return [photo]
         else:
             raise ValueError(f"Unsupported provider: {provider}")
 
-    def fetch_images_from_queries(self, search_queries: List[str], topic_id: int, prioritize_pexels: bool = False) -> List[Dict]:
+
+    def fetch_images_from_queries(self, search_queries: List[str], topic_id: int, provider: Provider = Provider.DALLE) -> List[Dict]:
         if not token:
             print("Failed to authenticate with WordPress.")
             return []
 
-        # Get list of images from Supabase for both providers
-        list_of_supabase_images = {
-            Provider.PEXELS: self.get_list_of_supabase_images(Provider.PEXELS.value),
-            Provider.UNSPLASH: self.get_list_of_supabase_images(Provider.UNSPLASH.value)
-        }
-        print("Got list of images from Supabase")
+        # If provider is DALL·E, no need to check for unique images in Supabase
+        if provider != Provider.DALLE:
+            list_of_supabase_images = self.get_list_of_supabase_images(provider.value)
+            print(f"Got list of images from Supabase for {provider.value}")
+        else:
+            list_of_supabase_images = []
 
-        # Determine priority based on the flag
-        primary_provider = Provider.PEXELS if prioritize_pexels else Provider.UNSPLASH
-        secondary_provider = Provider.UNSPLASH if prioritize_pexels else Provider.PEXELS
+        # Fetch image from the specified provider
+        image = self.query_images(search_queries, list_of_supabase_images, provider)
 
-        # Try to fetch image from primary provider
-        image = self.query_images(search_queries, list_of_supabase_images[primary_provider], primary_provider)
-
-        # If an error occurred or no image from primary, try the secondary
+        # If an error occurred or no image was found, return
         if image is None or not image:
-            print(f"Failed to find a unique photo in {primary_provider.value} for all queries or an error occurred.")
-            image = self.query_images(search_queries, list_of_supabase_images[secondary_provider], secondary_provider)
-
-            if not image:
-                print(f"Failed to find a unique photo in {secondary_provider.value} for all queries.")
-                return []
+            print(f"Failed to find a photo in {provider.value} for all queries.")
+            return []
 
         # Upload the image to WordPress
-        result = self.upload_image_to_wordpress(token, image.url, image.type, str(image.origin_id))
+        result = self.upload_image_to_wordpress(token, image.url, image.type, str(image.origin_id), provider)
         if not result:
             print("Failed to upload image to WordPress.")
             return []
@@ -172,6 +221,7 @@ class ImageProcessor:
             return []
         
     def query_images(self, search_queries, list_of_supabase_images, provider):
+        photo = None  # Initialize photo variable
         for query in search_queries:
             page = 1
             while True:
@@ -181,21 +231,29 @@ class ImageProcessor:
                         print(f"No photos found for query {query}")
                         break
                     photo = photos[0]
-                    if not self.is_photo_in_supabase(photo['id'], list_of_supabase_images):
+                    
+                    # Handle the Supabase check based on the provider
+                    if provider == Provider.DALLE:
                         return self.process_photo(photo, query, provider)
-                    page += 1
-                except (AttributeError, KeyError) as e:  # Catching specific errors related to attribute or key access
+                    elif self.is_photo_in_supabase(photo['id'], list_of_supabase_images):
+                        page += 1
+                    else:
+                        return self.process_photo(photo, query, provider)
+
+                except (AttributeError, KeyError) as e:  
                     print(f"Error querying {provider.value} for {query} on page {page}: {e}")
-                    print(f"Photo: {photo}")
-                    return None  # Return None to indicate an error occurred
-                except Exception as e:  # Catch other unexpected exceptions
+                    if photo:
+                        print(f"Photo: {photo}")
+                    return None
+                except Exception as e:  
                     print(f"Error querying {provider.value} for {query} on page {page}: {e}")
-                    print(f"Photo: {photo}")
+                    if photo:
+                        print(f"Photo: {photo}")
                     break
-        raise Exception(f"Failed to find a unique photo for all queries: {search_queries}")
+        raise Exception(f"Failed to find a photo for all queries: {search_queries}")
 
     def process_photo(self, photo, query, provider):
-        print(f"Processing photo: {photo}")
+        #print(f"Processing photo: {photo}")
         try:
             if provider == Provider.PEXELS:
                 details = {
@@ -212,11 +270,13 @@ class ImageProcessor:
                     'height': photo.height,
                     'wp_id': None,  # Placeholder or default value
                     'wp_url': None,  # Placeholder or default value
-                    'topic_id': None  # Placeholder or default value
+                    'topic_id': None,  # Placeholder or default value
+                    'alt_text': None,
+                    'alt_image_urls': None
                 }
                 print(f"Details: {details}")
             elif provider == Provider.UNSPLASH:
-                print(f"Processing photo: {photo}")
+                #print(f"Processing photo: {photo}")
                 details = {
                     'origin_id': photo['id'],
                     'url': photo['urls']['regular'],
@@ -231,7 +291,29 @@ class ImageProcessor:
                     'height': photo['height'],
                     'wp_id': None,  # Placeholder or default value
                     'wp_url': None,  # Placeholder or default value
-                    'topic_id': None  # Placeholder or default value
+                    'topic_id': None,  # Placeholder or default value
+                    'alt_text': None,
+                    'alt_image_urls': None
+                }
+                print(f"Details: {details}")
+            elif provider == Provider.DALLE:
+                details = {
+                    'origin_id': str(photo['id']),
+                    'url': photo['url'],
+                    'query': query,
+                    'description': None,  # DALL·E does not provide a description
+                    'photographer': None,  # DALL·E does not have a photographer
+                    'photographer_url': None,  # DALL·E does not have a photographer URL
+                    'type': self.fetch_image_type(photo['url']),
+                    'file_name': f"{photo['id']}.png",
+                    'provider': Provider.DALLE.value,
+                    'width': 640,
+                    'height': 360,
+                    'wp_id': None,  # Placeholder or default value
+                    'wp_url': None,  # Placeholder or default value
+                    'topic_id': None,  # Placeholder or default value
+                    'alt_text': None,
+                    'alt_image_urls': None
                 }
                 print(f"Details: {details}")
             else:

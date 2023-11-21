@@ -116,16 +116,19 @@ def test_ssl_handshake(url, proxy_url=None):
     except Exception as e:
         print(f"Error executing openssl command: {e}")
 
-async def test_scraping_site():
+async def test_scraping_site(url):
    # Setup
-    target_url = "https://www.npr.org/2023/10/17/1206450553/worlds-hottest-pepper-guinness-record-pepper-x"
+    target_url = url
     username = os.getenv('BRIGHTDATA_DC_USERNAME')
     password = os.getenv('BRIGHTDATA_DC_PASSWORD')
     port = os.getenv('BRIGHTDATA_DC_PORT')
     proxy_url = f"https://{username}:{password}@brd.superproxy.io:{port}"
 
     # Call the diagnostic function
-    collect_diagnostic_info(target_url, proxy_url)
+    #collect_diagnostic_info(target_url, proxy_url)
+    # Scrape content
+    content, external_links = scrape_content(target_url, depth=1, include_links=True, is_external=False)
+    print(f"Content: {content}")    
 
 def scrape_content(url, depth=1, include_links=True, is_external=False):
     try:
@@ -179,7 +182,7 @@ def scrape_content(url, depth=1, include_links=True, is_external=False):
 
 def establish_connection(url):
     hostname = urlparse(url).hostname
-    if '.gov' in hostname:
+    if '.gov' in hostname or 'nytimes.com':
         return fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
     else:
         return fetch_using_proxy(url, 'dc') or fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)

@@ -1,7 +1,6 @@
 import json
 import os
 from dotenv import load_dotenv
-from image_fetcher import fetch_images_from_queries # Import the image fetching function
 from supabase_utils import supabase
 from wp_utils import fetch_categories, fetch_tags
 from image_utils import ImageProcessor
@@ -17,13 +16,14 @@ load_dotenv()
 # Get prompt from environment variables
 synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
 
-def post_synthesis(token, topic):
+def post_synthesis(token, topic, categories, tags):
     # Read in the factsheets into an object for each source associated with the topic and keep track of the source IDs
     if not topic['factsheet']:
         print(f"Topic {topic['name']} has no factsheet. Skipping...")
         return
-    categories = fetch_categories(token)
-    tags = fetch_tags(token)
+    print("Beginning post synthesis...")
+    #categories = fetch_categories(token)
+    #tags = fetch_tags(token)
     factsheet = topic['factsheet']
     external_source_info = topic['external_source_info']
     print("Categories and tags fetched")
@@ -162,7 +162,7 @@ def post_completion(post_info, functions):
     instructions = "With this information, complete all of the missing fields in the JSON object (or optimize any that could be better for SEO) using the WordPressPostFieldCompletion function."
     # Convert the post_info dictionary to a JSON string
     json_str = json.dumps(post_info)
-    model = 'gpt-4'
+    model = os.getenv('FUNCTION_CALL_MODEL')
     response = function_call_gpt(json_str, instructions, model, functions, function_call_mode={"name": "WordPressPostFieldCompletion"})
     # Parse the JSON string into a dictionary
     # Check if response is already a dictionary
