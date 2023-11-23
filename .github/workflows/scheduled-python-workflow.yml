@@ -28,4 +28,4 @@ jobs:
         uses: addnab/docker-run-action@v3
         with:
           image: jakekinchen/cybernewsaggregator:latest # Ensure this matches the tag used above and is all lowercase
-          options: -e GITHUB_TOKEN=${{ secrets.cybernow_secret }}
+          options: -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
