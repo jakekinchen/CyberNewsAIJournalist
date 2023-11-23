@@ -3,7 +3,6 @@ import httpx
 import json
 import os
 from supabase_utils import supabase
-from dotenv import load_dotenv
 from bs4 import BeautifulSoup
 from datetime import datetime
 

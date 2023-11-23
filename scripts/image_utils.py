@@ -124,6 +124,7 @@ class ImageProcessor:
         # Fetch the image
         image_name = self.get_file_name(origin_id, image_type)
         image_response = httpx.get(image_url)
+        print("Got image from url")
         
         if image_response.status_code != 200:
             print(f"Failed to download image: {image_response.text}")
@@ -197,16 +198,20 @@ class ImageProcessor:
         # Fetch image from the specified provider
         image = self.query_images(search_queries, list_of_supabase_images, provider)
 
+        print("Queried images")
+
         # If an error occurred or no image was found, return
         if image is None or not image:
             print(f"Failed to find a photo in {provider.value} for all queries.")
             return []
+        print("Image is not null")
 
         # Upload the image to WordPress
         result = self.upload_image_to_wordpress(token, image.url, image.type, str(image.origin_id), provider)
         if not result:
             print("Failed to upload image to WordPress.")
             return []
+        print("Uploaded image to WordPress")
 
         wp_id, wp_url = result
         image_dict = image._asdict()

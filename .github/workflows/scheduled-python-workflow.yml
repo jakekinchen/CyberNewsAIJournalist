@@ -15,7 +15,7 @@ jobs:
       # If the Docker build-push-action uses set-output or save-state via stdout,
       # check its documentation for updates or alternatives.
       - name: Build and push Docker image
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v3
         with:
           context: .
           push: true
@@ -29,4 +29,3 @@ jobs:
         with:
           image: jakekinchen/cybernewsaggregator:latest # Ensure this matches the tag used above and is all lowercase
           options: -e GITHUB_TOKEN=${{ secrets.cybernow_secret }}
-          #test
