@@ -10,11 +10,12 @@ from datetime import datetime
 import re
 from bs4 import BeautifulSoup, Tag
 import math
+import prompts
 
 # Load .env file
 load_dotenv()
 # Get prompt from environment variables
-synthesis_prompt = os.getenv('SYNTHESIS_PROMPT')
+synthesis_prompt = prompts.synthesis
 
 def post_synthesis(token, topic, categories, tags):
     # Read in the factsheets into an object for each source associated with the topic and keep track of the source IDs
@@ -152,9 +153,9 @@ def post_synthesis(token, topic, categories, tags):
         print(f"Failed to optimize the article for SEO: {e}")
 
     post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
-    if not os.getenv('END_OF_ARTICLE_TAG') in post_info['content']:
+    if not prompts.end_of_article_tag in post_info['content']:
         print("End of article tag not found in content. Appending it to the end of the content.")
-        post_info['content'] += os.getenv('END_OF_ARTICLE_TAG')
+        post_info['content'] += prompts.end_of_article_tag
 
     return post_info
 

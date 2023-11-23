@@ -9,12 +9,14 @@ import logging
 from source_fetcher import fetch_sources_from_query
 from gpt_utils import query_gpt, function_call_gpt, image_query_function
 from bs4 import BeautifulSoup
+import prompts
+
 
 # Load .env file
 load_dotenv()
 bing_api_key = os.getenv('BING_SEARCH_KEY')
 response_machine_prompt = os.getenv('RESPONSE_MACHINE_PROMPT')
-tech_term_prompt = os.getenv('TECH_TERM_PROMPT')
+tech_term_prompt = prompts.tech_term_prompt
 
 def update_post(post_info):
     update_supabase_post(post_info)

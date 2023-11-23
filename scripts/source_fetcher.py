@@ -9,6 +9,7 @@ import re
 import json
 import asyncio
 from gpt_utils import query_gpt, function_call_gpt, tokenizer, source_remover_function, generate_factsheet_user_prompt
+import prompts
 
 # Load .env file
 load_dotenv()
@@ -21,7 +22,7 @@ async def create_factsheet(source, topic_name):
     if not source['factsheet']:
         # Sanitize content by replacing newline characters with a space
         sanitized_content = re.sub(r'[\n\r]', ' ', source['content'])
-        system_prompt = os.getenv('FACTSHEET_SYSTEM_PROMPT')
+        system_prompt = prompts.factsheet_system_prompt
         user_prompt = generate_factsheet_user_prompt(sanitized_content, topic_name)
         try:
             loop = asyncio.get_event_loop()
@@ -80,7 +81,7 @@ async def create_factsheets_for_sources(topic):
 def aggregate_factsheets(topic, combined_factsheet):
     try:
         if combined_factsheet:
-            system_prompt = os.getenv('COMBINED_FACTSHEET_SYSTEM_PROMPT')
+            system_prompt = prompts.combined_factsheet_system_prompt
             user_prompt = generate_factsheet_user_prompt(topic['name'], combined_factsheet)
             facts = query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo-16k')
             facts_json = json.dumps(facts)
