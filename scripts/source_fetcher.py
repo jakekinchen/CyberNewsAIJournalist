@@ -177,7 +177,8 @@ def remove_sources_from_supabase(unrelated_source_ids):
 def fetch_sources_from_query(query):
     print("Fetching sources from query: " + query)
     # Bing Search V7 endpoint
-    endpoint = os.getenv('BING_SEARCH_ENDPOINT')
+    #endpoint = os.getenv('BING_SEARCH_ENDPOINT')
+    endpoint = "https://api.bing.microsoft.com/v7.0/search"
     # Call the Bing API
     mkt = 'en-US'
     params = {'q': query, 'mkt': mkt, 'count': 3, 'responseFilter': 'webpages', 'answerCount': 1, 'safeSearch': 'strict'}

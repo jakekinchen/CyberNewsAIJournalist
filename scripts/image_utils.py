@@ -33,7 +33,8 @@ class ImageProcessor:
         # Initialize Pexels API
         self.pexels_api = API(self.pexels_api_key)
         # Load WP Media endpoint
-        self.wp_media_endpoint = os.getenv('WP_MEDIA_ENDPOINT')
+        # self.wp_media_endpoint = os.getenv('WP_MEDIA_ENDPOINT')
+        self.wp_media_endpoint = "https://cybernow.info/wp-json/wp/v2/media"
         
         # API Configuration
         self.API_CONFIG = {
