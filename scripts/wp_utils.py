@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from table_structures import wp_post_table
 from urllib.parse import urlparse
+import pytz
 
 # Load .env file
 load_dotenv()
