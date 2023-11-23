@@ -8,7 +8,6 @@ import logging
 from table_structures import wp_post_table
 from urllib.parse import urlparse
 import pytz
-from supabase_utils import get_wp_id_from_slug
 
 # Load .env file
 load_dotenv()
