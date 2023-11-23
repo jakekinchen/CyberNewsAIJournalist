@@ -21,7 +21,7 @@ import logging
 import time
 load_dotenv()
 
-amount_of_topics = 2
+amount_of_topics = 1
 MIN_SOURCES = 2
 exploit_fetcher_activated = False
 debug = False
