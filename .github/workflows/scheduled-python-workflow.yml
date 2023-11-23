@@ -10,23 +10,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4.1.1
       
+      # Login to Docker Hub (if needed for pushing image or private base images)
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: jakekinchen/cybernewsaggregator:latest
-      
-      - name: Run Docker image
-        uses: addnab/docker-run-action@v3
-        with:
-          image: jakekinchen/cybernewsaggregator:latest # Ensure this matches the tag used above and is all lowercase
-          options: -e GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+      # Build Docker Image
+      - name: Build Docker image
+        run: docker build -t my-app .
+
+      # Run Docker Container
+      - name: Run Docker container
+        run: |
+          docker run \
+            -v ${{ github.workspace }}:/app \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            --env-file .env \
+            --name my-app-container \
+            my-app python /app/scripts/init.py
