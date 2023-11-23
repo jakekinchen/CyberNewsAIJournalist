@@ -140,32 +140,34 @@ def add_tag_to_wordpress(token, tag):
         return None
     
 # Create a new post on WordPress
-def create_wordpress_post(token, post_info, post_time):
+def create_wordpress_post(token, post_info, immediate_post=True, delay_hours=1):
     if post_info is None:
         logging.error("Error: post_info is None")
         raise ValueError("post_info is None")
     
     post_endpoint = f"{BASE_URL}/posts"
-
     headers = {
         'Authorization': f'Bearer {token}',
         'Content-Type': 'application/json'
     }
 
-    # Append the following fields to the post_info dictionary
+    # Adjust post time
+    central_tz = pytz.timezone('America/Chicago')  # Assuming Central Time as mentioned
+    if immediate_post:
+        post_time = datetime.now(central_tz)
+    else:
+        post_time = datetime.now(central_tz) + timedelta(hours=delay_hours)
+
     post_info['date'] = post_time.strftime("%Y-%m-%dT%H:%M:%S")
-    post_info['date_gmt'] = (post_time - timedelta(hours=4)).strftime("%Y-%m-%dT%H:%M:%S")
+    post_info['date_gmt'] = post_time.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S")
     post_info['status'] = 'publish'
-    #print("added date, date_gmt, and status to post_info")
-    # Initialize sanitized_post_info dictionary with status, date, and date_gmt
+
     sanitized_post_info = type_check_post_info(post_info)
-       # else:
-       #     print(f"Skipping invalid field: {key}, expected type {post_fields.get(key, 'Unknown')} but got {type(value)}")
     response = httpx.post(post_endpoint, json=sanitized_post_info, headers=headers)
     
     if response.status_code == 201:
         print("Post created successfully.")
-        return response.json()  # Return the post data
+        return response.json()
     else:
         print(sanitized_post_info)
         raise Exception(f"Failed to create post: {response.text}")
