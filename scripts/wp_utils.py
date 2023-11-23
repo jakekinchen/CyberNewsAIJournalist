@@ -17,14 +17,14 @@ post_fields = wp_post_table
 # Access your API keys and token
 wp_username = os.getenv('WP_USERNAME')
 wp_password = os.getenv('WP_PASSWORD')
-wp_token = os.getenv('WP_TOKEN')
+#wp_token = os.getenv('WP_TOKEN')
 
 # Get the JWT token for WordPress
 def get_jwt_token(username, password):
 
-    if wp_token:
-        logging.info("Using existing token")
-        return wp_token
+    # if wp_token:
+    #     logging.info("Using existing token")
+    #     return wp_token
     
     token_endpoint = "http://cybernow.info/wp-json/jwt-auth/v1/token"
     payload = {
