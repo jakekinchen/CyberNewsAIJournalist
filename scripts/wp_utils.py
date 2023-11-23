@@ -8,6 +8,7 @@ import logging
 from table_structures import wp_post_table
 from urllib.parse import urlparse
 import pytz
+from supabase_utils import supabase, get_wp_id_from_slug
 
 # Load .env file
 load_dotenv()
@@ -145,7 +146,7 @@ def create_wordpress_post(token, post_info, immediate_post=True, delay_hours=1):
     if post_info is None:
         logging.error("Error: post_info is None")
         raise ValueError("post_info is None")
-    
+
     post_endpoint = f"{BASE_URL}/posts"
     headers = {
         'Authorization': f'Bearer {token}',
@@ -159,6 +160,7 @@ def create_wordpress_post(token, post_info, immediate_post=True, delay_hours=1):
     else:
         post_time = datetime.now(central_tz) + timedelta(hours=delay_hours)
 
+    # Setting the date field in the site's timezone and date_gmt field in UTC
     post_info['date'] = post_time.strftime("%Y-%m-%dT%H:%M:%S")
     post_info['date_gmt'] = post_time.astimezone(pytz.utc).strftime("%Y-%m-%dT%H:%M:%S")
     post_info['status'] = 'publish'
