@@ -98,7 +98,7 @@ async def process_topic(topic, token):
     # Create WordPress Post
     start_time = time.time()
     try:
-        create_wordpress_post(token, post_info)
+        create_wordpress_post(token, post_info, immediate_post=False, delay_hours=1)
         print(f"Post created in {time.time() - start_time:.2f} seconds")
     except Exception as e:
         print(f"Failed to create post: {e}")
