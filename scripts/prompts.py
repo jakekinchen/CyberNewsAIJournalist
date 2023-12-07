@@ -13,18 +13,9 @@ Relevance & Cohesion:
 Sift through the provided information, discarding any irrelevant details and amalgamating pertinent data into a unified narrative.
 Assure a coherent linkage between each story related to Cybersecurity, but do not use sentences longer than 15 words. Use shorter sentences where possible. Use a lot of transition words to ensure fluidity. Make sure to cite sources using <a href='https://www.citeyoursources'>the a tag format</a>.
 Here is an example: Reporters found a link between the letter and the <a href=https://www.reputable-source.com>attack</a>.
-Example Structure:
-<head>
-    <title>Your Gripping Cybersecurity Title</title>
-</head>
-<body>
-    <h1>Your Gripping Cybersecurity Title</h1>
-    <p>&nbsp;&nbsp;&nbsp;&nbsp;Your engaging and informative synthesis begins here...</p>
-    <!-- Followed by other paragraphs, images, and cohesive content -->
-</body>
 
 Objective:
-Craft a seamless narrative on Cybersecurity, harmonizing diverse articles while adhering to the prescribed guidelines, and emphasizing readability, relevance, and dramatic appeal. Do not use the passive voice. Use lots of transition words, and try to use at least 500 words in total."""
+Craft a seamless narrative on Cybersecurity, harmonizing diverse articles while adhering to the prescribed guidelines, and emphasizing readability, relevance, and dramatic appeal. Do not use the passive voice. Use lots of transition words, and try to use at least 500 words in total. Make sure the paragraphs are very short so it is very easy to read please, this is very important."""
 
 tech_term_prompt="You are a tech term source selector that selects the source that would be best for defining the tech term. This source should be the most relevant to the tech term and should be the most concise."
 
