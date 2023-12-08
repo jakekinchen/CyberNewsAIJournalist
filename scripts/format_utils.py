@@ -467,7 +467,7 @@ class SeoMetrics:
         # Beginning with the doctype, header, and meta information
         html_content = """
 <body>
-<div style="width:640px;">
+<div style="max-width:640px; margin: auto;">
 <header>
     <h1 style="font-size: larger;">{title}</h1>
 </header>
@@ -476,7 +476,7 @@ class SeoMetrics:
 
         # If there's an image associated with the post, add it after the title
         if 'image_url' in self.post_info and self.post_info['image_url']:
-            html_content += '<img src="{}" alt="Image for {}" style="width:640px;height:360px;">\n'.format(self.post_info['image_url'], self.post_info['title'])
+            html_content += '<img src="{}" alt="Image for {}" style="width:100%; height:auto;">\n'.format(self.post_info['image_url'], self.post_info['title'])
 
 
         # Add the cleaned content wrapped inside <article>
