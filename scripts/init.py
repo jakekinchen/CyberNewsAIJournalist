@@ -2,7 +2,7 @@ import os
 import httpx
 import datetime
 import utils
-from wp_utils import fetch_categories, fetch_tags
+from wp_utils import fetch_categories, fetch_tags, update_posts_with_new_html
 from gpt_utils import list_models, query_dalle
 from datetime import datetime, timedelta
 from generate_topics import generate_topics
@@ -26,6 +26,10 @@ MIN_SOURCES = 2
 exploit_fetcher_activated = False
 debug = False
 synthesize_factsheets = False
+
+def test_update_posts_with_new_html():
+    # Second argument is the starting date (the 1st of november 2023)
+    update_posts_with_new_html(token, datetime(2023, 11, 1))
 
 def test_query_dalle():
     prompt = "A digital chessboard with a shadowy figure holding a cloak of invisibility advancing unseen pieces forward."
@@ -126,10 +130,11 @@ async def main():
 
     if debug:
         print("Debug mode enabled")
+        test_update_posts_with_new_html()
         #test_query_dalle()
         #await test_create_factsheet()
         #list_models()
-        await test_scraping_site("https://www.nytimes.com/2023/11/09/us/politics/river-to-the-sea-israel-gaza-palestinians.html")
+        #await test_scraping_site("https://www.nytimes.com/2023/11/09/us/politics/river-to-the-sea-israel-gaza-palestinians.html")
         #inspect_all_methods(['load_dotenv', 'create_client'])
         #update_links()
         #test_inject_images_into_post_info()

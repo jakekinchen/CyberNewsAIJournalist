@@ -143,12 +143,7 @@ def get_image_info_by_wp_post(wp_post):
         'height': media.get('media_details', {}).get('height'),
     }
 
-def get_wp_id_from_slug(slug):
-    posts = fetch_from_wp_api(f"posts?slug={slug}")
-    if not posts:
-        print(f"No post found for slug: {slug}")
-        return None
-    return posts[0]["id"]
+
 
 # Go through every post in the posts table in Supabase and if there is a slug, then concatenate the slug with the URL https://cybernow.info/ and update the post field 'link' with the new URL
 # This is a one time script to update the links in the posts table

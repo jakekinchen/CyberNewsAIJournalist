@@ -9,7 +9,6 @@ import logging
 from table_structures import wp_post_table
 from urllib.parse import urlparse
 import pytz
-from supabase_utils import get_wp_id_from_slug
 from dateutil.parser import parse
 
 # Load .env file
@@ -53,6 +52,13 @@ BASE_URL = "https://cybernow.info/wp-json/wp/v2"
 HEADERS = {
     'Authorization': f'Bearer {token}'
 }
+
+def get_wp_id_from_slug(slug):
+    posts = fetch_from_wp_api(f"posts?slug={slug}")
+    if not posts:
+        print(f"No post found for slug: {slug}")
+        return None
+    return posts[0]["id"]
 
 # Delete wp posts with wp
 
@@ -291,6 +297,23 @@ def edit_post_html(html_content):
     first_img = soup.find('img')
     if first_img:
         first_img['style'] = "width:100%; height:auto;"
+
+    # Make sure the last paragraph tag is within the last div and there is a new line before it
+    last_div = soup.find_all('div')[-1]
+    last_paragraph = soup.find_all('p')[-1]
+    if last_div and last_paragraph:
+        if last_paragraph.parent != last_div:
+            last_div.append(last_paragraph)
+        if last_div.text[-1] != '\n':
+            last_div.append(BeautifulSoup('\n', 'html.parser'))
+     
+    # Make sure the last paragraph tag has a new line before it
+    last_paragraph = soup.find_all('p')[-1]
+    if last_paragraph:
+        if last_paragraph.text[-1] != '\n':
+            last_paragraph.append(BeautifulSoup('\n', 'html.parser'))
+            
+
 
     return str(soup)
 
