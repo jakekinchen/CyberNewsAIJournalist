@@ -8,7 +8,7 @@ from gpt_utils import query_gpt, function_call_gpt, generate_wp_field_completion
 from content_optimization import regenerate_image_queries, insert_tech_term_link, readability_optimization, seo_optimization
 from datetime import datetime
 import re
-from bs4 import BeautifulSoup, Tag
+from bs4 import BeautifulSoup, Tag, NavigableString
 import math
 import prompts
 
@@ -155,7 +155,14 @@ def post_synthesis(token, topic, categories, tags):
     post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
     if not prompts.end_of_article_tag in post_info['content']:
         print("End of article tag not found in content. Appending it to the end of the content.")
-        post_info['content'] += prompts.end_of_article_tag
+        # Find the last div in the content
+        last_div = soup.find_all('div')[-1]
+        if last_div:
+            # Insert the end_of_article_tag before the last div
+            last_div.insert_before(BeautifulSoup(prompts.end_of_article_tag, 'html.parser'))
+        else:
+            # If there is no div, append the tag at the end of the content
+            soup.append(BeautifulSoup(prompts.end_of_article_tag, 'html.parser'))
 
     return post_info
 

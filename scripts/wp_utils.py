@@ -2,12 +2,15 @@ import os
 import json
 import httpx
 import csv
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
 import logging
 from table_structures import wp_post_table
 from urllib.parse import urlparse
 import pytz
+from supabase_utils import get_wp_id_from_slug
+from dateutil.parser import parse
 
 # Load .env file
 load_dotenv()
@@ -258,6 +261,53 @@ def fetch_from_wp_api(endpoint):
         page += 1
     print(f"Fetched {len(results)} results from WordPress API endpoint: {endpoint}")
     return results
+
+def fetch_posts_since_date(token, date_str):
+    headers = {'Authorization': f'Bearer {token}'}
+    posts = []
+    page = 1
+    while True:
+        params = {'per_page': 100, 'page': page, 'after': date_str}
+        response = httpx.get(f"{BASE_URL}/posts", headers=headers, params=params)
+        if response.status_code != 200:
+            print(f"Failed to fetch posts on page {page}: {response.text}")
+            break
+        data = response.json()
+        if not data:
+            break
+        posts.extend(data)
+        page += 1
+    return posts
+
+def edit_post_html(html_content):
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    # Update the first div
+    first_div = soup.find('div')
+    if first_div:
+        first_div['style'] = "max-width:640px; margin: auto;"
+
+    # Update the first img tag
+    first_img = soup.find('img')
+    if first_img:
+        first_img['style'] = "width:100%; height:auto;"
+
+    return str(soup)
+
+def update_posts_with_new_html(token, start_date):
+    posts = fetch_posts_since_date(token, start_date)
+    for post in posts:
+        try:
+            original_html = post['content']['rendered']
+            updated_html = edit_post_html(original_html)
+            post_info = {
+                'slug': post['slug'],
+                'content': updated_html
+            }
+            update_wp_post(post_info)
+        except Exception as e:
+            print(f"Failed to update post {post['id']}: {e}")
+
 
 
 
