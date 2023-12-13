@@ -155,6 +155,8 @@ def post_synthesis(token, topic, categories, tags):
     post_info['content'] = insert_tech_term_link(post_info['content'], json_dict.get('tech_term'))
     if not prompts.end_of_article_tag in post_info['content']:
         print("End of article tag not found in content. Appending it to the end of the content.")
+        # Create a BeautifulSoup instance
+        soup = BeautifulSoup(post_info['content'], 'html.parser')
         # Find the last div in the content
         last_div = soup.find_all('div')[-1]
         if last_div:
@@ -163,6 +165,8 @@ def post_synthesis(token, topic, categories, tags):
         else:
             # If there is no div, append the tag at the end of the content
             soup.append(BeautifulSoup(prompts.end_of_article_tag, 'html.parser'))
+        # Update the post_info['content'] with the modified HTML
+        post_info['content'] = str(soup)
 
     return post_info
 
