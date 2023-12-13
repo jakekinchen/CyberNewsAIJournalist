@@ -160,8 +160,8 @@ def post_synthesis(token, topic, categories, tags):
         # Find the last div in the content
         last_div = soup.find_all('div')[-1]
         if last_div:
-            # Insert the end_of_article_tag before the last div
-            last_div.insert_before(BeautifulSoup(prompts.end_of_article_tag, 'html.parser'))
+            # Insert the end_of_article_tag at the end of the last div
+            last_div.append(BeautifulSoup(prompts.end_of_article_tag, 'html.parser'))
         else:
             # If there is no div, append the tag at the end of the content
             soup.append(BeautifulSoup(prompts.end_of_article_tag, 'html.parser'))
