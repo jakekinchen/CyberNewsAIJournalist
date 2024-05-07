@@ -275,7 +275,9 @@ def search_related_sources(query, offset=0):
     headers = {"Ocp-Apim-Subscription-Key": bing_api_key}
     response = httpx.get(endpoint, headers=headers, params=params)
     news_result = response.json()
+    print("Querying Bing API with query: " + query)
     # Extract related sources
+    print(news_result)
     related_sources = [
         {
             "topic_name": news_result["queryContext"]["originalQuery"],
