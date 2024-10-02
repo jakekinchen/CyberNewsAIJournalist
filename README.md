@@ -19,7 +19,7 @@ CyberNewsAggregator is a cutting-edge tool designed to harness the power of LLM'
 
 ## Installation and Setup
 
-### Prerequisites
+### Prerequisites 
 
 - Python 3.8+
 - Pipenv or similar virtual environment tool
