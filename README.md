@@ -3,7 +3,7 @@
 
 ## Description
 
-CyberNews AI Journalist is a cutting-edge tool designed to work with LLM's to fetch, aggregate, and provide insightful analyses of cybersecurity news from various sources across the internet. By gathering and synthesizing information related to cybersecurity, users are provided with up-to-date, relevant, and essential news in a single, cohesive interface. Has integrations with Wordpress so you can easily upload site specific content. Custom datascraping, it's not for the faint of heart! 
+CyberNews AI Journalist is a cutting-edge tool designed to work with LLM's to fetch, aggregate, and provide insightful analyses of cybersecurity news from various sources across the internet. By gathering and synthesizing information related to cybersecurity, users are provided with up-to-date, relevant, and essential news in a single, cohesive interface. Has integrations with Wordpress so you can easily upload site specific content. Also fetches an image for the page based on the content of the article, can use public image databases or Dalle 3. Custom datascraping too! it's not for the faint of heart! 
 
 ## Features
 
