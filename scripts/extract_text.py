@@ -8,15 +8,176 @@ import ssl
 import subprocess
 import socket
 from OpenSSL import crypto
+import pathlib
+import asyncio
+from playwright.async_api import async_playwright
+from stealth_browser import scrape_with_stealth
+import tempfile
+from PyPDF2 import PdfReader
+import logging
+from typing import Optional, Tuple, Union
+import io
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-def get_proxy_url():
-    username = os.getenv(f'BRIGHTDATA_RES_USERNAME')
-    password = os.getenv(f'BRIGHTDATA_RES_PASSWORD')
-    port = os.getenv(f'BRIGHTDATA_RES_PORT')
-    # Construct the proxy URL
+# Get the path to the CA certificate
+CA_CERT_PATH = str(pathlib.Path(__file__).parent.parent / 'ca.crt')
+
+class PDFExtractionError(Exception):
+    """Custom exception for PDF extraction errors."""
+    pass
+
+async def download_pdf(url: str, client: httpx.AsyncClient) -> Optional[bytes]:
+    """
+    Download a PDF file from a URL.
+    
+    Args:
+        url (str): The URL of the PDF file
+        client (httpx.AsyncClient): The HTTP client to use for the request
+        
+    Returns:
+        Optional[bytes]: The PDF content as bytes if successful, None otherwise
+    """
+    try:
+        response = await client.get(url)
+        response.raise_for_status()
+        
+        # Check if the response is actually a PDF
+        content_type = response.headers.get('content-type', '').lower()
+        if 'application/pdf' not in content_type:
+            logger.error(f"URL {url} did not return a PDF (content-type: {content_type})")
+            return None
+            
+        return response.content
+    except httpx.HTTPError as e:
+        logger.error(f"HTTP error occurred while downloading PDF from {url}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Unexpected error occurred while downloading PDF from {url}: {e}")
+        return None
+
+def extract_text_from_pdf(pdf_content: bytes) -> Optional[str]:
+    """
+    Extract text from a PDF file.
+    
+    Args:
+        pdf_content (bytes): The PDF content as bytes
+        
+    Returns:
+        Optional[str]: The extracted text if successful, None otherwise
+        
+    Raises:
+        PDFExtractionError: If there's an error processing the PDF
+    """
+    try:
+        # Create a file-like object from the bytes
+        pdf_file = io.BytesIO(pdf_content)
+        
+        # Create PDF reader object
+        pdf_reader = PdfReader(pdf_file)
+        
+        # Extract text from all pages
+        text = []
+        for page in pdf_reader.pages:
+            try:
+                page_text = page.extract_text()
+                if page_text:
+                    text.append(page_text)
+            except Exception as e:
+                logger.warning(f"Failed to extract text from page: {e}")
+                continue
+        
+        if not text:
+            raise PDFExtractionError("No text could be extracted from the PDF")
+            
+        return "\n".join(text)
+    except Exception as e:
+        raise PDFExtractionError(f"Error processing PDF: {e}")
+
+async def scrape_pdf(url: str) -> Optional[str]:
+    """
+    Scrape text content from a PDF URL.
+    
+    Args:
+        url (str): The URL of the PDF to scrape
+        
+    Returns:
+        Optional[str]: The extracted text if successful, None otherwise
+    """
+    async with httpx.AsyncClient(verify=False, timeout=30.0) as client:
+        try:
+            # Download the PDF
+            pdf_content = await download_pdf(url, client)
+            if not pdf_content:
+                logger.error(f"Failed to download PDF from {url}")
+                return None
+            
+            # Extract text from the PDF
+            text = extract_text_from_pdf(pdf_content)
+            if not text:
+                logger.error(f"Failed to extract text from PDF at {url}")
+                return None
+            
+            return text
+        except PDFExtractionError as e:
+            logger.error(f"PDF extraction error for {url}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Unexpected error while scraping PDF from {url}: {e}")
+            return None
+
+async def fetch_with_scraping_browser(url):
+    """Fetch content using Scraping Browser with Playwright."""
+    username = os.getenv('BRIGHTDATA_SB_USERNAME')
+    password = os.getenv('BRIGHTDATA_SB_PASSWORD')
+    auth = f"{username}:{password}"
+    sbr_ws_cdp = f'wss://{auth}@brd.superproxy.io:9222'
+
+    try:
+        async with async_playwright() as pw:
+            print(f'Connecting to Scraping Browser for {url}...')
+            browser = await pw.chromium.connect_over_cdp(sbr_ws_cdp)
+            try:
+                page = await browser.new_page()
+                await page.goto(url, timeout=60000)  # 60 second timeout
+                
+                # Handle potential CAPTCHA
+                client = await page.context.new_cdp_session(page)
+                solve_result = await client.send('Captcha.solve', {'detectTimeout': 30000})
+                print(f'Captcha solve status: {solve_result.get("status", "unknown")}')
+                
+                # Get the page content
+                content = await page.content()
+                return content
+            finally:
+                await browser.close()
+    except Exception as e:
+        print(f"Error with Scraping Browser for {url}: {e}")
+        return None
+
+def get_proxy_url(proxy_type='RES'):
+    """Get proxy URL for the specified proxy type."""
+    username = os.getenv(f'BRIGHTDATA_{proxy_type}_USERNAME')
+    password = os.getenv(f'BRIGHTDATA_{proxy_type}_PASSWORD')
+    port = '33335'  # Using the new port for the updated certificate
     return f"https://{username}:{password}@brd.superproxy.io:{port}"
+
+async def fetch_using_proxy(url):
+    """
+    Fetch content using a proxy service
+    """
+    try:
+        title, text = await scrape_with_stealth(url)
+        if text:
+            return text
+        return None
+    except Exception as e:
+        print(f"Error using proxy: {str(e)}")
+        return None
 
 def collect_diagnostic_info(url, proxy_url):
     print("=== Diagnostic Information ===")
@@ -127,122 +288,106 @@ async def test_scraping_site(url):
     # Call the diagnostic function
     #collect_diagnostic_info(target_url, proxy_url)
     # Scrape content
-    content, external_links = scrape_content(target_url, depth=1, include_links=True, is_external=False)
+    content, external_links = await scrape_content(target_url, depth=1, include_links=True, is_external=False)
     print(f"Content: {content}")    
 
-def scrape_content(url, depth=1, include_links=True, is_external=False):
+async def scrape_content(url: str, depth: int = 1, include_links: bool = True, is_external: bool = False) -> Optional[str]:
+    """
+    Scrape content from a URL with improved error handling and fallback mechanisms.
+    
+    Args:
+        url (str): The URL to scrape
+        depth (int): How deep to follow links (default: 1)
+        include_links (bool): Whether to include links in the output (default: True)
+        is_external (bool): Whether this is an external source (default: False)
+        
+    Returns:
+        Optional[str]: The scraped content if successful, None otherwise
+    """
+    if not url or not isinstance(url, str):
+        print(f"Invalid URL provided: {url}")
+        return None
+        
+    # Clean and validate URL
+    url = url.strip()
+    if not url.startswith(('http://', 'https://')):
+        url = 'https://' + url
+        
     try:
-        # Check if the URL points to a PDF
-        if url.lower().endswith('.pdf'):
-            if is_external:
-                # If it's an external link, don't scrape it but include it in the external links
-                return None, [url]
-            else:
-                # If it's a main source, skip over it
-                print(f"Skipping main PDF source: {url}")
-                return None, []
-        # The rest of your scraping logic remains the same
-        soup = establish_connection(url)
-        if soup is None:
-            raise ValueError("Unable to retrieve HTML")
-        content = None
-        # Specific handling for certain websites
-        if 'thehackernews.com' in url or 'yahoo.com' in url:
-            content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
-        elif 'wsj.com' in url:
-            content = ' '.join([p.get_text().strip() for p in soup.find_all('p', attrs={'data-type': 'paragraph'})])
-        elif 'exploit-db.com' in url:
-            return exploit_db_content(soup)
-        # Generic handling for other websites
-        else:
-            possible_selectors = [
-                "article", ".article-content", "#content", ".post-body",
-                "div.main-content", "section.article", ".entry-content",
-                ".post-content", "main article", ".blog-post",
-            ]
-            for selector in possible_selectors:
-                selected_content = soup.select_one(selector)
-                if selected_content:
-                    content = selected_content.get_text().strip()
-                    break
-        # Fallback to using <p> tag text if no content found using selectors
-        if not content:
-            content = ' '.join([p.get_text().strip() for p in soup.find_all('p')])
-        # Extract links if needed
-        external_links = []
-        if include_links:
-            base_domain = urlparse(url).netloc
-            external_links = extract_external_links(soup, base_domain, depth)
-            return content, external_links
-    except Exception as error:
-        print(f"Failed to scrape URL: {url}. Error: {error}")
-        if include_links:
-            return None, []  # Return empty list of links in case of error when include_links is True
+        # First try direct connection with a short timeout
+        async with httpx.AsyncClient(verify=False, timeout=10.0) as client:
+            try:
+                response = await client.get(url)
+                if response.status_code == 200:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    # Remove script and style elements
+                    for script in soup(["script", "style"]):
+                        script.decompose()
+                    text = soup.get_text()
+                    # Clean up text
+                    lines = (line.strip() for line in text.splitlines())
+                    chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+                    text = ' '.join(chunk for chunk in chunks if chunk)
+                    return text
+            except Exception as e:
+                print(f"Direct connection failed: {e}")
+                
+        # If direct connection fails, try with proxy
+        content = await fetch_using_proxy(url)
+        if content:
+            soup = BeautifulSoup(content, 'html.parser')
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+            text = soup.get_text()
+            # Clean up text
+            lines = (line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            text = ' '.join(chunk for chunk in chunks if chunk)
+            return text
+            
+        # If both methods fail, try scraping browser as last resort
+        content = await fetch_with_scraping_browser(url)
+        if content:
+            soup = BeautifulSoup(content, 'html.parser')
+            # Remove script and style elements
+            for script in soup(["script", "style"]):
+                script.decompose()
+            text = soup.get_text()
+            # Clean up text
+            lines = (line.strip() for line in text.splitlines())
+            chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+            text = ' '.join(chunk for chunk in chunks if chunk)
+            return text
+            
+        print(f"Failed to fetch content from {url} using all available methods")
+        return None
+        
+    except Exception as e:
+        print(f"Error scraping content from {url}: {e}")
         return None
 
-def establish_connection(url):
+async def establish_connection(url):
     hostname = urlparse(url).hostname
     if '.gov' in hostname or 'nytimes.com':
-        return fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
+        content = await fetch_using_proxy(url, 'RES')
+        if content:
+            return content
+        content = await fetch_using_proxy(url, 'DC')
+        if content:
+            return content
+        content = await fetch_using_proxy(url)  # Try Scraping Browser
+        return content
     else:
-        return fetch_using_proxy(url, 'dc') or fetch_using_proxy(url, 'zu') or fetch_using_proxy(url, 'res') or fetch_using_proxy(url, 'sb') or fetch_using_proxy(url)
+        content = await fetch_using_proxy(url, 'DC')
+        if content:
+            return content
+        content = await fetch_using_proxy(url, 'RES')
+        if content:
+            return content
+        content = await fetch_using_proxy(url)  # Try Scraping Browser
+        return content
 
-def fetch_using_proxy(url, proxy_type=None, verify_ssl=False):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36'
-    }
-
-    if proxy_type:
-        proxy_type = proxy_type.upper()
-        username = os.getenv(f'BRIGHTDATA_{proxy_type}_USERNAME')
-        password = os.getenv(f'BRIGHTDATA_{proxy_type}_PASSWORD')
-        port = os.getenv(f'BRIGHTDATA_{proxy_type}_PORT')
-        if not verify_ssl:
-            super_proxy = f"http://{username}:{password}@brd.superproxy.io:{port}"
-        else:
-            super_proxy = f"https://{username}:{password}@brd.superproxy.io:{port}"
-        proxies = {"http://": super_proxy, "https://": super_proxy}
-    else:
-        proxies = None
-        proxy_type = 'no'
-    
-    print(f"Fetching {url} using {proxy_type} proxy")
-
-    # Create SSL context with modern protocols
-    ssl_context = ssl.create_default_context()
-    ssl_context.set_ciphers('DEFAULT@SECLEVEL=2')
-    ssl_context.set_alpn_protocols(['h2', 'http/1.1'])
-    ssl_context.options |= ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
-
-    BRIGHTDATA_CERT_PATH = '/usr/local/share/ca-certificates/CA-BrightData.crt'
-    if os.path.exists(BRIGHTDATA_CERT_PATH):
-        ssl_context.load_verify_locations(cafile=BRIGHTDATA_CERT_PATH)
-    else:
-        print("BrightData certificate not found!")
-
-    # Decide on SSL verification
-    if not verify_ssl or '.gov' in urlparse(url).netloc:
-        verify = False
-    else:
-        verify = ssl_context
-    
-    try:
-        response = httpx.get(url, proxies=proxies, headers=headers, verify=verify)
-        response.raise_for_status()
-        if response.status_code != 200:
-            print(f"Response status code: {response.status_code}")
-            print(f"Failed to fetch {url} using {proxy_type} proxy: {response.text}")
-            print(f"proxies: {proxies}, headers: {headers}, verify: {verify}")
-        else:
-            return BeautifulSoup(response.text, 'html.parser')
-    except httpx.RequestError as e:
-        # If there's a TLS version mismatch error, you could potentially add a mechanism here to adapt and retry.
-        print(f"Error with using {proxy_type} proxy for {url}: {e}")
-        print(f"proxies: {proxies}, headers: {headers}, verify: {verify}")
-        if verify is not False:
-            for cert_details in verify.get_ca_certs():
-                print(f"Cert Details: {cert_details}")
-    
 def is_valid_http_url(url):
     try:
         parsed_url = urlparse(url)

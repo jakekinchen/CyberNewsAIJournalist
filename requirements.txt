@@ -1,13 +1,13 @@
 python_dotenv==0.21.0
 requests==2.31.0
-beautifulsoup4==4.4.0
+beautifulsoup4>=4.12.2
 openai
 requests_oauthlib==1.3.1
 python-slugify == 8.0.1
 pandas == 2.0.3
 supabase == 1.0.4
 pexels-api == 1.0.1
-httpx
+httpx>=0.24.1
 gotrue
 postgrest
 realtime
@@ -15,9 +15,15 @@ storage3
 supafunc
 certifi
 tiktoken
-pillow
-httpx
+pillow==10.2.0
 pyopenssl
 tenacity
 pytz
-#playwright==1.38
+playwright>=1.40.0
+playwright-stealth==1.0.6
+PyPDF2==3.0.1
+pytest==7.4.4
+python-dateutil>=2.8.2
+lxml>=4.9.3
+feedparser>=6.0.10
+aiohttp>=3.9.1

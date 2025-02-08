@@ -6,4 +6,4 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     env_file:
       - ./.env
-    command: python /app/scripts/init.py
+    command: python3 /app/scripts/init.py

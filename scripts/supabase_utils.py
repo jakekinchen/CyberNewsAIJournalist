@@ -2,18 +2,23 @@ from supabase import create_client, Client
 import os
 from dotenv import load_dotenv
 import logging
-from wp_utils import token, get_all_images_from_wp, fetch_from_wp_api
+from scripts.wp_utils import get_all_images_from_wp, fetch_from_wp_api
 from datetime import datetime
-from table_structures import image_table, post_table
+from scripts.table_structures import image_table, post_table
 from urllib.parse import urlparse
 
 # Load .env file
 load_dotenv()
 
 # Supabase configuration
-supabase_url = os.getenv('SUPABASE_ENDPOINT')
-supabase_key = os.getenv('SUPABASE_KEY')
-supabase = create_client(supabase_url, supabase_key)
+supabase_url = os.getenv('SUPABASE_URL')
+supabase_service_role_key = os.getenv('SUPABASE_SERVICE_ROLE_KEY')
+
+if not supabase_url or not supabase_service_role_key:
+    raise ValueError("Missing required environment variables: SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY")
+
+# Create client with service role key for server-side operations
+supabase = create_client(supabase_url, supabase_service_role_key)
 
 def upsert_supabase_image_using_origin_id(image_info):
     image_info = {k: v for k, v in image_info.items() if v is not None}
@@ -178,38 +183,78 @@ def update_links():
     except Exception as e:
         logging.error(f"Failed to update links: {e}")
 
-def insert_post_info_into_supabase(post_info):
- try:
-        response = supabase.table("posts").insert([post_info]).execute()
- except Exception as e:
-        print(f"An error occurred: {e}")
-        if e.code == '23505':
-            print(f"Post with the slug {post_info['slug']} already exists. Continuing...")
-            print("Deleting the post in Supabase...")
+def store_post_info(supabase, post_info):
+    """Store post information in Supabase."""
+    try:
+        now = datetime.now()
+        
+        # First, handle the featured media if present
+        featured_media_id = None
+        if 'featured_media' in post_info:
             try:
-                response = supabase.table("posts").delete().eq('slug', post_info['slug']).execute()
-                print("Post deleted.")
-                # Try to insert the post again
-                try:
-                    response = supabase.table("posts").insert([post_info]).execute()
-                    print("Post inserted.")
-                except Exception as e:
-                    print(f"Failed to insert the post: {e}")
-                    print("Continuing...")
-                    return
+                # Check if it's binary data (PNG image)
+                if isinstance(post_info['featured_media'], bytes):
+                    # Generate a new unique ID for the image
+                    featured_media_id = int(now.timestamp())
+                    
+                    # Create image data
+                    image_data = {
+                        'id': str(featured_media_id),  # Keep as string for images table
+                        'origin_id': str(featured_media_id),  # Keep as string for images table
+                        'url': f"https://cybernow.info/wp-content/uploads/{now.year}/{now.month:02d}/featured-image-{featured_media_id}.png",
+                        'type': 'image/png',
+                        'topic_id': post_info.get('topic_id'),
+                        'content': post_info['featured_media']  # Store the binary data
+                    }
+                    
+                    # Check if image exists first
+                    existing_image = supabase.table('images').select('*').eq('id', image_data['id']).execute()
+                    if not existing_image.data:
+                        # Insert new image
+                        supabase.table('images').insert(image_data).execute()
+                        print(f"Successfully inserted image with ID {image_data['id']}")
+                else:
+                    # If it's already an ID, use it as is
+                    featured_media_id = int(post_info['featured_media'])
+            except (TypeError, ValueError) as e:
+                print(f"Warning: Could not process featured media: {e}")
+                featured_media_id = None
+        
+        # Then create post record
+        post_data = {
+            'title': post_info['title'],
+            'content': post_info['content'],
+            'excerpt': post_info['excerpt'],
+            'slug': post_info['slug'],
+            'date_created': now.isoformat(),
+            'status': post_info['status'],
+            'topic_id': post_info.get('topic_id')
+        }
+        
+        # Only add featured_media if we have a valid ID
+        if featured_media_id is not None:
+            post_data['featured_media'] = featured_media_id
+            
+        # Handle duplicate slugs
+        original_slug = post_data['slug']
+        counter = 1
+        while True:
+            try:
+                # Try to insert the post
+                response = supabase.table('posts').insert(post_data).execute()
+                print("Successfully stored post info in Supabase")
+                return response.data
             except Exception as e:
-                print(f"Failed to delete the post: {e}")
-                print("Continuing...")
-                return
-        if e.code == 'PGRST102':
-            print("An invalid request body was sent(e.g. an empty body or malformed JSON).")
-            print("Tried to insert the following post info:")
-        if e.code == '22P02':
-            print("An invalid request body was sent(e.g. an empty body or malformed JSON).")
-            print(f"Tried to insert the following post info:{post_info}")
-        else:
-            print(f"Failed to save post information to Supabase. Continuing...")
-            return
+                if 'duplicate key value violates unique constraint' in str(e) and 'posts_slug_key' in str(e):
+                    # Append counter to slug and try again
+                    post_data['slug'] = f"{original_slug}-{counter}"
+                    counter += 1
+                else:
+                    raise e
+        
+    except Exception as e:
+        print(f"Failed to store post info: {e}")
+        return None
 
 async def delete_topic(topic_id):
     # Delete the topic
@@ -273,3 +318,25 @@ def delete_supabase_images_not_in_file_name_list(supabase_images, wp_image_file_
         else:
             print(f"Image with id {image['id']} is in WordPress. Continuing...")
             continue
+
+def get_topics_without_posts():
+    """Get topics that don't have associated posts in the posts table."""
+    try:
+        # Using a left join to find topics without posts
+        response = supabase.table("topics") \
+            .select("*, posts!left(id)") \
+            .is_("posts.id", "null") \
+            .order("id", desc=True) \
+            .execute()
+        
+        # Filter out the join data and return just the topics
+        topics = []
+        for item in response.data:
+            topic = {k: v for k, v in item.items() if k != "posts"}
+            topics.append(topic)
+            
+        print(f"Found {len(topics)} topics without posts")
+        return topics
+    except Exception as e:
+        print(f"Failed to get topics without posts: {e}")
+        return []

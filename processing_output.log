@@ -1,0 +1,1297 @@
+Found 895 topics without posts
+
+Found 895 topics without posts
+
+Processing topic: AI-Powered Social Engineering: Reinvented Threats (ID: 2007)...
+Processing topic URL: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Found 1 existing sources
+Using specialized THN scraper for https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Source https://thehackernews.com/2025/02/ai-powered-social-engineering.html already exists, skipping...
+Total sources gathered: 1
+Looking for additional sources for topic: AI-Powered Social Engineering: Reinvented Threats
+Fetching sources from Google CSE with query: cybersecurity AI-Powered Social Engineering Reinvented Threats
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.14455, 'formattedSearchTime': '0.14', 'totalResults': '5', 'formattedTotalResults': '5'}
+Skipping non-article page: https://thehackernews.com/search/label/social%20engineering
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Skipping non-article page: https://thehackernews.com/search/label/Voice%20Cloning?m=1
+Found source: AI-Powered Social Engineering: Reinvented Threats (https://thehackernews.com/2025/02/ai-powered-social-engineering.html)
+Skipping non-article page: https://thehackernews.com/search/label/artificial%20intelligence
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.170375, 'formattedSearchTime': '0.17', 'totalResults': '34', 'formattedTotalResults': '34'}
+Skipping non-article page: https://thehackernews.com/search/label/social%20engineering
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Found source: How an Instagram Account Became a Modern Luxury News Empire ... (https://www.wsj.com/style/fashion/style-not-com-instagram-zara-beka-gvishiani-sponsored-b8294174)
+Skipping non-article page: https://thehackernews.com/search/label/Voice%20Cloning?m=1
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: AI-Powered Social Engineering: Reinvented Threats (https://thehackernews.com/2025/02/ai-powered-social-engineering.html)
+Found source: Updated 2025-02-05 · GitHub (https://gist.github.com/masta-g3/8f7227397b1053b42e727bbd6abf1d2e)
+Found source: AtkinsRéalis welcomes Accenture as new Canadians for CANDU ... (https://ca.finance.yahoo.com/news/atkinsr-alis-welcomes-accenture-canadians-163900029.html)
+Found source: Amazon Web Services - Wikipedia (https://en.wikipedia.org/wiki/Amazon_Web_Services)
+Found source: TechCrunch | Startup and Technology News (https://techcrunch.com/)
+Found 9 total valid sources
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Source https://thehackernews.com/2025/02/ai-powered-social-engineering.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2007
+
+Processing topic: CISA Warns of Active Exploits Targeting Trimble Cityworks Vulnerability (ID: 2006)...
+Processing topic URL: https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Found 1 existing sources
+Using specialized THN scraper for https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Source https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html already exists, skipping...
+Total sources gathered: 1
+Looking for additional sources for topic: CISA Warns of Active Exploits Targeting Trimble Cityworks Vulnerability
+Fetching sources from Google CSE with query: CISA Warns of Active Exploits Targeting Trimble Cityworks Vulnerability
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.18568, 'formattedSearchTime': '0.19', 'totalResults': '4', 'formattedTotalResults': '4'}
+Found source: CISA Warns of Active Exploits Targeting Trimble Cityworks ... (https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html)
+Skipping non-article page: https://thehackernews.com/search/label/Vulnerability
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: Google Patches 47 Android Security Flaws, Including Actively ... (https://thehackernews.com/2025/02/google-patches-47-android-security.html)
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.24638, 'formattedSearchTime': '0.25', 'totalResults': '17', 'formattedTotalResults': '17'}
+Found source: CISA Warns of Active Exploits Targeting Trimble Cityworks ... (https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html)
+Found source: Known Exploited Vulnerabilities Catalog | CISA (https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
+Found source: CISA warns Trimble Cityworks customers of actively exploited RCE ... (http://www.scmagazine.com/news/cisa-warns-trimble-cityworks-customers-of-actively-exploited-rce-flaw)
+Skipping non-article page: https://thehackernews.com/search/label/Vulnerability
+Found source: News in the Security category (https://www.bleepingcomputer.com/news/security/)
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: Schneider Electric EcoStruxure | CISA (https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-02)
+Found source: ABB Drive Composer | CISA (https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-03)
+Found source: Trimble Cityworks versions prior to 15.8.9 and Cityworks... · CVE ... (https://github.com/advisories/GHSA-m5q8-8x36-w25p)
+Found source: Schneider Electric EcoStruxure Power Monitoring Expert (PME) | CISA (https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-01)
+Found 10 total valid sources
+Added security news source: https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Added security news source: https://thehackernews.com/2025/02/google-patches-47-android-security.html
+Added security news source: https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Added security news source: https://www.cisa.gov/known-exploited-vulnerabilities-catalog
+Added security news source: http://www.scmagazine.com/news/cisa-warns-trimble-cityworks-customers-of-actively-exploited-rce-flaw
+Added security news source: https://www.bleepingcomputer.com/news/security/
+Added security news source: https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-02
+Added security news source: https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-03
+Added security news source: https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-01
+Source https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/2025/02/google-patches-47-android-security.html
+Source https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html already exists, skipping...
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2006
+
+Processing topic: DeepSeek App Transmits Sensitive User and Device Data Without Encryption (ID: 2005)...
+Processing topic URL: https://thehackernews.com/2025/02/deepseek-app-transmits-sensitive-user.html
+Using specialized THN scraper for https://thehackernews.com/2025/02/deepseek-app-transmits-sensitive-user.html
+Successfully stored source from https://thehackernews.com/2025/02/deepseek-app-transmits-sensitive-user.html
+Total sources gathered: 1
+Looking for additional sources for topic: DeepSeek App Transmits Sensitive User and Device Data Without Encryption
+Fetching sources from Google CSE with query: cybersecurity DeepSeek App Transmits Sensitive User and Device Data Without Encryption
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.151425, 'formattedSearchTime': '0.15', 'totalResults': '9', 'formattedTotalResults': '9'}
+Skipping non-article page: https://thehackernews.com/search/label/Vulnerability
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: DeepSeek App Transmits Sensitive User and Device Data Without ... (https://thehackernews.com/2025/02/deepseek-app-transmits-sensitive-user.html)
+Found source: Taiwan Bans DeepSeek AI Over National Security Concerns, Citing ... (https://thehackernews.com/2025/02/taiwan-bans-deepseek-ai-over-national.html)
+Found source: AMD SEV-SNP Vulnerability Allows Malicious Microcode Injection ... (https://thehackernews.com/2025/02/amd-sev-snp-vulnerability-allows.html)
+Skipping non-article page: https://thehackernews.com/search?updated-max=2025-02-03T11:00:00%2B05:30&max-results=11&m=1
+Skipping non-article page: https://thehackernews.com/search?updated-max=2025-02-03T18:00:00%2B05:30&max-results=11
+Skipping non-article page: https://thehackernews.com/search/label/data%20breach
+Skipping non-article page: https://thehackernews.com/search/label/artificial%20intelligence
+Found 3 total valid sources
+Added security news source: https://thehackernews.com/2025/02/deepseek-app-transmits-sensitive-user.html
+Added security news source: https://thehackernews.com/2025/02/taiwan-bans-deepseek-ai-over-national.html
+Added security news source: https://thehackernews.com/2025/02/amd-sev-snp-vulnerability-allows.html
+Source https://thehackernews.com/2025/02/deepseek-app-transmits-sensitive-user.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/2025/02/taiwan-bans-deepseek-ai-over-national.html
+Using enhanced scraper for additional source: https://thehackernews.com/2025/02/amd-sev-snp-vulnerability-allows.html
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2005
+
+Processing topic: CISA Warns of Active Exploits Targeting Trimble Cityworks Vulnerability (ID: 2004)...
+Processing topic URL: https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Using specialized THN scraper for https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Successfully stored source from https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Total sources gathered: 1
+Looking for additional sources for topic: CISA Warns of Active Exploits Targeting Trimble Cityworks Vulnerability
+Fetching sources from Google CSE with query: CISA Warns of Active Exploits Targeting Trimble Cityworks Vulnerability
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.260369, 'formattedSearchTime': '0.26', 'totalResults': '4', 'formattedTotalResults': '4'}
+Found source: CISA Warns of Active Exploits Targeting Trimble Cityworks ... (https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html)
+Skipping non-article page: https://thehackernews.com/search/label/Vulnerability
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: Google Patches 47 Android Security Flaws, Including Actively ... (https://thehackernews.com/2025/02/google-patches-47-android-security.html)
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.131223, 'formattedSearchTime': '0.13', 'totalResults': '18', 'formattedTotalResults': '18'}
+Found source: CISA Warns of Active Exploits Targeting Trimble Cityworks ... (https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html)
+Found source: Known Exploited Vulnerabilities Catalog | CISA (https://www.cisa.gov/known-exploited-vulnerabilities-catalog)
+Found source: All News (https://www.bleepingcomputer.com/news/)
+Found source: CISA warns Trimble Cityworks customers of actively exploited RCE ... (http://www.scmagazine.com/news/cisa-warns-trimble-cityworks-customers-of-actively-exploited-rce-flaw)
+Skipping non-article page: https://thehackernews.com/search/label/Vulnerability
+Found source: News in the Security category (https://www.bleepingcomputer.com/news/security/)
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: Schneider Electric EcoStruxure | CISA (https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-02)
+Found source: ABB Drive Composer | CISA (https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-03)
+Found source: Trimble Cityworks versions prior to 15.8.9 and Cityworks... · CVE ... (https://github.com/advisories/GHSA-m5q8-8x36-w25p)
+Found 10 total valid sources
+Added security news source: https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Added security news source: https://thehackernews.com/2025/02/google-patches-47-android-security.html
+Added security news source: https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html
+Added security news source: https://www.cisa.gov/known-exploited-vulnerabilities-catalog
+Added security news source: https://www.bleepingcomputer.com/news/
+Added security news source: http://www.scmagazine.com/news/cisa-warns-trimble-cityworks-customers-of-actively-exploited-rce-flaw
+Added security news source: https://www.bleepingcomputer.com/news/security/
+Added security news source: https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-02
+Added security news source: https://www.cisa.gov/news-events/ics-advisories/icsa-25-037-03
+Source https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/2025/02/google-patches-47-android-security.html
+Source https://thehackernews.com/2025/02/cisa-warns-of-active-exploitation-in.html already exists, skipping...
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2004
+
+Processing topic: AI-Powered Social Engineering: Reinvented Threats (ID: 2003)...
+Processing topic URL: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Using specialized THN scraper for https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Successfully stored source from https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Total sources gathered: 1
+Looking for additional sources for topic: AI-Powered Social Engineering: Reinvented Threats
+Fetching sources from Google CSE with query: cybersecurity AI-Powered Social Engineering Reinvented Threats
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.202885, 'formattedSearchTime': '0.20', 'totalResults': '6', 'formattedTotalResults': '6'}
+Skipping non-article page: https://thehackernews.com/search/label/social%20engineering
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Skipping non-article page: https://thehackernews.com/search/label/Voice%20Cloning?m=1
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: AI-Powered Social Engineering: Reinvented Threats (https://thehackernews.com/2025/02/ai-powered-social-engineering.html)
+Skipping non-article page: https://thehackernews.com/search/label/artificial%20intelligence
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.251849, 'formattedSearchTime': '0.25', 'totalResults': '34', 'formattedTotalResults': '34'}
+Skipping non-article page: https://thehackernews.com/search/label/social%20engineering
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Found source: How an Instagram Account Became a Modern Luxury News Empire ... (https://www.wsj.com/style/fashion/style-not-com-instagram-zara-beka-gvishiani-sponsored-b8294174)
+Skipping non-article page: https://thehackernews.com/search/label/Voice%20Cloning?m=1
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity
+Found source: AI-Powered Social Engineering: Reinvented Threats (https://thehackernews.com/2025/02/ai-powered-social-engineering.html)
+Found source: Updated 2025-02-05 · GitHub (https://gist.github.com/masta-g3/8f7227397b1053b42e727bbd6abf1d2e)
+Found source: AtkinsRéalis welcomes Accenture as new Canadians for CANDU ... (https://ca.finance.yahoo.com/news/atkinsr-alis-welcomes-accenture-canadians-163900029.html)
+Found source: Amazon Web Services - Wikipedia (https://en.wikipedia.org/wiki/Amazon_Web_Services)
+Found source: TechCrunch | Startup and Technology News (https://techcrunch.com/)
+Found 9 total valid sources
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Source https://thehackernews.com/2025/02/ai-powered-social-engineering.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2003
+
+Processing topic: AI-Powered Social Engineering: Reinvented Threats (ID: 2002)...
+Processing topic URL: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Using specialized THN scraper for https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Successfully stored source from https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Total sources gathered: 1
+Looking for additional sources for topic: AI-Powered Social Engineering: Reinvented Threats
+Fetching sources from Google CSE with query: cybersecurity AI-Powered Social Engineering Reinvented Threats
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.152542, 'formattedSearchTime': '0.15', 'totalResults': '5', 'formattedTotalResults': '5'}
+Skipping non-article page: https://thehackernews.com/search/label/social%20engineering
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Skipping non-article page: https://thehackernews.com/search/label/Voice%20Cloning?m=1
+Found source: AI-Powered Social Engineering: Reinvented Threats (https://thehackernews.com/2025/02/ai-powered-social-engineering.html)
+Skipping non-article page: https://thehackernews.com/search/label/artificial%20intelligence
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.153061, 'formattedSearchTime': '0.15', 'totalResults': '33', 'formattedTotalResults': '33'}
+Found source: Department of Government Efficiency - Wikipedia (https://en.wikipedia.org/wiki/Department_of_Government_Efficiency)
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Found source: How an Instagram Account Became a Modern Luxury News Empire ... (https://www.wsj.com/style/fashion/style-not-com-instagram-zara-beka-gvishiani-sponsored-b8294174)
+Skipping non-article page: https://thehackernews.com/search/label/Voice%20Cloning?m=1
+Found source: AI-Powered Social Engineering: Reinvented Threats (https://thehackernews.com/2025/02/ai-powered-social-engineering.html)
+Found source: Updated 2025-02-05 · GitHub (https://gist.github.com/masta-g3/8f7227397b1053b42e727bbd6abf1d2e)
+Found source: Amazon Web Services - Wikipedia (https://en.wikipedia.org/wiki/Amazon_Web_Services)
+Found source: TechCrunch | Startup and Technology News (https://techcrunch.com/)
+Found source: Machine learning - Wikipedia (https://en.wikipedia.org/wiki/Machine_learning)
+Found source: Open-source software - Wikipedia (https://en.wikipedia.org/wiki/Open-source_software)
+Found 11 total valid sources
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/ai-powered-social-engineering.html
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Source https://thehackernews.com/2025/02/ai-powered-social-engineering.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2002
+
+Processing topic: CVE: CVE-2025-0674 (ID: 2001)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-0674
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-0674
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-0674
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2001
+
+Processing topic: CVE: CVE-2025-1084 (ID: 2000)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 2000
+
+Processing topic: CVE: CVE-2025-1084 (ID: 1999)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1999
+
+Processing topic: CVE: CVE-2025-1084 (ID: 1998)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1998
+
+Processing topic: CVE: CVE-2025-1084 (ID: 1997)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1997
+
+Processing topic: CVE: CVE-2025-0675 (ID: 1996)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-0675
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-0675
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-0675
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1996
+
+Processing topic: CVE: CVE-2025-1084 (ID: 1995)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1995
+
+Processing topic: CVE: CVE-2025-1084 (ID: 1994)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-1084
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1994
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1993)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1993
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1992)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1992
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1991)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1991
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1990)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1990
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1989)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1989
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1988)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1988
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1987)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1987
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1986)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1986
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1985)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1985
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1984)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1984
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1983)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1983
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1982)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1982
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1981)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1981
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1980)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1980
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1979)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1979
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1978)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1978
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1977)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1977
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1976)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1976
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1975)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1975
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1974)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1974
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1973)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1973
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1972)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1972
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1971)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1971
+
+Processing topic: CVE: CVE-2024-56889 (ID: 1970)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-56889
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-56889
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-56889
+No sources found for topic 1970, skipping...
+
+Processing topic: CVE: CVE-2024-57392 (ID: 1969)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57392
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57392
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57392
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1969
+
+Processing topic: CVE: CVE-2024-57609 (ID: 1968)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-57609
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1968
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1967)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1967
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1966)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1966
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1965)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1965
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1964)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1964
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1963)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1963
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1962)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1962
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1961)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1961
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1960)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1960
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1959)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1959
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1958)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1958
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1957)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1957
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1956)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1956
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1955)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1955
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1954)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1954
+
+Processing topic: CVE: CVE-2025-22936 (ID: 1953)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-22936
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1953
+
+Processing topic: CVE: CVE-2025-23093 (ID: 1952)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-23093
+Found 2 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2025-23093
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2025-23093
+Gathered 2 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1952
+
+Processing topic: Experts Flag Security, Privacy Risks in DeepSeek AI App (ID: 1951)...
+Processing topic URL: https://krebsonsecurity.com/2025/02/experts-flag-security-privacy-risks-in-deepseek-ai-app/
+Found 3 existing sources
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1951
+
+Processing topic: CVE: CVE-2024-43811 (ID: 1950)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2024-43811
+Found 1 existing sources
+Using enhanced scraper for https://nvd.nist.gov/vuln/detail/CVE-2024-43811
+Failed to get sufficient content from https://nvd.nist.gov/vuln/detail/CVE-2024-43811
+Gathered 1 sources
+Skipping rejected CVE: CVE: CVE-2024-43811
+Failed to generate post content for topic 1950, skipping...
+
+Processing topic: CVE: CVE-2025-0994 (ID: 1949)...
+Processing topic URL: https://nvd.nist.gov/vuln/detail/CVE-2025-0994
+Found 3 existing sources
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1949
+
+Processing topic: Cybercriminals Use Go Resty and Node Fetch in 13 Million Password Spraying Attempts (ID: 1948)...
+Processing topic URL: https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html
+Found 2 existing sources
+Using specialized THN scraper for https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html
+Source https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html already exists, skipping...
+Total sources gathered: 2
+Looking for additional sources for topic: Cybercriminals Use Go Resty and Node Fetch in 13 Million Password Spraying Attempts
+Fetching sources from Google CSE with query: cybersecurity Cybercriminals Use Go Resty and Node Fetch in 13 Million Password Spraying Attempts
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.181611, 'formattedSearchTime': '0.18', 'totalResults': '2', 'formattedTotalResults': '2'}
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Found source: Cybercriminals Use Go Resty and Node Fetch in 13 Million ... (https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html)
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.307454, 'formattedSearchTime': '0.31', 'totalResults': '4', 'formattedTotalResults': '4'}
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Found source: Cybercriminals Use Go Resty and Node Fetch in 13 Million ... (https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html)
+Found source: Attackers Increase Use of HTTP Clients for Account Takeovers ... (https://www.infosecurity-magazine.com/news/attackers-increase-use-http/)
+Found source: News | NICCS (https://niccs.cisa.gov/cybersecurity-career-resources/news)
+Found 6 total valid sources
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html
+Added security news source: https://www.infosecurity-magazine.com/news/attackers-increase-use-http/
+Added security news source: https://niccs.cisa.gov/cybersecurity-career-resources/news
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Source https://thehackernews.com/2025/02/cybercriminals-use-axios-and-node-fetch.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Gathered 2 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1948
+
+Processing topic: Russian Cybercrime Groups Exploiting 7-Zip Flaw to Bypass Windows MotW Protections (ID: 1947)...
+Processing topic URL: https://thehackernews.com/2025/02/russian-cybercrime-groups-exploiting-7.html
+Using specialized THN scraper for https://thehackernews.com/2025/02/russian-cybercrime-groups-exploiting-7.html
+Successfully stored source from https://thehackernews.com/2025/02/russian-cybercrime-groups-exploiting-7.html
+Total sources gathered: 1
+Looking for additional sources for topic: Russian Cybercrime Groups Exploiting 7-Zip Flaw to Bypass Windows MotW Protections
+Fetching sources from Google CSE with query: Russian Cybercrime Groups Exploiting 7-Zip Flaw to Bypass Windows MotW Protections
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.169845, 'formattedSearchTime': '0.17', 'totalResults': '8', 'formattedTotalResults': '8'}
+Skipping non-article page: https://thehackernews.com/search/label/Vulnerability
+Skipping non-article page: https://thehackernews.com/search?updated-max=2025-02-06T13:10:00%2B05:30&max-results=11
+Skipping non-article page: https://thehackernews.com/search/label/Malware
+Found source: Russian Cybercrime Groups Exploiting 7-Zip Flaw to Bypass ... (https://thehackernews.com/2025/02/russian-cybercrime-groups-exploiting-7.html)
+Found source: Using Roles and Attributes to Protect Identities (https://thehackernews.com/expert-insights/2025/02/using-roles-and-attributes-to-protect.html)
+Found source: DeepSeek AI Database Exposed: Over 1 Million Log Lines, Secret ... (https://thehackernews.com/2025/01/deepseek-ai-database-exposed-over-1.html)
+Found source: Authorities Seize Domains of Popular Hacking Forums in Major ... (https://thehackernews.com/2025/01/authorities-seize-domains-of-popular.html)
+Found source: Zero Trust Security, Why It's Essential In Today's Threat Landscape (https://thehackernews.com/expert-insights/2025/01/zero-trust-security-why-its-essential.html)
+Found 5 total valid sources
+Added security news source: https://thehackernews.com/2025/02/russian-cybercrime-groups-exploiting-7.html
+Added security news source: https://thehackernews.com/expert-insights/2025/02/using-roles-and-attributes-to-protect.html
+Added security news source: https://thehackernews.com/2025/01/deepseek-ai-database-exposed-over-1.html
+Added security news source: https://thehackernews.com/2025/01/authorities-seize-domains-of-popular.html
+Added security news source: https://thehackernews.com/expert-insights/2025/01/zero-trust-security-why-its-essential.html
+Source https://thehackernews.com/2025/02/russian-cybercrime-groups-exploiting-7.html already exists, skipping...
+Using enhanced scraper for additional source: https://thehackernews.com/expert-insights/2025/02/using-roles-and-attributes-to-protect.html
+Using enhanced scraper for additional source: https://thehackernews.com/2025/01/deepseek-ai-database-exposed-over-1.html
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1947
+
+Processing topic: Next-Generation Attacks, Same Targets - How to Protect Your Users' Identities (ID: 1946)...
+Processing topic URL: https://thehackernews.com/2024/09/next-generation-attacks-same-targets.html
+Using specialized THN scraper for https://thehackernews.com/2024/09/next-generation-attacks-same-targets.html
+Successfully stored source from https://thehackernews.com/2024/09/next-generation-attacks-same-targets.html
+Total sources gathered: 1
+Looking for additional sources for topic: Next-Generation Attacks, Same Targets - How to Protect Your Users' Identities
+Fetching sources from Google CSE with query: cybersecurity Next-Generation Attacks Same Targets - How to Protect Your Users Identities
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.230157, 'formattedSearchTime': '0.23', 'totalResults': '219', 'formattedTotalResults': '219'}
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site (https://thehackernews.com/)
+Skipping non-article page: https://thehackernews.com/search/label/social%20engineering
+Found source: The Hacker News | #1 Trusted Cybersecurity News Site — Index Page (https://thehackernews.com/search)
+Skipping non-article page: https://thehackernews.com/search/label/cryptocurrency
+Found source: Crazy Evil Gang Targets Crypto with StealC, AMOS, and Angel ... (https://thehackernews.com/2025/02/crazy-evil-gang-targets-crypto-with.html)
+Skipping non-article page: https://thehackernews.com/search/label/bank%20hacked
+Skipping non-article page: https://thehackernews.com/search/label/mobile%20security
+Skipping non-article page: https://thehackernews.com/search/label/zero-day
+Skipping non-article page: https://thehackernews.com/search/label/spyware
+Skipping non-article page: https://thehackernews.com/search/label/Broadcom
+Found 3 total valid sources
+Added security news source: https://thehackernews.com/
+Added security news source: https://thehackernews.com/search
+Added security news source: https://thehackernews.com/2025/02/crazy-evil-gang-targets-crypto-with.html
+Using enhanced scraper for additional source: https://thehackernews.com/
+Using enhanced scraper for additional source: https://thehackernews.com/search
+Using enhanced scraper for additional source: https://thehackernews.com/2025/02/crazy-evil-gang-targets-crypto-with.html
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1946
+
+Processing topic: CTEM in the Spotlight: How Gartner's New Categories Help to Manage Exposures (ID: 1919)...
+Processing topic URL: https://thehackernews.com/2024/08/ctem-in-spotlight-how-gartners-new.html
+Using specialized THN scraper for https://thehackernews.com/2024/08/ctem-in-spotlight-how-gartners-new.html
+Successfully stored source from https://thehackernews.com/2024/08/ctem-in-spotlight-how-gartners-new.html
+Total sources gathered: 1
+Looking for additional sources for topic: CTEM in the Spotlight: How Gartner's New Categories Help to Manage Exposures
+Fetching sources from Google CSE with query: cybersecurity CTEM in the Spotlight How Gartners New Categories Help to Manage Exposures
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.215995, 'formattedSearchTime': '0.22', 'totalResults': '1', 'formattedTotalResults': '1'}
+Skipping non-article page: https://thehackernews.com/search/label/vulnerability%20management
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.278277, 'formattedSearchTime': '0.28', 'totalResults': '3', 'formattedTotalResults': '3'}
+Found source: DeepSeek Used Bevy of Tactics To Outfox U.S. (https://www.wsj.com/public/resources/documents/doyynGv3mg88xgyzrz9M-WSJNewsPaper-1-29-2025.pdf)
+Skipping non-article page: https://thehackernews.com/search/label/vulnerability%20management
+Found source: Capitol Rioters Leave Prison As Pardons Trigger Controversy (https://www.wsj.com/public/resources/documents/WtEfcGkSkyNeI6u17jsd-WSJNewsPaper-1-22-2025.pdf)
+Found 2 total valid sources
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1919
+
+Processing topic: Smash-and-Grab Extortion (ID: 1680)...
+Processing topic URL: https://thehackernews.com/2024/07/smash-and-grab-extortion.html
+Using specialized THN scraper for https://thehackernews.com/2024/07/smash-and-grab-extortion.html
+Successfully stored source from https://thehackernews.com/2024/07/smash-and-grab-extortion.html
+Total sources gathered: 1
+Looking for additional sources for topic: Smash-and-Grab Extortion
+Fetching sources from Google CSE with query: cybersecurity Smash-and-Grab Extortion
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.148414, 'formattedSearchTime': '0.15', 'totalResults': '1', 'formattedTotalResults': '1'}
+Skipping non-article page: https://thehackernews.com/search/label/Firmware%20Security
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.175074, 'formattedSearchTime': '0.18', 'totalResults': '2', 'formattedTotalResults': '2'}
+Skipping non-article page: https://thehackernews.com/search/label/Firmware%20Security
+Found source: Research and Analysis Wing - Wikipedia (https://en.wikipedia.org/wiki/Research_and_Analysis_Wing)
+Found 1 total valid sources
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1680
+
+Processing topic: Why SaaS Security is Suddenly Hot: Racing to Defend and Comply (ID: 1548)...
+Processing topic URL: https://thehackernews.com/2024/06/why-saas-security-is-suddenly-hot.html
+Using specialized THN scraper for https://thehackernews.com/2024/06/why-saas-security-is-suddenly-hot.html
+Successfully stored source from https://thehackernews.com/2024/06/why-saas-security-is-suddenly-hot.html
+Total sources gathered: 1
+Looking for additional sources for topic: Why SaaS Security is Suddenly Hot: Racing to Defend and Comply
+Fetching sources from Google CSE with query: Why SaaS Security is Suddenly Hot Racing to Defend and Comply
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.147829, 'formattedSearchTime': '0.15', 'totalResults': '1', 'formattedTotalResults': '1'}
+Skipping non-article page: https://thehackernews.com/search/label/Shadow%20IT
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.340005, 'formattedSearchTime': '0.34', 'totalResults': '5', 'formattedTotalResults': '5'}
+Found source: Canada, Mexico Set Retaliation For U.S. Tariffs (https://www.wsj.com/public/resources/documents/jc9C3mFRvFkaLTJJNeVv-WSJNewsPaper-2-3-2025.pdf)
+Found source: Google Cloud release notes | Documentation (https://cloud.google.com/release-notes)
+Found source: DeepSeek Used Bevy of Tactics To Outfox U.S. (https://www.wsj.com/public/resources/documents/doyynGv3mg88xgyzrz9M-WSJNewsPaper-1-29-2025.pdf)
+Skipping non-article page: https://thehackernews.com/search/label/Shadow%20IT
+Found source: VMware - Wikipedia (https://en.wikipedia.org/wiki/VMware)
+Found 4 total valid sources
+Skipping non-article URL: https://cloud.google.com/release-notes
+Gathered 1 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1548
+
+Processing topic: From PDFs to Payload: Bogus Adobe Acrobat Reader Installers Distribute Byakugan Malware (ID: 1210)...
+Processing topic URL: https://thehackernews.com/2024/04/from-pdfs-to-payload-bogus-adobe.html
+Found 5 existing sources
+Gathered 5 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1210
+
+Processing topic: CISO Perspectives on Complying with Cybersecurity Regulations (ID: 1209)...
+Processing topic URL: https://thehackernews.com/2024/04/ciso-perspectives-on-complying-with.html
+Found 4 existing sources
+Gathered 4 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1209
+
+Processing topic: New Wave of JSOutProx Malware Targeting Financial Firms in APAC and MENA (ID: 1208)...
+Processing topic URL: https://thehackernews.com/2024/04/new-wave-of-jsoutprox-malware-targeting.html
+Found 2 existing sources
+Using specialized THN scraper for https://thehackernews.com/2024/04/new-wave-of-jsoutprox-malware-targeting.html
+Successfully stored source from https://thehackernews.com/2024/04/new-wave-of-jsoutprox-malware-targeting.html
+Total sources gathered: 3
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1208
+
+Processing topic: New Phishing Campaign Targets Oil & Gas with Evolved Data-Stealing Malware (ID: 1207)...
+Processing topic URL: https://thehackernews.com/2024/04/new-phishing-campaign-targets-oil-gas.html
+Found 6 existing sources
+Gathered 6 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1207
+
+Processing topic: Vietnam-Based Hackers Steal Financial Data Across Asia with Malware (ID: 1206)...
+Processing topic URL: https://thehackernews.com/2024/04/vietnam-based-hackers-steal-financial.html
+Found 2 existing sources
+Using specialized THN scraper for https://thehackernews.com/2024/04/vietnam-based-hackers-steal-financial.html
+Successfully stored source from https://thehackernews.com/2024/04/vietnam-based-hackers-steal-financial.html
+Total sources gathered: 3
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1206
+
+Processing topic: Considerations for Operational Technology Cybersecurity (ID: 1204)...
+Processing topic URL: https://thehackernews.com/2024/04/considerations-for-operational.html
+Found 3 existing sources
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1204
+
+Processing topic: Ivanti Rushes Patches for 4 New Flaws in Connect Secure and Policy Secure (ID: 1203)...
+Processing topic URL: https://thehackernews.com/2024/04/ivanti-rushes-patches-for-4-new-flaw-in.html
+Found 3 existing sources
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1203
+
+Processing topic: Ivanti Rushes Patches for 4 New Flaw in Connect Secure and Policy Secure (ID: 1201)...
+Processing topic URL: https://thehackernews.com/2024/04/ivanti-rushes-patches-for-4-new-flaw-in.html
+Found 3 existing sources
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1201
+
+Processing topic: China-linked Hackers Deploy New 'UNAPIMON' Malware for Stealthy Operations (ID: 1200)...
+Processing topic URL: https://thehackernews.com/2024/04/china-linked-hackers-deploy-new.html
+Found 6 existing sources
+Gathered 6 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1200
+
+Processing topic: Attack Surface Management vs. Vulnerability Management (ID: 1199)...
+Processing topic URL: https://thehackernews.com/2024/04/attack-surface-management-vs.html
+Found 6 existing sources
+Gathered 6 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1199
+
+Processing topic: Mispadu Trojan Targets Europe, Thousands of Credentials Compromised (ID: 1198)...
+Processing topic URL: https://thehackernews.com/2024/04/mispadu-trojan-targets-europe-thousands.html
+Found 4 existing sources
+Gathered 4 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1198
+
+Processing topic: Critical Security Flaw Found in Popular LayerSlider WordPress Plugin (ID: 1197)...
+Processing topic URL: https://thehackernews.com/2024/04/critical-security-flaw-found-in-popular.html
+Found 9 existing sources
+Gathered 9 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1197
+
+Processing topic: Malicious Code in XZ Utils for Linux Systems Enables Remote Code Execution (ID: 1195)...
+Processing topic URL: https://thehackernews.com/2024/04/malicious-code-in-xz-utils-for-linux.html
+Found 13 existing sources
+Gathered 13 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1195
+
+Processing topic: Harnessing the Power of CTEM for Cloud Security (ID: 1194)...
+Processing topic URL: https://thehackernews.com/2024/04/harnessing-power-of-ctem-for-cloud.html
+Found 5 existing sources
+Gathered 5 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1194
+
+Processing topic: Google to Delete Billions of Browsing Records in 'Incognito Mode' Privacy Lawsuit Settlement (ID: 1193)...
+Processing topic URL: https://thehackernews.com/2024/04/google-to-delete-billions-of-browsing.html
+Found 2 existing sources
+Using specialized THN scraper for https://thehackernews.com/2024/04/google-to-delete-billions-of-browsing.html
+Successfully stored source from https://thehackernews.com/2024/04/google-to-delete-billions-of-browsing.html
+Total sources gathered: 3
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1193
+
+Processing topic: Massive Phishing Campaign Strikes Latin America: Venom RAT Targeting Multiple Sectors (ID: 1192)...
+Processing topic URL: https://thehackernews.com/2024/04/massive-phishing-campaign-strikes-latin.html
+Found 8 existing sources
+Gathered 8 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1192
+
+Processing topic: Detecting Windows-based Malware Through Better Visibility (ID: 1191)...
+Processing topic URL: https://thehackernews.com/2024/04/detecting-windows-based-malware-through.html
+Found 8 existing sources
+Gathered 8 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1191
+
+Processing topic: Malicious Apps Caught Secretly Turning Android Phones into Proxies for Cybercriminals (ID: 1190)...
+Processing topic URL: https://thehackernews.com/2024/04/malicious-apps-caught-secretly-turning.html
+Found 4 existing sources
+Gathered 4 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1190
+
+Processing topic: Finland Blames Chinese Hacking Group APT31 for Parliament Cyber Attack (ID: 1189)...
+Processing topic URL: https://thehackernews.com/2024/03/finland-blames-chinese-hacking-group.html
+Found 5 existing sources
+Gathered 5 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1189
+
+Processing topic: Vultur Android Banking Trojan Returns with Upgraded Remote Control Capabilities (ID: 1188)...
+Processing topic URL: https://thehackernews.com/2024/04/vultur-android-banking-trojan-returns.html
+Found 3 existing sources
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1188
+
+Processing topic: Linux Version of DinodasRAT Spotted in Cyber Attacks Across Several Countries (ID: 1187)...
+Processing topic URL: https://thehackernews.com/2024/03/linux-version-of-dinodasrat-spotted-in.html
+Found 5 existing sources
+Gathered 5 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1187
+
+Processing topic: PyPI Halts Sign-Ups Amid Surge of Malicious Package Uploads Targeting Developers (ID: 1185)...
+Processing topic URL: https://thehackernews.com/2024/03/pypi-halts-sign-ups-amid-surge-of.html
+Found 7 existing sources
+Gathered 7 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1185
+
+Processing topic: New Linux Bug Could Lead to User Password Leaks and Clipboard Hijacking (ID: 1183)...
+Processing topic URL: https://thehackernews.com/2024/03/new-linux-bug-could-lead-to-user.html
+Found 10 existing sources
+Gathered 10 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1183
+
+Processing topic: The Golden Age of Automated Penetration Testing is Here (ID: 1180)...
+Processing topic URL: https://thehackernews.com/2024/03/the-golden-age-of-automated-penetration.html
+Found 3 existing sources
+Gathered 3 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1180
+
+Processing topic: TheMoon Botnet Resurfaces, Exploiting EoL Devices to Power Criminal Proxy (ID: 1179)...
+Processing topic URL: https://thehackernews.com/2024/03/themoon-botnet-resurfaces-exploiting.html
+Found 8 existing sources
+Gathered 8 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1179
+
+Processing topic: Hackers Target macOS Users with Malicious Ads Spreading Stealer Malware (ID: 1178)...
+Processing topic URL: https://thehackernews.com/2024/03/hackers-target-macos-users-with.html
+Found 7 existing sources
+Gathered 7 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1178
+
+Processing topic: Urgent: Secret Backdoor Found in XZ Utils Library, Impacts Major Linux Distros (ID: 1177)...
+Processing topic URL: https://thehackernews.com/2024/03/urgent-secret-backdoor-found-in-xz.html
+Found 11 existing sources
+Gathered 11 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1177
+
+Processing topic: Dormakaba Locks Used in Millions of Hotel Rooms Could Be Cracked in Seconds (ID: 1176)...
+Processing topic URL: https://thehackernews.com/2024/03/dormakaba-locks-used-in-millions-of.html
+Found 5 existing sources
+Gathered 5 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1176
+
+Processing topic: U.S. Charges 7 Chinese Nationals in Major 14-Year Cyber Espionage Operation (ID: 1160)...
+Processing topic URL: https://thehackernews.com/2024/03/us-charges-7-chinese-nationals-in-major.html
+Found 6 existing sources
+Gathered 6 sources
+Error generating/uploading featured image: name 'upload_media_to_wordpress' is not defined
+Error details:  NameError
+Successfully stored post info in Supabase
+Successfully created post for topic 1160
+
+Processing topic: U.S. Sanctions 3 Cryptocurrency Exchanges for Helping Russia Evade Sanctions (ID: 1159)...
+Processing topic URL: https://thehackernews.com/2024/03/us-sanctions-3-cryptocurrency-exchanges.html
+Found 2 existing sources
+Using specialized THN scraper for https://thehackernews.com/2024/03/us-sanctions-3-cryptocurrency-exchanges.html
+Source https://thehackernews.com/2024/03/us-sanctions-3-cryptocurrency-exchanges.html already exists, skipping...
+Total sources gathered: 2
+Looking for additional sources for topic: U.S. Sanctions 3 Cryptocurrency Exchanges for Helping Russia Evade Sanctions
+Fetching sources from Google CSE with query: cybersecurity US Sanctions 3 Cryptocurrency Exchanges for Helping Russia Evade Sanctions
+Making request to Google CSE API with site restriction...
+Search info (with site restriction): {'searchTime': 0.189183, 'formattedSearchTime': '0.19', 'totalResults': '9', 'formattedTotalResults': '9'}
+Skipping non-article page: https://thehackernews.com/search/label/lazarus%20group
+Skipping non-article page: https://thehackernews.com/search/label/Blockchain
+Skipping non-article page: https://thehackernews.com/search/label/identity%20theft
+Skipping non-article page: https://thehackernews.com/search/label/Financial%20Crime
+Skipping non-article page: https://thehackernews.com/search/label/darknet
+Skipping non-article page: https://thehackernews.com/search/label/North%20Korean%20Hacker
+Skipping non-article page: https://thehackernews.com/search/label/LockBit
+Skipping non-article page: https://thehackernews.com/search/label/cybersecurity?updated-max=2025-01-20T04:02:00-08:00&max-results=20&start=16&by-date=false
+Skipping non-article page: https://thehackernews.com/search?updated-max=2025-01-20T04:02:00-08:00&max-results=11
+Not enough sources found with site restriction, trying without...
+Making request to Google CSE API without site restriction...
+Search info (without site restriction): {'searchTime': 0.219829, 'formattedSearchTime': '0.22', 'totalResults': '86', 'formattedTotalResults': '86'}
+Found source: Trump says Musk to target defense, education after USAID cuts ... (https://uk.news.yahoo.com/trump-victory-lap-ahead-inauguration-213518416.html)
+Found source: Joe Manchin - Wikipedia (https://en.wikipedia.org/wiki/Joe_Manchin)
+Found source: Jose T. Sio - SM.PH | SM Investments Corp. - Wall Street Journal (https://www.wsj.com/market-data/quotes/PH/SM/company-people/executive-profile/33975091)
+Found source: Trump executive order sanctions international court over Israel war ... (https://www.yahoo.com/news/trump-executive-order-sanctions-international-224853754.html)
+Found source: Stephen Allen Schwarzman - BX | Blackstone Inc. - Wall Street Journal (https://www.wsj.com/market-data/quotes/BX/company-people/executive-profile/2162241)
+Found source: U.S. to Dial Back Crackdown on Foreign Corruption, Russian ... (https://www.wsj.com/articles/u-s-to-dial-back-crackdown-on-foreign-corruption-russian-oligarchs-to-fight-cartels-620821e6?mod=latest_headlines)
+Found source: Financial Services Roundup: Market Talk - WSJ (https://www.wsj.com/finance/banking/financial-services-roundup-market-talk-74de1b63)
+Found source: DeepSeek reopens new user sign-ups despite ongoing security ... (https://uk.finance.yahoo.com/news/deepseek-reopens-user-sign-ups-151843204.html)
+Found source: Satya Nadella - MSFT | Microsoft Corp. - Wall Street Journal (https://www.wsj.com/market-data/quotes/MSFT/company-people/executive-profile/9589153)
+Found source: Trade - Latest News, Investigations and Analysis - WSJ.com (https://www.wsj.com/economy/trade)
+Found 10 total valid sources
+Gathered 2 sources

@@ -53,7 +53,8 @@ post_table = {
         'topic_id': (int, type(None)),
         'date_created': (datetime, type(None)),
         'image_queries': (list, type(None)),
-        'yoast_meta': (dict, type(None))
+        'yoast_meta': (dict, type(None)),
+        'wp_post_id': (int, type(None))
     }
 
 wp_post_table = {

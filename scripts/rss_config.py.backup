@@ -1,0 +1,190 @@
+"""
+Configuration file for RSS feeds used in topic generation.
+Each feed can have specific parsing rules and metadata.
+"""
+
+RSS_FEEDS = {
+    'news_sources': [
+        {
+            'name': 'The Hacker News',
+            'url': 'https://feeds.feedburner.com/TheHackersNews',
+            'category': 'news',
+            'priority': 1,
+            'date_format': '%a, %d %b %Y %H:%M:%S %z',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        },
+        {
+            'name': 'Krebs on Security',
+            'url': 'https://krebsonsecurity.com/feed/',
+            'category': 'news',
+            'priority': 2,
+            'date_format': '%a, %d %b %Y %H:%M:%S %z',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        },
+        {
+            'name': 'Bleeping Computer',
+            'url': 'https://www.bleepingcomputer.com/feed/',
+            'category': 'news',
+            'priority': 3,
+            'date_format': '%a, %d %b %Y %H:%M:%S %z',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        },
+        {
+            'name': 'Security Week',
+            'url': 'https://www.securityweek.com/feed/',
+            'category': 'news',
+            'priority': 4,
+            'date_format': '%a, %d %b %Y %H:%M:%S %z',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        }
+    ],
+    'vulnerability_sources': [
+        {
+            'name': 'CISA KEV',
+            'url': 'https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json',
+            'category': 'vulnerability',
+            'priority': 1,
+            'format': 'json',
+            'article_selector': {
+                'title': 'vulnerabilityName',
+                'link': 'vendorProject',
+                'date': 'dateAdded',
+                'description': 'shortDescription'
+            }
+        },
+        {
+            'name': 'NVD Recent',
+            'url': 'https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-recent.json.gz',
+            'category': 'vulnerability',
+            'priority': 2,
+            'format': 'json',
+            'article_selector': {
+                'title': 'cve.CVE_data_meta.ID',
+                'link': 'cve.references.reference_data[0].url',
+                'date': 'publishedDate',
+                'description': 'cve.description.description_data[0].value'
+            }
+        }
+    ],
+    'advisory_sources': [
+        {
+            'name': 'CISA Advisories',
+            'url': 'https://www.cisa.gov/cybersecurity-advisories/cybersecurity-advisories.xml',
+            'category': 'advisory',
+            'priority': 1,
+            'format': 'xml',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        },
+        {
+            'name': 'Microsoft Security Updates',
+            'url': 'https://api.msrc.microsoft.com/update-guide/rss',
+            'category': 'advisory',
+            'priority': 2,
+            'format': 'xml',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        }
+    ],
+    'research_sources': [
+        {
+            'name': 'Project Zero',
+            'url': 'https://googleprojectzero.blogspot.com/feeds/posts/default',
+            'category': 'research',
+            'priority': 1,
+            'format': 'xml',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'published',
+                'description': 'content'
+            }
+        },
+        {
+            'name': 'Microsoft Security Blog',
+            'url': 'https://www.microsoft.com/en-us/security/blog/feed/',
+            'category': 'research',
+            'priority': 2,
+            'format': 'xml',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        },
+        {
+            'name': 'Rapid7 Blog',
+            'url': 'https://blog.rapid7.com/rss/',
+            'category': 'research',
+            'priority': 3,
+            'format': 'xml',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        },
+        {
+            'name': 'Tenable Blog',
+            'url': 'https://www.tenable.com/blog/feed',
+            'category': 'research',
+            'priority': 4,
+            'format': 'xml',
+            'article_selector': {
+                'title': 'title',
+                'link': 'link',
+                'date': 'pubDate',
+                'description': 'description'
+            }
+        }
+    ]
+}
+
+def get_all_feeds():
+    """Get all configured RSS feeds."""
+    all_feeds = []
+    for category in RSS_FEEDS.values():
+        all_feeds.extend(category)
+    return all_feeds
+
+def get_feeds_by_category(category):
+    """Get RSS feeds for a specific category."""
+    return RSS_FEEDS.get(category, [])
+
+def get_feed_by_name(name):
+    """Get a specific feed by its name."""
+    for category in RSS_FEEDS.values():
+        for feed in category:
+            if feed['name'] == name:
+                return feed
+    return None 

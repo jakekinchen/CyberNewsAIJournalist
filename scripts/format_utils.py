@@ -147,15 +147,22 @@ class ReadabilityMetrics:
         return score
 
     def optimize_paragraph(self, index):
-        #print(f"Number of paragraphs: {len(self.paragraphs)}")
-        # Use GPT to optimize the given paragraph and return the optimized version.
         paragraph = self.paragraphs[index].text
-        system_prompt = "You are a brilliant editor for the New York Times"
-        user_prompt = (f"Please optimize the following paragraph from a blog post. "
-                f"Break it into shorter paragraphs if it's too long, "
-                f"maintain an active voice, don't use sentences longer than 20 words, and use appropriate transition words. "
-                f"Don't include anything extra besides the paragraphs.\n\n"
-                f"Paragraph:\n{paragraph}")
+        system_prompt = """You are a brilliant editor for the New York Times who follows strict style guidelines:
+1. Never use these words: landscape, crucial, evolve, delve, explore, in an era, critical, sophisticated, emerging, resilient, robust
+2. Always use active voice (90% minimum)
+3. Keep sentences under 18 words (75% minimum)
+4. Use appropriate transition words for flow
+5. Avoid exaggeration, vague language, and flowery descriptions
+6. Let details speak for themselves without repetitive or overly emphatic language
+7. Never end with the word 'Conclusion'"""
+
+        user_prompt = (f"Please optimize the following paragraph from a blog post. Don't add any new information. "
+                    f"Use short but clear sentences. Break it into shorter paragraphs if it's too long. "
+                    f"Maintain active voice (90% minimum). Keep 75% of sentences under 18 words. "
+                    f"Use appropriate transition words. Don't include anything extra besides the paragraphs.\n\n"
+                    f"Paragraph:\n{paragraph}")
+        
         optimized_text = query_gpt(user_prompt, system_prompt, model=os.getenv('FUNCTION_CALL_MODEL'))
         
         # Here we replace the text of the existing paragraph Tag with the optimized text
@@ -164,13 +171,19 @@ class ReadabilityMetrics:
         self.paragraphs[index] = new_paragraph
     
     def optimize_sentence(self, sentence):
-        # Use GPT to optimize the given sentence and return the optimized version.
-        system_prompt = "You are a brilliant editor for the New York Times"
-        user_prompt = (f"Please optimize the following sentence from a blog post. "
-                  f"Maintain an active voice, and don't use sentences longer than 20 words. "
-                  f"Don't include anything extra besides the sentence.\n\n"
-                  f"Sentence:\n{sentence}")
-        return query_gpt(user_prompt, system_prompt, model=os.getenv('FUNCTION_CALL_MODEL'))
+        system_prompt = """You are a brilliant editor for the New York Times who follows strict style guidelines:
+1. Never use these words: landscape, crucial, evolve, delve, explore, in an era, critical, sophisticated, emerging, resilient, robust
+2. Always use active voice
+3. Keep sentences under 18 words
+4. Avoid exaggeration, vague language, and flowery descriptions
+5. Let details speak for themselves without repetitive or overly emphatic language"""
+
+        user_prompt = (f"Please optimize this sentence following our style guidelines. "
+                    f"Keep it concise, clear, and in active voice. Don't add any new information. "
+                    f"Original sentence:\n{sentence}")
+        
+        optimized_text = query_gpt(user_prompt, system_prompt, model=os.getenv('FUNCTION_CALL_MODEL'))
+        return optimized_text
         
     def score_paragraph_length(self):
         # Score paragraphs based on length. Return a list of scores for each paragraph.

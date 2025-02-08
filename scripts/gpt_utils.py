@@ -12,29 +12,33 @@ from openai import OpenAI
 import tiktoken
 from PIL import Image, ImageOps
 from io import BytesIO
+from pydantic import BaseModel
+from typing import TypeVar, Type, Optional, Dict, Any, List, Union
+from openai.types.chat import ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam
 
 
 client = OpenAI(
-    # Defaults to os.environ.get("OPENAI_API_KEY")
+    api_key=os.getenv('OPENAI_API_KEY'),
+    organization=os.getenv('OPENAI_ORGANIZATION')
 )
 
 # Set your OpenAI API key and organization
-openai.api_key = os.getenv('OPENAI_KEY')
+openai.api_key = os.getenv('OPENAI_API_KEY')
 openai.organization = os.getenv('OPENAI_ORGANIZATION')
+
+model = os.getenv('FUNCTION_CALL_MODEL')
+summarization_model = os.getenv('SUMMARIZATION_MODEL')
 
 # Define the retry behavior
 @retry(
-    retry=retry_if_exception_type((openai.APIError, 
-                                  openai.APIConnectionError, 
-                                  openai.RateLimitError, 
-                                  openai.Timeout)),
+    retry=retry_if_exception_type(BaseException),
     wait=wait_random_exponential(multiplier=1, max=60),
     stop=stop_after_attempt(10)
 )
 def _api_call_with_backoff(*args, **kwargs):
     return client.chat.completions.create(*args, **kwargs)
 
-def function_call_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo', functions=[], function_call_mode="auto"):
+def function_call_gpt(user_prompt, system_prompt, model=model, functions=[], function_call_mode="auto"):
     function_call_mode = {"name": f"{functions[0]['name']}"}
     try:
         response = _api_call_with_backoff(
@@ -82,38 +86,100 @@ def query_dalle(prompt, mode="create", size="1792x1024", image=None, mask=None, 
     else:
         raise Exception('Invalid mode')
     
-def list_models():
+def list_available_models(filter_prefix=None):
+    """
+    List all available OpenAI models accessible to the user's API key.
+    Args:
+        filter_prefix (str or list, optional): Filter models by prefix(es). E.g., 'gpt' or ['gpt', 'text']
+    Returns:
+        list: Sorted list of model IDs
+    """
     try:
         response = client.models.list()
-        # response format is as follows SyncPage[Model](data=[Model(id='text-search-babbage-doc-001', created=1651172509)])
-        # Print the model ids on separate lines in a file called models.txt
-        with open('models.txt', 'w') as f:
-            for model in response.data:
-                f.write(model.id + '\n')
-        return
-    except openai.APIError as err:
-        logging.error(err)
-        print(f"Error: {err}")
+        models = []
+        
+        # Convert single prefix to list for consistent handling
+        if isinstance(filter_prefix, str):
+            filter_prefix = [filter_prefix]
+        
+        for model in response.data:
+            # If no filter is specified, include all models
+            if not filter_prefix:
+                models.append(model.id)
+            # If filter is specified, only include models with matching prefixes
+            elif any(prefix in model.id.lower() for prefix in filter_prefix):
+                models.append(model.id)
+        
+        # Sort models for consistent output
+        models.sort()
+        
+        # Print models in a formatted way
+        if models:
+            print("\nAvailable Models:")
+            print("----------------")
+            for model in models:
+                print(f"- {model}")
+        else:
+            print("\nNo models found matching the specified criteria.")
+            
+        return models
+    except Exception as err:
+        logging.error(f"Failed to list models: {err}")
+        return []
 
-
-def query_gpt(user_prompt, system_prompt, model='gpt-3.5-turbo'):
-    context = f"{system_prompt} {user_prompt}"
+def query_gpt(user_prompt, system_prompt, model=summarization_model):
+    """
+    Query GPT model with the given prompts.
+    
+    Args:
+        user_prompt (str): The user's input prompt
+        system_prompt (str): The system behavior prompt
+        model (str): The model to use for the query
+        
+    Returns:
+        str: The model's response
+        
+    Raises:
+        ValueError: If prompts are empty or None
+        openai.AuthenticationError: For API key related errors
+        openai.APIError: For other API-related errors
+        Exception: For other unexpected errors
+    """
+    if not user_prompt or not system_prompt:
+        raise ValueError("User prompt and system prompt cannot be empty or None")
+    
+    # Validate API key
+    api_key = os.getenv('OPENAI_API_KEY')
+    if not api_key:
+        raise ValueError("OpenAI API key is not set")
+    
+    # Create a new client instance for each call to ensure we're using the current API key
+    client = OpenAI(
+        api_key=api_key,
+        organization=os.getenv('OPENAI_ORGANIZATION')
+    )
+        
     try:
-        model = model_optimizer(context, model)  # assuming model_optimizer is defined elsewhere
-    except Exception as e:
-        logging.error(e)
-        raise Exception(e)
-    try:
-        response = _api_call_with_backoff(
+        response = client.chat.completions.create(
             model=model,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt}
             ],
         )
+        if not response.choices:
+            raise Exception("No response received from the model")
+            
         return response.choices[0].message.content
-    except openai.APIConnectionError as err:
-        logging.error(err)
+    except openai.AuthenticationError as err:
+        logging.error(f"Authentication error in query_gpt: {err}")
+        raise
+    except openai.APIError as err:
+        logging.error(f"API error in query_gpt: {err}")
+        raise
+    except Exception as err:
+        logging.error(f"Unexpected error in query_gpt: {err}")
+        raise
 
 def tokenizer(string: str, encoding_name: str) -> int:
     encoding = tiktoken.encoding_for_model(encoding_name)
@@ -254,4 +320,62 @@ source_remover_function = [
                 }
             }
         ]
+        
+T = TypeVar('T', bound=BaseModel)
+
+def structured_output_gpt(prompt: str, model_class: Type[T], system_prompt: Optional[str] = None) -> Optional[T]:
+    """
+    Query GPT model with structured output using Pydantic models.
+    
+    Args:
+        prompt (str): The user's input prompt
+        model_class (Type[T]): The Pydantic model class to structure the output
+        system_prompt (Optional[str]): Optional system behavior prompt
+        
+    Returns:
+        Optional[T]: The structured response, or None if parsing fails
+    """
+    if not prompt:
+        raise ValueError("Prompt cannot be empty or None")
+    
+    messages: List[Union[ChatCompletionSystemMessageParam, ChatCompletionUserMessageParam]] = []
+    
+    # Add system prompt if provided, otherwise use a default one
+    if system_prompt:
+        messages.append({"role": "system", "content": f"{system_prompt}\nProvide your response in JSON format."})
+    else:
+        messages.append({"role": "system", "content": "You are a helpful assistant that provides responses in JSON format."})
+    
+    # Add user prompt with explicit JSON request
+    messages.append({"role": "user", "content": f"{prompt}\nPlease provide your response in JSON format that matches the expected structure."})
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-1106-preview",  # Use a specific model that supports JSON output
+            messages=messages,
+            response_format={"type": "json_object"}
+        )
+        
+        if not response.choices:
+            print("No response received from the model")
+            return None
+            
+        content = response.choices[0].message.content
+        if not content:
+            print("Empty content received from the model")
+            return None
+            
+        try:
+            # Parse the JSON string into a dictionary
+            data = json.loads(content)
+            # Create a Pydantic model instance from the dictionary
+            return model_class(**data)
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"Error parsing model response: {e}")
+            print(f"Raw content: {content}")
+            return None
+            
+    except Exception as e:
+        print(f"Error in API call: {e}")
+        return None
         

@@ -60,4 +60,65 @@ gpt-4-0314
 davinci
 dall-e-2
 gpt-3.5-turbo-0613
+gpt-4o
+gpt-4o-2024-08-06
+chatgpt-4o-latest
+gpt-4o-mini
+gpt-4o-mini-2024-07-18
+o1
+o1-2024-12-17
+o1-mini
+o1-mini-2024-09-12
+o3-mini
+o3-mini-2025-01-31
+o1-preview
+o1-preview-2024-09-12
+gpt-4o-realtime-preview
+gpt-4o-realtime-preview-2024-12-17
+gpt-4o-mini-realtime-preview
+gpt-4o-mini-realtime-preview-2024-12-17
+gpt-4o-audio-preview
+gpt-4o-audio-preview-2024-12-17
 """
+
+import asyncio
+import sys
+from supabase_utils import supabase
+
+async def delete_topic_and_related(topic_id):
+    """Delete a topic and all its related data."""
+    print(f"Deleting topic {topic_id} and related data...")
+    
+    # First delete related sources
+    try:
+        sources = supabase.table("sources").select("*").eq("topic_id", topic_id).execute()
+        if sources.data:
+            print(f"Found {len(sources.data)} related sources")
+            supabase.table("sources").delete().eq("topic_id", topic_id).execute()
+            print(f"Deleted {len(sources.data)} sources")
+    except Exception as e:
+        print(f"Error deleting sources: {e}")
+    
+    # Then delete the topic itself
+    try:
+        topic = supabase.table("topics").select("*").eq("id", topic_id).execute()
+        if topic.data:
+            supabase.table("topics").delete().eq("id", topic_id).execute()
+            print(f"Deleted topic {topic_id}")
+        else:
+            print(f"Topic {topic_id} not found")
+    except Exception as e:
+        print(f"Error deleting topic: {e}")
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: python remove.py <topic_id>")
+        sys.exit(1)
+        
+    try:
+        topic_id = int(sys.argv[1])
+    except ValueError:
+        print("Error: topic_id must be a number")
+        sys.exit(1)
+        
+    asyncio.run(delete_topic_and_related(topic_id))

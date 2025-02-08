@@ -1,0 +1,229 @@
+{
+  "items": [
+    {
+      "id": 274,
+      "date": "2025-02-06T22:20:44",
+      "modified": "2025-02-06T23:20:48",
+      "slug": "test-article-advanced-security-testing-2025-02-06-2220",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/02/06/test-article-advanced-security-testing-2025-02-06-2220/",
+      "title": {
+        "rendered": "Test Article: Advanced Security Testing 2025-02-06 22:20"
+      },
+      "content": {
+        "rendered": "<div style=\"max-width:640px; margin: auto;\">\n<p>This is a comprehensive test article to verify all WordPress fields are operational.</p>\n<p>        The article covers multiple aspects of security testing, including:<br />\n        &#8211; Automated security scanning<br />\n        &#8211; Penetration testing methodologies<br />\n        &#8211; Vulnerability assessment<br />\n        &#8211; Security compliance verification</p>\n<p>        This test post ensures proper formatting, image generation, and metadata handling.</p>\n<h2>Key Facts</h2>\n<ul>\n<li>Automated security testing can identify up to 80% of common vulnerabilities</li>\n<li>Regular penetration testing is essential for maintaining strong security posture</li>\n<li>Compliance verification should be integrated into the testing lifecycle</li>\n<li>Modern security testing incorporates both static and dynamic analysis</li>\n</ul>\n</div>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>Learn about security testing best practices including automated scanning, penetration testing, vulnerability assessment, and compliance verification.</p>\n",
+        "protected": false
+      },
+      "author": 1,
+      "featured_media": 273,
+      "categories": [
+        42
+      ],
+      "tags": [
+        64,
+        62,
+        63,
+        60,
+        61
+      ]
+    },
+    {
+      "id": 174,
+      "date": "2025-02-06T14:01:59",
+      "modified": "2025-02-06T14:01:59",
+      "slug": "cve-cve-2024-43811",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/02/06/cve-cve-2024-43811/",
+      "title": {
+        "rendered": "CVE: CVE-2024-43811"
+      },
+      "content": {
+        "rendered": "<div style=\"max-width:640px; margin: auto;\">\n<p>Rejected reason: ** REJECT ** DO NOT USE THIS CANDIDATE NUMBER. ConsultIDs: none. Reason: The CNA or individual who requested this candidate did not associate it with any vulnerability during 2024. Notes: none.<br />\nCVSS Score: N/A (N/A)</p>\n</div>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>Rejected reason: ** REJECT ** DO NOT USE THIS CANDIDATE NUMBER. ConsultIDs: none. Reason: The CNA or&#8230;</p>\n",
+        "protected": false
+      },
+      "author": 1,
+      "featured_media": 0,
+      "categories": [
+        42
+      ],
+      "tags": [
+        47
+      ]
+    },
+    {
+      "id": 167,
+      "date": "2025-02-05T09:46:42",
+      "modified": "2025-02-05T09:46:42",
+      "slug": "cybercriminals-use-go-resty-and-node-fetch-in-13-million-password-spraying-attempts-5",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/02/05/cybercriminals-use-go-resty-and-node-fetch-in-13-million-password-spraying-attempts-5/",
+      "title": {
+        "rendered": "Cybercriminals Use Go Resty and Node Fetch in 13 Million Password Spraying Attempts"
+      },
+      "content": {
+        "rendered": "<div style=\"max-width:640px; margin: auto;\">\n<p>Cybercriminals are increasingly leveraging legitimate HTTP client tools to facilitate account takeover (ATO) attacks on Microsoft 365 environments.<br />\nEnterprise security company Proofpoint said it observed campaigns using HTTP clients Axios and Node Fetch to send HTTP requests and receive HTTP responses from web servers with the goal of conducting ATO attacks.<br />\n&#8220;Originally sourced from public</p>\n</div>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>Cybercriminals are increasingly leveraging legitimate HTTP client tools to facilitate account takeov&#8230;</p>\n",
+        "protected": false
+      },
+      "author": 1,
+      "featured_media": 0,
+      "categories": [
+        42
+      ],
+      "tags": [
+        47
+      ]
+    },
+    {
+      "id": 131,
+      "date": "2025-01-27T18:43:50",
+      "modified": "2025-01-30T10:27:36",
+      "slug": "rbi-cybersecurity-measures",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/01/27/rbi-cybersecurity-measures/",
+      "title": {
+        "rendered": "Reserve Bank of India Tightens Cybersecurity Measures"
+      },
+      "content": {
+        "rendered": "<p>In response to the growing threat of digital fraud, the Reserve Bank of India (RBI) has issued an urgent directive for banks to enhance their cybersecurity systems. Governor Sanjay Malhotra emphasized the importance of proactive measures, particularly in monitoring third-party service providers, to safeguard the nation&#8217;s financial infrastructure.</p>\n<h2>Key Areas of Focus</h2>\n<h3>Strengthening Oversight on Third Parties</h3>\n<p>The RBI has urged banks to implement stringent supervisory frameworks for third-party vendors, ensuring their systems comply with robust security protocols.</p>\n<h3>Addressing the Rise in Digital Fraud</h3>\n<p>With the increasing volume of digital transactions, financial institutions face heightened risks of fraud. The RBI&#8217;s directives aim to equip banks with advanced tools to detect and prevent such attacks.</p>\n<h3>Enhancing Customer Awareness</h3>\n<p>Governor Malhotra also highlighted the need for user education to minimize the risks associated with digital banking fraud. Public campaigns and secure banking practices will play a pivotal role in reducing vulnerabilities.</p>\n<h2>Regulatory Measures for 2025</h2>\n<p>The RBI has outlined several steps to bridge the technological gaps in India&#8217;s banking system:</p>\n<ul>\n<li>Mandatory cybersecurity audits</li>\n<li>Implementation of AI-based fraud detection systems</li>\n<li>Development of a centralized fraud-monitoring mechanism</li>\n</ul>\n<h2>Conclusion</h2>\n<p>The RBI&#8217;s call for action underscores the critical importance of cybersecurity in safeguarding financial systems. As banks adopt these measures, they will not only protect their customers but also strengthen the nation&#8217;s digital economy.</p>\n<p>Stay updated with the latest developments in <a href=\"/articles/news/cybersecurity\">cybersecurity news</a>.</p>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>Learn how the RBI is addressing cybersecurity risks and digital fraud in India&#8217;s banking sector.</p>\n",
+        "protected": false
+      },
+      "author": 1,
+      "featured_media": 155,
+      "categories": [
+        42
+      ],
+      "tags": [
+        54,
+        57,
+        56
+      ]
+    },
+    {
+      "id": 129,
+      "date": "2025-01-24T12:27:05",
+      "modified": "2025-01-30T10:28:25",
+      "slug": "powerschool-data-breach-2025",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/01/24/powerschool-data-breach-2025/",
+      "title": {
+        "rendered": "PowerSchool Data Breach Exposes Student and Teacher Information Nationwide"
+      },
+      "content": {
+        "rendered": "<p>In late December 2024, educational software provider PowerSchool experienced a significant cybersecurity breach, compromising the personal information of students and teachers across the United States and Canada. PowerSchool, which serves over 60 million K-12 students through its cloud-based student information system, detected unauthorized access to its systems on December 28, 2024. The breach was executed using compromised credentials, allowing attackers to extract data from the student information system database. <a href=\"https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://www.theregister.com/2025/01/09/powerschool_school_data/?utm_source=chatgpt.com\">oai_citation_attribution:0\u2021Enterprise Technology News and Analysis</a></p>\n<p>The stolen data includes names, addresses, birth dates, contact information, and, in some cases, Social Security numbers, medical information, and grades. PowerSchool has stated that not all customers were affected, but the exact number of impacted districts remains undisclosed. The company has taken steps to mitigate the breach, including deactivating compromised credentials, restricting access to affected portals, and implementing a full password reset. Additionally, PowerSchool has offered free credit monitoring services to affected individuals. <a href=\"https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://www.bleepingcomputer.com/news/security/powerschool-hack-exposes-student-teacher-data-from-k-12-districts/?utm_source=chatgpt.com\">oai_citation_attribution:1\u2021BleepingComputer</a></p>\n<p>School districts nationwide have been notifying parents and staff about the breach. For instance, the Glenwood Community School District informed families and educators that their personal information may have been compromised. Superintendent Nicole Kooiker emphasized that the district is working with PowerSchool to determine the specific data affected. <a href=\"https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://www.opinion-tribune.com/news/glenwood-community-school-district-data-breached-powerschool-cybersecurity-attack?utm_source=chatgpt.com\">oai_citation_attribution:2\u2021opinion-tribune.com</a></p>\n<p>This incident underscores the critical importance of robust cybersecurity measures in educational institutions. Experts recommend that schools conduct regular risk assessments, implement multi-factor authentication, and provide training to staff and students on identifying phishing attempts and maintaining strong passwords. Having a comprehensive response plan in place can also help minimize the impact of such breaches. <a href=\"https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://www.edweek.org/technology/what-schools-should-know-about-the-powerschool-data-breach/2025/01?utm_source=chatgpt.com\">oai_citation_attribution:3\u2021Education Week</a></p>\n<p>As the investigation continues, PowerSchool has stated that it does not anticipate any operational disruptions and will continue to provide services as normal to its customers. The company is committed to transparency and will share findings with affected school districts once the investigation is complete. <a href=\"https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://https://www.bleepingcomputer.com/news/security/powerschool-hack-exposes-student-teacher-data-from-k-12-districts/?utm_source=chatgpt.com\">oai_citation_attribution:4\u2021BleepingComputer</a></p>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>A recent cyberattack on PowerSchool has compromised personal information of students and teachers across the United States and Canada.</p>\n",
+        "protected": false
+      },
+      "author": 1,
+      "featured_media": 147,
+      "categories": [
+        42
+      ],
+      "tags": [
+        54,
+        52,
+        55,
+        53
+      ]
+    },
+    {
+      "id": 59,
+      "date": "2025-01-23T20:00:06",
+      "modified": "2025-02-07T18:41:42",
+      "slug": "rise-of-decentralized-finance",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/01/23/rise-of-decentralized-finance/",
+      "title": {
+        "rendered": "The Rise of Decentralized Finance in 2025"
+      },
+      "content": {
+        "rendered": "<p><img loading=\"lazy\" decoding=\"async\" class=\"alignnone  wp-image-112\" src=\"https://cybernow.info/wp-content/uploads/2025/01/1737667123883-1737666992296-1737666598437-6756d547b5238dde35ade3e7_main-Top-Trends-Driving-DeFi-Development-in-2025-300x169.webp\" alt=\"\" width=\"840\" height=\"473\" srcset=\"https://cybernow.info/wp-content/uploads/2025/01/1737667123883-1737666992296-1737666598437-6756d547b5238dde35ade3e7_main-Top-Trends-Driving-DeFi-Development-in-2025-300x169.webp 300w, https://cybernow.info/wp-content/uploads/2025/01/1737667123883-1737666992296-1737666598437-6756d547b5238dde35ade3e7_main-Top-Trends-Driving-DeFi-Development-in-2025-600x338.webp 600w, https://cybernow.info/wp-content/uploads/2025/01/1737667123883-1737666992296-1737666598437-6756d547b5238dde35ade3e7_main-Top-Trends-Driving-DeFi-Development-in-2025.webp 710w\" sizes=\"auto, (max-width: 840px) 100vw, 840px\" /></p>\n<p>Decentralized finance, or DeFi, has emerged as one of the most disruptive innovations in financial technology. With <a href=\"/articles/tech/blockchain-beyond-cryptocurrency\">blockchain technology</a> at its core, DeFi aims to provide open and permissionless financial services to anyone with internet access. As we&#8217;ve seen in our previous coverage of <a href=\"/articles/tech/ai-transforming-everyday-life\">AI&#8217;s impact on cybersecurity</a>, technological innovation continues to reshape traditional industries.</p>\n<p>In 2025, key trends in DeFi include the rise of decentralized autonomous organizations (DAOs), cross-chain interoperability, and regulatory developments that aim to bridge the gap between traditional finance and crypto-based systems. As the sector matures, challenges such as security, scalability, and user education remain critical to address.</p>\n<h2>The Evolution of DAOs in DeFi</h2>\n<p>Decentralized Autonomous Organizations have become the backbone of many DeFi protocols. According to <a href=\"https://ethereum.org/dao\">Ethereum.org</a>, DAOs provide transparent governance and community-driven decision-making. Leading platforms like <a href=\"https://https://https://https://https://https://https://https://https://https://https://uniswap.org\">Uniswap</a> and <a href=\"https://https://https://https://https://https://https://https://https://https://https://aave.com\">Aave</a> have demonstrated the effectiveness of DAO governance in managing billions in digital assets.</p>\n<h2>Cross-Chain Innovation</h2>\n<p>Interoperability between different blockchain networks has revolutionized how DeFi protocols operate. Projects like <a href=\"https://polkadot.network\">Polkadot</a> and <a href=\"https://cosmos.network\">Cosmos</a> have created robust ecosystems that enable seamless asset transfers and cross-chain communication. This advancement has significantly reduced the friction in DeFi operations and expanded the possibilities for decentralized applications.</p>\n<h2>Regulatory Landscape and Compliance</h2>\n<p>The regulatory environment for DeFi has evolved considerably since its inception. Major financial institutions and governments have recognized the potential of decentralized finance while implementing balanced regulatory frameworks. The <a href=\"https://https://https://https://https://https://https://https://https://https://https://www.weforum.org\">World Economic Forum&#8217;s DeFi Policy Toolkit</a> provides valuable insights into the regulatory approach to DeFi innovation.</p>\n<h2>Security and Risk Management</h2>\n<p>As DeFi platforms manage increasing amounts of value, security has become paramount. Advanced smart contract auditing, insurance protocols, and risk management tools have become standard practice. Our recent analysis of <a href=\"/articles/tech/blockchain-security-best-practices\">blockchain security measures</a> highlights the importance of robust security infrastructure in DeFi.</p>\n<h2>The Future of Financial Inclusion</h2>\n<p>DeFi&#8217;s promise of financial inclusion continues to materialize through:</p>\n<p>\u2013 Accessible lending and borrowing platforms<br />\n\u2013 Decentralized insurance products<br />\n\u2013 Yield optimization protocols<br />\n\u2013 Cross-border payment solutions<br />\n\u2013 Tokenized real-world assets</p>\n<h2>Educational Initiatives and User Adoption</h2>\n<p>The DeFi community has prioritized user education and onboarding. Resources like <a href=\"https://https://https://https://https://https://https://https://https://https://https://defipulse.com\">DeFi Pulse</a> and <a href=\"https://https://https://https://https://https://https://https://https://https://https://defillama.com\">DeFi Llama</a> provide valuable insights for both newcomers and experienced users. Our <a href=\"/articles/tech/defi-getting-started\">comprehensive guide to DeFi</a> offers a practical introduction for those looking to enter the space.</p>\n<p>Stay tuned as we explore how DeFi continues to revolutionize the financial world, paving the way for a more inclusive global economy. Follow our <a href=\"/articles/tech/blockchain-series\">blockchain technology series</a> for more insights into the future of decentralized finance.</p>\n<h2>Additional Resources</h2>\n<p>\u2013 <a href=\"https://www.coingecko.com/en/defi\">CoinGecko&#8217;s DeFi Overview</a><br />\n\u2013 <a href=\"https://https://https://https://https://https://https://https://https://https://https://www.defieducation.org\">DeFi Education Alliance</a><br />\n\u2013 <a href=\"https://https://https://https://https://https://https://https://https://https://https://www.blockchain-council.org\">Blockchain Council&#8217;s DeFi Certification</a></p>\n<p><em>This article is part of our ongoing coverage of financial technology innovations. For more insights, check out our <a href=\"/articles/news/fintech\">FinTech news section</a> and <a href=\"/articles/tech\">technology analysis</a>.</em></p>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>Explore how decentralized finance is shaping the future of financial technology in 2025, with key trends and innovations.</p>\n",
+        "protected": false
+      },
+      "author": 1,
+      "featured_media": 112,
+      "categories": [
+        42
+      ],
+      "tags": []
+    },
+    {
+      "id": 61,
+      "date": "2025-01-22T16:18:27",
+      "modified": "2025-01-29T18:19:22",
+      "slug": "blockchain-beyond-cryptocurrency",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/01/22/blockchain-beyond-cryptocurrency/",
+      "title": {
+        "rendered": "Blockchain: Beyond Cryptocurrency"
+      },
+      "content": {
+        "rendered": "<p>Blockchain technology has come a long way from its beginnings in cryptocurrency. Today, it&#8217;s being used in supply chains, healthcare, and even entertainment. This article examines how blockchain is driving innovation across industries and solving real-world problems.</p>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>Discover how blockchain technology is driving innovation beyond cryptocurrency.</p>\n",
+        "protected": false
+      },
+      "author": 2,
+      "featured_media": 0,
+      "categories": [
+        43
+      ],
+      "tags": []
+    },
+    {
+      "id": 57,
+      "date": "2025-01-22T16:18:23",
+      "modified": "2025-01-29T19:20:28",
+      "slug": "ai-transforming-everyday-life",
+      "status": "publish",
+      "link": "https://cybernow.info/2025/01/22/ai-transforming-everyday-life/",
+      "title": {
+        "rendered": "AI Transforming Everyday Life: From Smart Homes to Healthcare"
+      },
+      "content": {
+        "rendered": "<p>!<a href=\"https://cybernow.info/wp-content/uploads/2025/01/1738193128972-10-Practical-Examples-of-AI-Transforming-Everyday-Life.png\">AI Transforming Everyday Life</a></p>\n<h2>The Rise of Smart Home Technology</h2>\n<p>Smart home technology has become increasingly sophisticated thanks to AI integration. According to <a href=\"https://www.technologyreview.com/\">research by MIT Technology Review</a>, over 75% of homes in developed nations now feature at least one AI-powered smart device. These systems learn from user behavior, automatically adjusting lighting, temperature, and security settings for optimal comfort and efficiency.</p>\n<h3>Enhanced Security and Privacy</h3>\n<p>With the increasing integration of AI in homes, cybersecurity has become paramount. The <a href=\"/articles/news/rbi-cybersecurity-measures\">Reserve Bank of India\u2019s recent cybersecurity measures</a> highlight the importance of protecting smart home systems from potential threats. AI-powered security systems can now detect unusual patterns and potential breaches in real-time, providing homeowners with immediate alerts and automated responses.</p>\n<h2>Healthcare Revolution</h2>\n<p>The healthcare sector has witnessed one of the most profound transformations through AI implementation. Machine learning algorithms are now capable of:</p>\n<ul>\n<li>Analyzing medical images with unprecedented accuracy</li>\n<li>Predicting patient outcomes based on vast datasets</li>\n<li>Personalizing treatment plans for individual patients</li>\n<li>Monitoring patient vital signs in real-time</li>\n</ul>\n<h3>Data Security in Healthcare</h3>\n<p>As healthcare becomes increasingly digitized, data security remains a critical concern. Recent incidents like the <a href=\"/articles/news/powerschool-data-breach-2025\">PowerSchool data breach</a> demonstrate the importance of robust security measures in protecting sensitive information. Healthcare providers are implementing advanced AI systems to safeguard patient data while maintaining accessibility for authorized personnel.</p>\n<h2>Financial Services and AI</h2>\n<p>The financial sector has embraced AI for everything from fraud detection to personalized banking services. The <a href=\"/articles/news/rise-of-decentralized-finance\">rise of decentralized finance</a> showcases how AI is reshaping traditional banking and creating new opportunities for financial innovation. AI-powered algorithms now handle:</p>\n<ul>\n<li>Fraud detection and prevention</li>\n<li>Automated trading strategies</li>\n<li>Personal financial planning</li>\n<li>Risk assessment and management</li>\n</ul>\n<h2>The Future of Work</h2>\n<p>AI is transforming the workplace in unprecedented ways. According to the <a href=\"https://www.weforum.org/\">World Economic Forum</a>, by 2025:</p>\n<ul>\n<li>85 million jobs may be displaced by AI and automation</li>\n<li>97 million new roles may emerge that are better adapted to the new division of labor between humans and machines</li>\n<li>50% of all employees will need reskilling as technology adoption increases</li>\n</ul>\n<h3>Skills for the AI Era</h3>\n<p>To thrive in this AI-driven environment, workers need to develop new skills. The most valuable capabilities include:</p>\n<ol>\n<li>AI literacy and basic programming</li>\n<li>Data analysis and interpretation</li>\n<li>Critical thinking and problem-solving</li>\n<li>Emotional intelligence and human interaction</li>\n<li>Adaptability and continuous learning</li>\n</ol>\n<h2>Ethical Considerations</h2>\n<p>As AI becomes more integrated into daily life, ethical considerations become increasingly important. Key concerns include:</p>\n<ul>\n<li>Privacy and data protection</li>\n<li>Algorithmic bias and fairness</li>\n<li>Transparency in AI decision-making</li>\n<li>Impact on employment and society</li>\n<li>Environmental implications of AI infrastructure</li>\n</ul>\n<h2>Looking Ahead</h2>\n<p>The integration of AI into everyday life continues to accelerate. Experts predict that by 2030, AI will be as ubiquitous as electricity, seamlessly woven into the fabric of daily activities. While challenges remain, the potential benefits of AI in improving quality of life, efficiency, and human capabilities are enormous.</p>\n<p>For more insights on technological advancements and their impact on society, visit the <a href=\"https://www.weforum.org/platforms/shaping-the-future-of-technology-governance-artificial-intelligence-and-robotics\">World Economic Forum\u2019s AI and Robotics platform</a> or explore our other technology coverage here on CyberNow.</p>\n",
+        "protected": false
+      },
+      "excerpt": {
+        "rendered": "<p>Discover how artificial intelligence is revolutionizing daily life in 2025, from personalized healthcare to smart home automation. Learn about the latest AI innovations transforming industries worldwide.</p>\n",
+        "protected": false
+      },
+      "author": 1,
+      "featured_media": 143,
+      "categories": [
+        42
+      ],
+      "tags": [
+        47,
+        51,
+        50,
+        48,
+        49
+      ]
+    }
+  ]
+}

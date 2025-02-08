@@ -76,58 +76,9 @@ def capture_traceback_and_variables(exc_traceback):
 
 def handle_exception(exc_type, exc_value, exc_traceback):
     # Capture extended traceback info
-    captured_info = capture_traceback_and_variables(exc_traceback)
+    capture_traceback_and_variables(exc_traceback)
+    # Then call the default handler
+    sys.__excepthook__(exc_type, exc_value, exc_traceback)
 
-    # Tokenize and check if within token limit
-    captured_str = "\n".join([f"{filename}:{lineno} - {line} | Vars: {vars}" for filename, lineno, line, vars in captured_info])
-    total_tokens = tokenizer(captured_str, "gpt-4")
-
-    # Remove outer layers until within token limit
-    while total_tokens > MAX_TOKENS:
-        captured_info.pop(0)
-        captured_str = "\n".join([f"{filename}:{lineno} - {line} | Vars: {vars}" for filename, lineno, line, vars in captured_info])
-        total_tokens = tokenizer(captured_str, "gpt-4")
-
-    # Add the error message
-    error_msg = f"{exc_type.__name__}: {exc_value}"
-    total_str = error_msg + "\n" + captured_str
-
-    # Log the entire traceback
-    logging.error(total_str)
-
-    # Pass to GPT
-    response = query_code_gpt(total_str, 'gpt-4-1106-preview')
-    print(response)
-
-def inspect_all_methods(ignore_methods=[]):
-    # Set the directory to search for Python files
-    directory = "scripts"
-
-    # Get the name of the current module
-    current_module = inspect.getmodulename(inspect.stack()[-1][1])
-
-    # Loop through all files in the directory
-    for filename in os.listdir(directory):
-        # Check if the file is a Python file
-        if filename.endswith(".py"):
-            # Print the filename
-            print(f"\n{filename}\n{'-' * len(filename)}")
-
-            # Import the module
-            module_name = filename[:-3]  # Remove the ".py" extension
-            module = __import__(module_name)
-
-            # Check if the module is not the current module
-            if module_name != current_module[:-3]:
-                # Get all the members of the module
-                members = inspect.getmembers(module)
-
-                # Filter out the functions and sort them by their line number in the source file
-                functions = [(name, member) for name, member in members if inspect.isfunction(member) and name not in ignore_methods]
-                functions.sort(key=lambda x: inspect.getsourcelines(x[1])[1])
-
-                # Loop through the functions and print the signature
-                for name, member in functions:
-                    print(f"{name}{inspect.signature(member)}")
-
-#sys.excepthook = handle_exception
+# Set the custom exception handler
+sys.excepthook = handle_exception
